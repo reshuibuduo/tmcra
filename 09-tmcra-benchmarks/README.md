@@ -10,8 +10,8 @@ shared algorithm modules under `algorithm/`.
 - The frozen official scorecard is **411/500 (82.2%)**, produced in one
   end-to-end 500-question evaluation run. Describe it as one frozen
   LongMemEval-S500 run; do not merge it with newer, separate measurements.
-- Every merged input and the official judge output are published with SHA-256
-  hashes. See `RELEASE_MANIFEST.json` for the pinned file set.
+- The frozen evaluation inputs and official judge output are published with
+  SHA-256 hashes. See `RELEASE_MANIFEST.json` for the pinned file set.
 - Newer mainline measurements (cleanroom, no-GNN) are reported separately and
   must not be mixed with the frozen official 500-question score.
 

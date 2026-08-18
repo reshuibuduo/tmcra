@@ -296,6 +296,26 @@ and Writer handshakes. It performs no paid provider call. A process may be
 live while not ready; use the readiness endpoint and preflight report rather
 than treating a listening port as proof of a healthy deployment.
 
+## Reference hardware and deployment boundary
+
+The complete public release was developed on a **single NVIDIA RTX 5090** GPU.
+That is the reference development profile for the public service: one process
+preloads one retrieval engine and the resident Writer pool handles durable
+write work independently.
+
+For a production deployment of the published default profile, plan for **at
+least 32 GB of GPU VRAM**. Actual capacity depends on selected embedding,
+reranking, and generation models, concurrency, batch sizes, context lengths,
+and the operator's latency target; this recommendation is not a throughput or
+availability guarantee.
+
+Multi-GPU serving is intentionally outside the supported public deployment
+profile. An operator that needs tensor/model parallelism, cross-device
+retrieval placement, multi-process scheduling, or multi-GPU failover must
+design and validate that topology itself, including model placement,
+memory-pressure behavior, request routing, readiness checks, and rollback.
+See the [deployment guide](docs/DEPLOYMENT.md) before changing this boundary.
+
 The supported public profile keeps TMCRA_LEARNED_GRAPH_ENABLED=0. The small
 TMCRA runtime reranker is included, while larger learned-graph checkpoints and
 third-party embedding/reranker weights are not. Operators obtain and license
@@ -319,6 +339,22 @@ This repository is the complete public source release:
 | 10 | [model-data-assets](10-tmcra-model-data-assets/) | Model references, provenance, and smoke-test fixture manifests |
 
 Module 11 is intentionally not part of this release.
+
+## Developer documentation
+
+The top-level architecture explains the trust boundary. The implementation
+guides below explain what each application can do, which code path owns the
+behavior, and how an operator deploys and runs it.
+
+| Guide | Use it for |
+|---|---|
+| [Application surfaces](docs/APPLICATIONS.md) | Web, desktop, Android, SDK, lifecycle-plugin, and MCP capabilities plus their implementation boundaries |
+| [API and runtime](docs/API_AND_RUNTIME.md) | Endpoint groups, durable write/recall lifecycle, isolation, performance controls, cost accounting, and recovery |
+| [Integration and extension](docs/INTEGRATION_AND_EXTENSION.md) | Bring an existing memory system to TMCRA, dual-write safely, inject recall, and extend supported boundaries |
+| [Module capability matrix](docs/MODULES.md) | Verified, detailed functions, implementation entry points, run commands, and limitations for components 01–10 |
+| [Commercial modules](docs/COMMERCIAL_MODULES.md) | Tenants, accounts, plans, quota, cost, webhooks, retention, operations, and operator-owned commercial boundaries |
+| [Deployment guide](docs/DEPLOYMENT.md) | RTX 5090 reference profile, 32 GB minimum recommendation, single-GPU install, preflight, production topology, and multi-GPU boundary |
+| [中文工程指南](docs/DEVELOPER_GUIDE.zh-CN.md) | 中文版应用、API、部署和运维入口 |
 
 ## Deploy the Memory API
 
