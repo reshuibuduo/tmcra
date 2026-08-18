@@ -38,6 +38,31 @@ The result is a memory service that can be used by a single product, an
 enterprise multi-tenant application, or a collection of local agent tools
 without changing the underlying evidence contract.
 
+## Benchmark results
+
+TMCRA publishes the score, evaluation boundary, and failure analysis together
+so an operator can distinguish a reproducible result from a marketing claim.
+
+| Evaluation | Result | Scope and interpretation |
+|---|---:|---|
+| LongMemEval-S frozen official scorecard | **411/500 (82.2%)** | One frozen, end-to-end 500-question evaluation run. |
+| Frozen 100-question Source24 production-candidate path | **77/100** | GPT-5.4 answer model and official GPT-5.4 judge; the release's production-candidate answer path for this frozen slice. |
+| Semantic V4 shadow path | **61/100** | Same 100-question slice; retained as a diagnostic experiment and explicitly not promoted over the 77/100 baseline. |
+| LoCoMo Mem0-style LLM Judge | **80.92%** | Auxiliary five-run mean over Categories 1–4 (`N = 1,540`); Category 5 is excluded, so this is not presented as full-set official accuracy. |
+| LoCoMo official Token F1 | **55.20** | Deterministic scorer over all 1,986 questions. |
+| LoCoMo evidence recall | **82.00%** | Evidence-retrieval coverage over all 1,986 questions. |
+
+The 411/500 score is from one frozen end-to-end 500-question run. Separately,
+the 100-question comparison completed every answer, but the semantic path
+regressed 16 points versus the baseline. That negative result is retained in
+the public report rather than hidden: it isolates the remaining problem to
+semantic resolution and answer binding, not first-stage retrieval. See the
+[benchmark reproduction guide](09-tmcra-benchmarks/README.md) and the full
+[Semantic100 report](09-tmcra-benchmarks/TMCRA_V4_SEMANTIC100_BENCHMARK_REPORT.md)
+for the frozen-set contract, category breakdown, limitations, and promotion
+decision. LoCoMo results use different protocols and denominators and are kept
+separate; see the [LoCoMo result record](09-tmcra-benchmarks/LOCOMO_BENCHMARK_REPORT.md).
+
 ## Architecture at a glance
 
 ~~~mermaid

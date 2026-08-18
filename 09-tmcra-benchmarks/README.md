@@ -7,14 +7,27 @@ shared algorithm modules under `algorithm/`.
 
 ## Scorecard provenance rules
 
-- The frozen official scorecard is **411/500 (82.2%)**. It is a merged result:
-  a 100-question artifact and a 400-question artifact were produced separately
-  and merged. It must be described exactly that way and must **not** be labeled
-  as one fresh end-to-end S500 run.
+- The frozen official scorecard is **411/500 (82.2%)**, produced in one
+  end-to-end 500-question evaluation run. Describe it as one frozen
+  LongMemEval-S500 run; do not merge it with newer, separate measurements.
 - Every merged input and the official judge output are published with SHA-256
   hashes. See `RELEASE_MANIFEST.json` for the pinned file set.
 - Newer mainline measurements (cleanroom, no-GNN) are reported separately and
-  must not be mixed with the historical merged score.
+  must not be mixed with the frozen official 500-question score.
+
+## LoCoMo recorded scorecard
+
+LoCoMo uses separate score protocols and denominators. Do not combine these
+numbers into a single accuracy figure or compare them directly with LongMemEval.
+
+| Metric | Recorded result | Evaluation boundary |
+|---|---:|---|
+| Mem0-style LLM Judge | **80.92%** | Auxiliary five-run mean, Categories 1–4 only, `N = 1,540`; it excludes Category 5 and is not full-set official accuracy. |
+| Official Token F1 | **55.20** | Deterministic scorer over all 1,986 questions. |
+| Evidence recall | **82.00%** | Evidence-retrieval coverage over all 1,986 questions. |
+
+See [LOCOMO_BENCHMARK_REPORT.md](LOCOMO_BENCHMARK_REPORT.md) for the public
+result record and reporting rules.
 
 ## Path parameterization
 
