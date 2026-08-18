@@ -1,4 +1,4 @@
-<!-- Thanks for contributing to TMCRA. Please keep this PR focused and free of private user data, credentials, or production-only paths. -->
+<!-- Thanks for contributing to TMCRA. Please keep this PR focused and free of private user data, credentials, or deployment-specific paths. -->
 
 ## Summary / 概要
 
@@ -14,7 +14,7 @@
 
 ## Compatibility, privacy, and security / 兼容性、隐私与安全
 
-- [ ] I have not added credentials, user data, or internal-only endpoints.
+- [ ] I have not added credentials, user data, or restricted operator endpoints.
 - [ ] I considered backward compatibility and documented any migration or configuration change.
 - [ ] I updated documentation, tests, or examples where appropriate.
 
