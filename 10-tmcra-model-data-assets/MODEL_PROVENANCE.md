@@ -19,6 +19,24 @@ fixtures listed in this component.
 | Mobile speaker segmentation | `csukuangfj/sherpa-onnx-pyannote-segmentation-3-0` | Model card says files are converted from `pyannote/segmentation-3.0`; no explicit license metadata on the converted repo page | Download reference only; confirm before redistributing weights |
 | Mobile speaker identity | `iic/speech_eres2netv2_sv_zh-cn_16k-common` / 3D-Speaker | 3D-Speaker GitHub repository is Apache-2.0; ModelScope page must be reviewed before redistributing the exact model artifact | Download reference only; confirm before redistributing weights |
 
+## Production role mapping
+
+The two BGE artifacts are the local retrieval models used by the native TMCRA
+production path, not optional names listed without context. `BAAI/bge-m3`
+creates the dense shortlist; `BAAI/bge-reranker-v2-m3` cross-encodes the
+query/evidence union. The bundled TMCRA checkpoint then contributes TMCRA's
+own local learned ranking signal.
+
+Writer, reviewer, slow-graph, and recall-planner roles use separately configured
+provider or self-hosted routes. The tested local Qwen name in service config is
+a deployment alias; this repository does not redistribute its weights or claim
+an upstream license for an operator-selected artifact. The fixed GPT-5.4 model
+belongs to the reference/evaluation answer route and is not required when an
+operator's own Agent consumes the Memory API evidence pack.
+
+See [production model stack](../docs/PRODUCTION_MODEL_STACK.md) for exact role,
+environment-variable, and replacement boundaries.
+
 ## Fixture boundary
 
 The `fixtures/` WAV files are public sample audio files copied from the official

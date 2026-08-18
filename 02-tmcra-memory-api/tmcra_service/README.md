@@ -275,9 +275,9 @@ release without a private TMCRA checkout:
 2. Download the publicly referenced BGE embedding and cross-encoder models to
    the paths in `deploy/tmcra-service.env.example`; copy the bundled
    `models/tmcra_v3_reranker.pt` to that same models directory.
-3. Copy the environment example to `/etc/tmcra/service.env` and create
-   `/etc/tmcra/writer.env` with the operator's own provider credentials. Never
-   publish either environment file.
+3. Copy `deploy/tmcra-service.env.example` to `/etc/tmcra/service.env` and
+   `deploy/writer.env.example` to `/etc/tmcra/writer.env`; replace every path,
+   URL, and credential placeholder. Never publish either live environment file.
 4. Set `TMCRA_SERVICE_PUBLIC_BASE_URL` to the operator's HTTPS origin and use
    `trusted_proxy` only when the bind address is protected by that proxy.
 5. Run `python ops/run_tmcra_service_preflight.py --env-file
@@ -291,6 +291,14 @@ silent fallback.
 `TMCRA_SERVICE_STARTUP_PREFLIGHT_MODE=off` exists only for unit tests and
 local contract development. Production deployment must use `full` and treats a
 failed preflight as a hard startup failure.
+
+The reference production route is explicit: local `BAAI/bge-m3` embedding,
+local `BAAI/bge-reranker-v2-m3` cross encoding, the bundled TMCRA runtime
+reranker, DeepSeek V4 Flash/Pro Writer and graph roles, and a Flash recall-role
+planner. The Memory API returns a bounded evidence pack, so the calling product
+may use its own outer Agent model. Exact model roles, local Qwen routes,
+retrieval sizes, environment variables, and replacement contracts are in
+[`docs/PRODUCTION_MODEL_STACK.md`](../../docs/PRODUCTION_MODEL_STACK.md).
 
 On a normal systemd host, install
 `tmcra-memory-api.service`. On hosts without a working systemd control plane,

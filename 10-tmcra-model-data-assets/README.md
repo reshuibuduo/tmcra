@@ -17,3 +17,14 @@ The mobile app fetches its models at build time with pinned SHA-256 checksums
 (see component 05 `android/app/build.gradle`); the memory service loads its
 embedding/reranker/cross-encoder models from paths configured by environment
 variables (component 02). Consult each model's own license before use.
+
+The production text-memory route maps those artifacts as follows:
+
+- `TMCRA_EMBEDDING_MODEL` -> `BAAI/bge-m3` for 1,024-dimensional dense recall;
+- `TMCRA_CROSS_MODEL` -> `BAAI/bge-reranker-v2-m3` for query/evidence cross encoding;
+- `TMCRA_CHECKPOINT` -> the bundled `tmcra_v3_reranker.pt` for local TMCRA ranking signals; and
+- Writer, reviewer, slow-graph, recall-planner, and outer-agent models remain
+  separate configured roles rather than being hidden inside the embedding path.
+
+See [the complete production model stack](../docs/PRODUCTION_MODEL_STACK.md)
+before downloading or replacing a model.

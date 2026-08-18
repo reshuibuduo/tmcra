@@ -128,6 +128,34 @@ tenant/scope binding; it does not expose a production Memory API key or let a
 browser select an arbitrary scope. MCP uses local stdio so the host process,
 not a remote intermediary, controls the credential.
 
+## Production model stack
+
+TMCRA is not one foundation model. The native memory algorithm combines local
+open retrieval models, the bundled TMCRA runtime reranker, provider-backed or
+self-hosted Writer/Planner roles, deterministic evidence compilation, and an
+operator-controlled outer agent.
+
+| Production stage | Reference configuration | Responsibility |
+|---|---|---|
+| Write extraction | `deepseek-v4-flash` or the strict local Qwen route | Create attributed source records and fast-memory assertions |
+| Review and slow graph | `deepseek-v4-pro`, with Flash first-stage work; or local Qwen | Reconcile ambiguous writes and build durable semantic capsules in batches |
+| Dense retrieval | local `BAAI/bge-m3` | Generate the 1,024-dimensional source/query shortlist |
+| Cross encoding | local `BAAI/bge-reranker-v2-m3` | Rerank query/evidence pairs before packing |
+| Local learned fusion | bundled `tmcra_v3_reranker.pt` | Fuse cross-encoder, dense, graph, selection, and recency signals locally |
+| Recall-role planning | `deepseek-v4-flash` or local Qwen | Assign evidence/context roles without deleting the immutable source reservoir |
+| Evidence compilation | deterministic code, no model | Bind Source IDs and execute dates, counts, ordering, and set operations |
+| Product agent / answer | operator-selected | Consume the bounded evidence pack; the fixed reference/evaluation answer route uses `gpt-5.4` |
+
+The outer product Agent is **not locked to GPT-5.4 or DeepSeek**. Applications
+may use their own model or Agent framework through the SDK, lifecycle adapter,
+REST API, or MCP boundary. The public production profile loads BGE-M3,
+BGE-reranker-v2-m3, and the included TMCRA checkpoint locally; third-party model
+weights are downloaded separately and remain subject to their upstream terms.
+
+See the complete [production model stack](docs/PRODUCTION_MODEL_STACK.md) for
+the request diagram, exact environment variables, retrieval sizes, local Qwen
+route, bring-your-own-model rules, and audio model path.
+
 ## Memory model
 
 Each write carries tenant, scope, actor, source application, timestamps, and
@@ -350,6 +378,7 @@ behavior, and how an operator deploys and runs it.
 |---|---|
 | [Application surfaces](docs/APPLICATIONS.md) | Web, desktop, Android, SDK, lifecycle-plugin, and MCP capabilities plus their implementation boundaries |
 | [API and runtime](docs/API_AND_RUNTIME.md) | Endpoint groups, durable write/recall lifecycle, isolation, performance controls, cost accounting, and recovery |
+| [Production model stack](docs/PRODUCTION_MODEL_STACK.md) | Writer, reviewer, embedding, reranker, planner, evidence compiler, outer-agent roles, exact configuration, and replacement boundaries |
 | [Integration and extension](docs/INTEGRATION_AND_EXTENSION.md) | Bring an existing memory system to TMCRA, dual-write safely, inject recall, and extend supported boundaries |
 | [Module capability matrix](docs/MODULES.md) | Verified, detailed functions, implementation entry points, run commands, and limitations for components 01–10 |
 | [Commercial modules](docs/COMMERCIAL_MODULES.md) | Tenants, accounts, plans, quota, cost, webhooks, retention, operations, and operator-owned commercial boundaries |
@@ -374,7 +403,8 @@ python -m pip install -r requirements-tmcra-service.txt
 
 # Install the component at an operator-controlled runtime location, then:
 cp deploy/tmcra-service.env.example /etc/tmcra/service.env
-# Create /etc/tmcra/writer.env with the operator's own provider credential.
+cp deploy/writer.env.example /etc/tmcra/writer.env
+# Replace every placeholder with operator-owned paths and credentials.
 # Keep both files outside Git.
 python ops/run_tmcra_service_preflight.py --env-file /etc/tmcra/service.env
 ~~~

@@ -70,6 +70,7 @@ python -m pip install -r requirements-tmcra-service.txt
 
 sudo install -d -m 700 /etc/tmcra
 sudo cp deploy/tmcra-service.env.example /etc/tmcra/service.env
+sudo cp deploy/writer.env.example /etc/tmcra/writer.env
 sudoedit /etc/tmcra/service.env
 sudoedit /etc/tmcra/writer.env
 
@@ -80,6 +81,13 @@ python ops/run_tmcra_service_preflight.py --env-file /etc/tmcra/service.env
 Git. Set the public HTTPS origin, state/model paths, CUDA device settings, and
 provider configuration in `service.env`. Do not publish either file, the state
 directory, or the bootstrap-key file.
+
+The exact Writer, reviewer, slow-graph, embedding, runtime-reranker,
+cross-encoder, recall-planner, evidence-compiler, and outer-agent boundaries are
+documented in [PRODUCTION_MODEL_STACK.md](PRODUCTION_MODEL_STACK.md). The
+service template declares `TMCRA_EMBEDDING_MODEL`, `TMCRA_CROSS_MODEL`,
+`TMCRA_CHECKPOINT`, and recall-pool GPU estimates explicitly; the Writer
+template contains only placeholders and must never be used unchanged.
 
 Install `deploy/tmcra-memory-api.service` on a systemd host. When systemd is
 not available, use `deploy/tmcra-memory-api-control.sh start`; its supervisor

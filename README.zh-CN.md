@@ -85,6 +85,29 @@ flowchart LR
 Tenant/Scope 绑定；浏览器不会获得生产 API 密钥，也不能任意选择 Scope。MCP 使用
 本地 stdio，凭证始终由宿主进程控制。
 
+## 生产模型栈
+
+TMCRA 不是某一个基础模型。原生记忆算法由本地开源检索模型、仓库内置 TMCRA reranker、
+Provider 或本地 Writer/Planner、确定性证据编译器，以及部署方自己的业务 Agent 共同组成。
+
+| 生产阶段 | 参考配置 | 实际职责 |
+|---|---|---|
+| 写入提取 | `deepseek-v4-flash` 或严格校验的本地 Qwen 路由 | 生成带 Actor/来源的原始记录与快速记忆断言 |
+| 审核与慢速图谱 | `deepseek-v4-pro`，Flash 承担首阶段；或本地 Qwen | 审核歧义写入，批量构建长期语义胶囊 |
+| 向量召回 | 本地 `BAAI/bge-m3` | 生成 1024 维 Query/证据向量候选 |
+| Cross Encoder | 本地 `BAAI/bge-reranker-v2-m3` | 对 Query/证据对进行最终重排 |
+| 本地学习排序 | 仓库内置 `tmcra_v3_reranker.pt` | 在本地融合 Cross Encoder、dense、graph、selection 与 recency 信号 |
+| 召回角色规划 | `deepseek-v4-flash` 或本地 Qwen | 为证据层分配角色，但不能删除原始证据池 |
+| 证据编译 | 确定性代码，不使用模型 | 绑定 Source ID，执行日期、计数、排序与集合运算 |
+| 业务 Agent / 答案 | 部署方选择 | 消费有限证据包；固定参考/评测答案链路使用 `gpt-5.4` |
+
+外层业务 Agent **不被 GPT-5.4 或 DeepSeek 锁定**。应用可以通过 SDK、生命周期 Adapter、
+REST API 或 MCP 使用自己的模型和 Agent 框架。公开生产配置在本地加载 BGE-M3、
+BGE-reranker-v2-m3 和内置 TMCRA checkpoint；第三方权重由部署方自行下载并遵守上游条款。
+
+完整请求图、环境变量、候选数量、本地 Qwen 路由、自有模型替换规则和语音模型链路见
+[生产模型栈详细说明](docs/PRODUCTION_MODEL_STACK.zh-CN.md)。
+
 ## 三层记忆模型
 
 每次写入都带 tenant、scope、actor、source application、时间戳和幂等边界。Tenant
@@ -187,6 +210,7 @@ GPU 显存**。实际容量仍取决于嵌入、重排和生成模型、并发�
 |---|---|
 | [应用端实现](docs/APPLICATIONS.md) | Web、桌面、Android、SDK、生命周期插件与 MCP 的功能和实现边界 |
 | [API 与运行时](docs/API_AND_RUNTIME.md) | 端点、可靠写入/召回、隔离、性能控制、成本与恢复 |
+| [生产模型栈](docs/PRODUCTION_MODEL_STACK.zh-CN.md) | Writer、Reviewer、Embedding、Reranker、Planner、证据编译器和业务 Agent 的配置与替换边界 |
 | [接入与扩展](docs/INTEGRATION_AND_EXTENSION.md) | 已有记忆系统接入、双写迁移、召回注入及扩展边界 |
 | [模块功能矩阵](docs/MODULES.md) | 已核对的 01–10 模块功能、实现入口、运行方式和限制 |
 | [商业模块](docs/COMMERCIAL_MODULES.md) | Tenant、账号、套餐、配额、成本、Webhook、保留策略和运营边界 |
