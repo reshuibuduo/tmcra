@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TMCRA Audio Memory</string>
+    <string name="title_activity_main">TMCRA Audio Memory</string>
+    <string name="package_name">com.tmcra.memory.mobile</string>
+    <string name="custom_url_scheme">com.tmcra.memory.mobile</string>
+    <string name="capture_channel_name">音频记忆采集</string>
+    <string name="capture_channel_description">在设备上持续检测语音并生成文字记忆</string>
+    <string name="reminder_channel_name">记忆提醒</string>
+</resources>

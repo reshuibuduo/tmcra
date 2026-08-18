@@ -1,0 +1,28 @@
+[Unit]
+Description=TMCRA API reverse tunnel to the public gateway
+Wants=network-online.target
+After=network-online.target tmcra-memory-api.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/ssh -N -T -p 22 -i /opt/tmcra/.ssh/tmcra_vm_reverse -o BatchMode=yes -o ExitOnForwardFailure=yes -o IdentitiesOnly=yes -o ConnectTimeout=10 -o ConnectionAttempts=3 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/opt/tmcra/.ssh/tmcra_vm_reverse_known_hosts -R 127.0.0.1:22019:127.0.0.1:2009 ubuntu@119.28.46.94
+Restart=always
+RestartSec=2s
+TimeoutStopSec=10s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

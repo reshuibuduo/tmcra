@@ -1,0 +1,13 @@
+node_modules/
+.build-cache/
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+*.log
+tmcra_service_state/

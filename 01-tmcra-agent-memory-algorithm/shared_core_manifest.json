@@ -1,0 +1,83 @@
+{
+  "schema_version": "tmcra.service.shared-core-manifest.1",
+  "service_version": "0.2.8",
+  "generated_on": "2026-08-17",
+  "algorithm_files": [
+    {
+      "path": "prepare_tmcra_v4_e2e_data.py",
+      "sha256": "68bdd34631a0897730926b5f8f68b87ee7352900446baba62d1615c961a53c96"
+    },
+    {
+      "path": "run_tmcra_v4_build.py",
+      "sha256": "33f53611fa19897ab09357b6e6e5951bccf05efafc350fdf5b014b8c4fb5c899"
+    },
+    {
+      "path": "run_tmcra_v4_compile_evidence.py",
+      "sha256": "d1b2a5d4011debf9ff99e0b4ee8d2fe3e2af75c5b8d4a75f9a7399b84a1f3f89"
+    },
+    {
+      "path": "tmp_tmcra_v2_lme_pipeline.py",
+      "sha256": "22768faa73f61050373791179f83a33595b46a3d9fb35476ef8054222a446cbd"
+    },
+    {
+      "path": "tmcra_v2_lme_pipeline.py",
+      "sha256": "b09afe18bcc888f02cad2a0985698210ff172ba9b5e77d9b4405e4146fa6bc60"
+    },
+    {
+      "path": "tmcra_v3_online_runtime.py",
+      "sha256": "75186638496fe9271b711e0ba76cb93b232a5684e75b565dfe4721bf821c0a12"
+    },
+    {
+      "path": "tmcra_v3_product_writer.py",
+      "sha256": "29ad8493caaf13223384fefe5c6ab9d7aa0eb73b110eade7c89576786e002af6"
+    },
+    {
+      "path": "tmcra_v3_recall_planner.py",
+      "sha256": "e01e814433562e7bd37fd56465a35fe84a3e096f3a3f37888b97140f2e9c233b"
+    },
+    {
+      "path": "tmcra_v3_slow_graph.py",
+      "sha256": "8246d27e094cdc8288e4d21b23c32cd4725e74c433a72505b2d3ce1dec3d306b"
+    },
+    {
+      "path": "tmcra_v4_batch_writer.py",
+      "sha256": "56142ecb4a4a60c0dac54b39b54eb8cd8763a63db8c994db40a54f18ac0e15f4"
+    },
+    {
+      "path": "tmcra_v4_cost_report.py",
+      "sha256": "e8c02aa3d7e1a7b3d721c55675d4e421c9bef92ca88ec9b13b650f8601e4833c"
+    },
+    {
+      "path": "tmcra_v4_evidence_operations.py",
+      "sha256": "5fb6f918b4977cceb1cf081ec0bfee0c7267b8c21d29ad27a8bde50560e7609c"
+    },
+    {
+      "path": "tmcra_v4_evidence_planner.py",
+      "sha256": "26b083a600f0e32f511ee430f54a04d87d9456d29ef61e1ca54e2416248d56c8"
+    },
+    {
+      "path": "tmcra_v4_online_runtime.py",
+      "sha256": "3477b8130e15f1bf3211ee82f471dba69439842da173d382f25ef8bcbcd4002f"
+    },
+    {
+      "path": "tmcra_v4_slow_graph.py",
+      "sha256": "2d0910105bf8a44630ce2f0147d2daf89bfc91c4b80d71cf3a35a9eaf31ed6eb"
+    },
+    {
+      "path": "tmcra_v4_recall_planner.py",
+      "sha256": "4875b34b28e040b393ff4374d2b6b640e0d34877e67600555ccce22525d230cc"
+    },
+    {
+      "path": "tmcra_v4_route_policy.py",
+      "sha256": "e670e2a6fe6d82af06a7f5da36f2595e8869684211cdaaf6242793a9ee482826"
+    },
+    {
+      "path": "tmcra_v4_task_contract.py",
+      "sha256": "c36555c2ec5f675c07c4fced84c12f43a840d165b9fd3eb1c7086c3b3d3ba21e"
+    },
+    {
+      "path": "tmcra_v4_typed_semantics.py",
+      "sha256": "367917528c80829a9b99ecebc1f9c533fb77f39753713b65abadbddb9c4e43e5"
+    }
+  ]
+}

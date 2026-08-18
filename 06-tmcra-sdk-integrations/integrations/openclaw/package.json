@@ -1,0 +1,39 @@
+{
+  "name": "@tmcra/openclaw-memory",
+  "version": "0.1.0",
+  "description": "Native OpenClaw lifecycle plugin for TMCRA memory recall and turn ingestion.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.22.3"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.7.1"
+  },
+  "openclaw": {
+    "extensions": ["./index.js"],
+    "runtimeExtensions": ["./index.js"],
+    "compat": {
+      "pluginApi": ">=2026.7.1",
+      "minGatewayVersion": "2026.7.1"
+    },
+    "build": {
+      "openclawVersion": "2026.7.1",
+      "pluginSdkVersion": "2026.7.1"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/harness.test.mjs",
+    "test:server": "node test/server-smoke.mjs"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "ids.js",
+    "queue.js",
+    "test/server-smoke.mjs",
+    "openclaw.plugin.json",
+    "README.md",
+    "INSTALL.md"
+  ]
+}

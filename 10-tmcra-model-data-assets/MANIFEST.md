@@ -1,0 +1,32 @@
+# TMCRA model & data assets manifest
+Models and datasets are NOT redistributed in this repository until
+redistribution rights are confirmed. This manifest lists artifacts,
+sources, and SHA-256 checksums; download scripts reference public
+sources only.
+
+## Models on build host (/opt/tmcra-models)
+13dcd6c31d9fec9d1d8e158702072f62d7fa7d312a64b9fe057bec9a08cfe41a  BAAI/bge-reranker-v2-m3/config.json
+1eef72430e7194a1e59680e635aed81ffa083f05668dbc5bb1c56c04c0999c38  BAAI/bge-m3/config_sentence_transformers.json
+21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08  BAAI/bge-m3/tokenizer.json
+26159e7ad065073448460117eb24b7a4572f6f4e78eadff65dc0a11c052449fa  BAAI/bge-m3/config.json
+34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930  BAAI/bge-reranker-v2-m3/.gitattributes
+66228fe6119341bee22481f050fbd638b85cd17617aedbafe891dc074a77adcd  BAAI/bge-reranker-v2-m3/TMCRA_MODEL_MANIFEST.json
+69564b696052886ed0ac63fa393e928384e0f8caada38c1f4864a9bfbf379c15  BAAI/bge-reranker-v2-m3/tokenizer.json
+7363a8ebd782ede400e72bb3e88c19248478eb6f280a7376d398fc2f22707b9a  BAAI/bge-m3/.gitattributes
+7e4c1cc848840aeccdd763458c18dd525eb0f795c992e00ebe9c28554e7db2d4  BAAI/bge-reranker-v2-m3/tokenizer_config.json
+84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf  BAAI/bge-m3/modules.json
+8c785abebea9ae3257b61681b4e6fd8365ceafde980c21970d001e834cf10835  BAAI/bge-m3/special_tokens_map.json
+8c785abebea9ae3257b61681b4e6fd8365ceafde980c21970d001e834cf10835  BAAI/bge-reranker-v2-m3/special_tokens_map.json
+8d81a22f8b6fb9bf6ee2705e2c68d087c8c709df1ede8e35562bac25aacca1cc  MemReader-4B.download-http.log
+a62b2b6784f990259fddef5f16388693a8043be4f69179e6a5257eeb3f9abac4  BAAI/bge-m3/tokenizer_config.json
+b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38  BAAI/bge-m3/pytorch_model.bin
+c887aa6dd2598f908bf0582ca7068cc816585c7a1b6a07df305b631ede0cb174  BAAI/bge-reranker-v2-m3/README.md
+cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865  BAAI/bge-m3/sentencepiece.bpe.model
+cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865  BAAI/bge-reranker-v2-m3/sentencepiece.bpe.model
+d9e3e081faff1eefb84019509b2f5558fd74c1a05a2c7db22f74174fcedb5286  BAAI/bge-reranker-v2-m3/model.safetensors
+eb9b44b13c0f52a3b3685c3b1cbdea1ba8b04bea123b98f61610048940776eb1  BAAI/bge-m3/sentence_bert_config.json
+f00a4f955948ac06806c31b48d52e78c1bec20fb77b17fdbf5becca29bf632ba  MemReader-4B.download.log
+## Public audio fixtures (sherpa-onnx speaker-segmentation release)
+bedf036caed208386c67b4ef4b11f83d74dd0d420b102163a1c33cd09cde7010  0-four-speakers-zh.wav
+f1c877dc01595e28be7147bf2fe38e5268147a868bf3fdb5c37b97f5940e21f3  1-two-speakers-en.wav
+ee9c33d34e8f0fda4b78277f609944a1565aa16e6e2146f4cb8f0efb0d70030b  2-two-speakers-en.wav

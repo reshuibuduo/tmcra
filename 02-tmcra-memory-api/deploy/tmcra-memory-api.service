@@ -1,0 +1,18 @@
+[Unit]
+Description=TMCRA Memory API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/tmcra
+EnvironmentFile=/opt/tmcra/deploy/tmcra-service.env
+# The public HTTPS endpoint is terminated by the existing gpuhome TLS reverse proxy.
+ExecStart=/opt/tmcra_env_20260713/bin/python -m tmcra_service
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

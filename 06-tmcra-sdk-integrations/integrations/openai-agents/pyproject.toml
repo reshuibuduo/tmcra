@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tmcra-openai-agents"
+version = "0.1.0"
+description = "OpenAI Agents SDK lifecycle integration for TMCRA"
+requires-python = ">=3.10"
+readme = "README.md"
+dependencies = ["tmcra-client>=0.3.0", "openai-agents>=0.18,<1"]
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.data-files]
+"share/tmcra-openai-agents" = ["README.md", "README.zh-CN.md", "INSTALL.md", "INSTALL.zh-CN.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

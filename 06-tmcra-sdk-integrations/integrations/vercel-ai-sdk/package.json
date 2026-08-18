@@ -1,0 +1,30 @@
+{
+  "name": "@tmcra/vercel-ai-sdk",
+  "version": "0.1.0",
+  "description": "TMCRA LanguageModelV3 middleware for the Vercel AI SDK",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": ["dist", "README.md", "README.zh-CN.md", "INSTALL.md", "INSTALL.zh-CN.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "peerDependencies": {
+    "@ai-sdk/provider": ">=4 <5",
+    "@tmcra/typescript": ">=0.3.0"
+  },
+  "devDependencies": {
+    "@ai-sdk/provider": "4.0.3",
+    "@tmcra/typescript": "file:../../sdk/typescript",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

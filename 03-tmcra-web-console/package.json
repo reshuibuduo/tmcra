@@ -1,0 +1,59 @@
+{
+  "name": "site-creator-vinext-starter",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "start": "vinext start",
+    "test": "npm run build && node --test tests/account-boundary.test.mjs tests/api-docs-contract.test.mjs tests/brand-assets-contract.test.mjs tests/desktop-release-contract.test.mjs tests/mobile-release-contract.test.mjs tests/device-authorization-contract.test.mjs tests/device-authorization-runtime.test.mjs tests/gpuhome-loopback-binding.test.mjs tests/internal-bootstrap-contract.test.mjs tests/internal-operations.test.mjs tests/internal-schema.test.mjs tests/memory-graph-contract.test.mjs tests/personal-api-keys-contract.test.mjs tests/personal-chat-contract.test.mjs tests/personal-chat-preview-boundary.test.mjs tests/personal-voice-contract.test.mjs tests/personal-export-contract.test.mjs tests/personal-knowledge-contract.test.mjs tests/personal-memory-control-contract.test.mjs tests/personal-integrations-contract.test.mjs tests/personal-history-import-contract.test.mjs",
+    "test:security": "node tests/run-internal-security.mjs && python tests/test_gpuhome_proxy.py",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.30",
+    "@assistant-ui/react": "^0.15.14",
+    "@assistant-ui/react-ai-sdk": "^1.4.5",
+    "@tmcra/typescript": "file:../../sdk/typescript",
+    "@tmcra/vercel-ai-sdk": "file:../../integrations/vercel-ai-sdk",
+    "ai": "^7.0.65",
+    "cytoscape": "^3.34.0",
+    "cytoscape-elk": "^2.3.0",
+    "drizzle-orm": "0.45.2",
+    "graphology": "^0.26.0",
+    "next": "16.2.10",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "sigma": "^3.0.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.45.0",
+    "@cloudflare/workers-types": "^5.20260715.1",
+    "@tailwindcss/postcss": "4.2.1",
+    "@tmcra/miniflare-loopback-api-plugin": "file:deploy/gpuhome/miniflare-loopback-api-plugin",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.10",
+    "react-server-dom-webpack": "19.2.6",
+    "tailwindcss": "4.2.1",
+    "typescript": "5.9.3",
+    "vinext": "0.0.50",
+    "vite": "8.1.4",
+    "wrangler": "4.111.0"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.10"
+    }
+  },
+  "type": "module"
+}

@@ -1,0 +1,33 @@
+[Unit]
+Description=TMCRA official website
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/tmcra-release/current
+Environment=TMCRA_DEPLOY_ENV=/opt/tmcra-release/shared/deployment.env
+ExecStart=/usr/bin/python3 -u /opt/tmcra-release/current/deploy/gpuhome/supervisor.py
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+KillMode=mixed
+UMask=0077
+LimitNOFILE=65535
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+ReadWritePaths=/opt/tmcra-release/shared
+MemoryHigh=1400M
+
+[Install]
+WantedBy=multi-user.target

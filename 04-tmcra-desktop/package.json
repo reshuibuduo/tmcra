@@ -1,0 +1,95 @@
+{
+  "name": "tmcra-memory-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TMCRA Memory desktop installer and account console for Codex",
+  "author": "TMCRA",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "src/main.mjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "generate:icon": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-icon.ps1",
+    "sync:resources": "node scripts/sync-resources.mjs",
+    "verify:resources": "npm run sync:resources && node scripts/verify-build-inputs.mjs",
+    "pack:win": "npm run test && npm run verify:resources && electron-builder --dir --win --x64",
+    "dist:win": "npm run test && npm run verify:resources && electron-builder --win nsis --x64",
+    "publish:win": "node scripts/publish-release.mjs"
+  },
+  "devDependencies": {
+    "electron": "43.1.1",
+    "electron-builder": "26.15.3"
+  },
+  "tmcra": {
+    "pluginArchive": "tmcra-codex-latest.zip",
+    "pluginReleaseManifest": "tmcra-codex-release.json",
+    "fallbackPluginVersion": "0.1.3",
+    "authorizationBaseUrl": "https://euvbyqa1jpvdm7yq-2000.sc01-webservice.gpuhome.cc:8443",
+    "consolePath": "/personal",
+    "allowedAuthenticationOrigins": [
+      "https://chatgpt.com",
+      "https://auth.openai.com"
+    ]
+  },
+  "build": {
+    "appId": "com.tmcra.memory",
+    "productName": "TMCRA Memory",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "package.json",
+      "src/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/tmcra-codex-latest.zip",
+        "to": "tmcra-codex-latest.zip"
+      },
+      {
+        "from": "resources/tmcra-codex-release.json",
+        "to": "tmcra-codex-release.json"
+      },
+      {
+        "from": "scripts/expand-plugin.ps1",
+        "to": "desktop-scripts/expand-plugin.ps1"
+      },
+      {
+        "from": "scripts/find-codex.ps1",
+        "to": "desktop-scripts/find-codex.ps1"
+      },
+      {
+        "from": "scripts/verify-codex-plugin.ps1",
+        "to": "desktop-scripts/verify-codex-plugin.ps1"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "TMCRA-Memory-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "TMCRA Memory",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    }
+  }
+}

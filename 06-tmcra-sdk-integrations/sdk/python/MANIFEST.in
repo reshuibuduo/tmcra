@@ -1,0 +1,4 @@
+include README.md
+include README.zh-CN.md
+include INSTALL.md
+include INSTALL.zh-CN.md

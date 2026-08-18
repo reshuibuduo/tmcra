@@ -1,0 +1,37 @@
+{
+  "name": "tmcra-memory",
+  "version": "0.2.9",
+  "description": "Automatic long-term memory recall and capture for Codex.",
+  "author": {
+    "name": "TMCRA"
+  },
+  "homepage": "https://tmcra.com",
+  "keywords": [
+    "memory",
+    "mcp",
+    "codex",
+    "agent"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "TMCRA Memory",
+    "shortDescription": "Automatic long-term memory for coding agents.",
+    "longDescription": "Recall relevant TMCRA memory before Codex answers, capture completed turns, and preserve long-running tasks across automatic context compaction with redacted tool-progress checkpoints. Includes explicit MCP tools for inspecting recall, ingestion, jobs, and runtime status.",
+    "developerName": "TMCRA",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "Show the TMCRA memories that were injected for my latest completed answer.",
+      "Show which TMCRA memories are relevant to this task.",
+      "Remember this decision for future coding sessions.",
+      "Check whether the latest TMCRA memory write completed.",
+      "Show TMCRA installation and lifecycle status."
+    ],
+    "brandColor": "#49E5C2"
+  },
+  "mcpServers": "./.mcp.json"
+}

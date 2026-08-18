@@ -1,0 +1,210 @@
+import java.security.MessageDigest
+
+apply plugin: 'com.android.application'
+
+def requestedAbi = (project.findProperty('tmcraTestAbi') ?: 'arm64-v8a').toString()
+def supportedAbis = ['arm64-v8a', 'x86_64']
+if (!supportedAbis.contains(requestedAbi)) {
+    throw new GradleException(
+            "Unsupported tmcraTestAbi '${requestedAbi}'. Expected one of ${supportedAbis.join(', ')}")
+}
+
+def generatedModelAssets = file("${buildDir}/generated/tmcra-model-assets")
+def fileSha256 = { File input ->
+    MessageDigest digest = MessageDigest.getInstance('SHA-256')
+    input.withInputStream { stream ->
+        byte[] buffer = new byte[1024 * 1024]
+        int count
+        while ((count = stream.read(buffer)) >= 0) digest.update(buffer, 0, count)
+    }
+    digest.digest().collect { String.format('%02x', it & 0xff) }.join()
+}
+
+def modelSpecs = [
+        [
+                key: 'DiarizationModel',
+                outputName: 'tmcra-pyannote-segmentation-3.0.int8.onnx',
+                sha256: 'd582f4b4c6b48205de7e0643c57df0df5615a3c176189be3fc461e9d18827b5d',
+                pathEnv: 'TMCRA_DIARIZATION_MODEL_PATH',
+                urlEnv: 'TMCRA_DIARIZATION_MODEL_URL',
+                url: 'https://huggingface.co/csukuangfj/sherpa-onnx-pyannote-segmentation-3-0/resolve/main/model.int8.onnx',
+        ],
+        [
+                key: 'SpeakerModel',
+                outputName: '3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx',
+                sha256: 'bf1a75b9930474cf3389ef415e6e5d38ca96fea4a3a00f7e301d080a58ee2239',
+                pathEnv: 'TMCRA_SPEAKER_MODEL_PATH',
+                urlEnv: 'TMCRA_SPEAKER_MODEL_URL',
+                url: 'https://huggingface.co/csukuangfj/speaker-embedding-models/resolve/main/3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx',
+        ],
+        [
+                key: 'AsrModel',
+                outputName: 'tmcra-asr-zipformer-small-zh-2025-04.int8.onnx',
+                sha256: '68c9c943840f7d9cf3e8a4970ba50f404feb5277f611fa82b7e72267786fa84a',
+                pathEnv: 'TMCRA_ASR_MODEL_PATH',
+                urlEnv: 'TMCRA_ASR_MODEL_URL',
+                url: 'https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01/resolve/main/model.int8.onnx',
+        ],
+        [
+                key: 'AsrTokens',
+                outputName: 'tmcra-asr-zipformer-small-zh-2025-04.tokens.txt',
+                sha256: '6fed8c6c248516f38e7faa19404b57413e8ce259f1cbc1fa4aebc86eac32fdfd',
+                pathEnv: 'TMCRA_ASR_TOKENS_PATH',
+                urlEnv: 'TMCRA_ASR_TOKENS_URL',
+                url: 'https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01/resolve/main/tokens.txt',
+        ],
+]
+
+def modelFetchTasks = []
+modelSpecs.each { spec ->
+    File cacheFile = file("${rootProject.projectDir}/../.build-cache/models/${spec.outputName}")
+    def task = tasks.register("fetch${spec.key}") {
+        outputs.file(cacheFile)
+        outputs.upToDateWhen {
+            cacheFile.isFile() && fileSha256(cacheFile) == spec.sha256
+        }
+        doLast {
+            if (cacheFile.isFile() && fileSha256(cacheFile) == spec.sha256) return
+            cacheFile.parentFile.mkdirs()
+            File temporary = new File(cacheFile.parentFile, "${spec.outputName}.partial")
+            if (temporary.exists() && !temporary.delete()) {
+                throw new GradleException("Unable to replace partial model asset ${spec.outputName}")
+            }
+            String localPath = System.getenv(spec.pathEnv) ?: ''
+            if (localPath) {
+                File source = file(localPath)
+                if (!source.isFile()) throw new GradleException("${spec.pathEnv} is not a file")
+                source.withInputStream { input ->
+                    temporary.withOutputStream { output -> input.transferTo(output) }
+                }
+            } else {
+                String assetUrl = System.getenv(spec.urlEnv) ?: spec.url
+                logger.lifecycle("Downloading pinned TMCRA model asset ${spec.outputName}")
+                URLConnection connection = new URL(assetUrl).openConnection()
+                connection.connectTimeout = 30_000
+                connection.readTimeout = 300_000
+                connection.setRequestProperty('User-Agent', 'TMCRA-Android-Build/0.2.0')
+                connection.inputStream.withCloseable { input ->
+                    temporary.withOutputStream { output -> input.transferTo(output) }
+                }
+            }
+            String actual = fileSha256(temporary)
+            if (actual != spec.sha256) {
+                temporary.delete()
+                throw new GradleException("Model checksum mismatch for ${spec.outputName}: ${actual}")
+            }
+            java.nio.file.Files.move(
+                    temporary.toPath(),
+                    cacheFile.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
+    modelFetchTasks.add(task)
+}
+
+def stageOnDeviceModels = tasks.register('stageOnDeviceModels') {
+    dependsOn modelFetchTasks
+    inputs.files modelSpecs.collect { spec ->
+        file("${rootProject.projectDir}/../.build-cache/models/${spec.outputName}")
+    }
+    outputs.dir(generatedModelAssets)
+    doLast {
+        delete generatedModelAssets
+        generatedModelAssets.mkdirs()
+        modelSpecs.each { spec ->
+            copy {
+                from file("${rootProject.projectDir}/../.build-cache/models/${spec.outputName}")
+                into generatedModelAssets
+            }
+        }
+    }
+}
+
+android {
+    namespace = "com.tmcra.memory.mobile"
+    compileSdk = rootProject.ext.compileSdkVersion
+    buildToolsVersion "36.0.0"
+    defaultConfig {
+        applicationId "com.tmcra.memory.mobile"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 2
+        versionName "0.2.0"
+        // The first hardware-validation build targets modern Android phones.
+        // x86_64 is available only through -PtmcraTestAbi=x86_64 for the server emulator gate.
+        // Release invocations keep the default arm64-v8a ABI.
+        ndk {
+            abiFilters requestedAbi
+        }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+            noCompress 'onnx'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    signingConfigs {
+        release {
+            def storePath = System.getenv('TMCRA_ANDROID_KEYSTORE')
+            if (storePath) {
+                storeFile file(storePath)
+                storePassword System.getenv('TMCRA_ANDROID_STORE_PASSWORD')
+                keyAlias System.getenv('TMCRA_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('TMCRA_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            // Keep developer builds beside an already installed production-signed app.
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        release {
+            def releaseRequested = gradle.startParameter.taskNames.any {
+                it.toLowerCase(Locale.ROOT).contains('release')
+            }
+            if (releaseRequested && !System.getenv('TMCRA_ANDROID_KEYSTORE')) {
+                throw new GradleException('Release signing environment is required for TMCRA mobile release builds.')
+            }
+            if (System.getenv('TMCRA_ANDROID_KEYSTORE')) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.assets.srcDir generatedModelAssets
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name ==~ /merge.*Assets/) task.dependsOn(stageOnDeviceModels)
+}
+
+dependencies {
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    // sherpa-onnx as a local AAR keeps the build independent of jitpack reachability on CN networks.
+    implementation files('libs/sherpa-onnx-v1.13.4.aar')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+}
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+

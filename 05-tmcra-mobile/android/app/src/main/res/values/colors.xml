@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#17211C</color>
+    <color name="colorPrimaryDark">#0E1511</color>
+    <color name="colorAccent">#2D6A4F</color>
+    <color name="tmcra_surface">#F4F1EB</color>
+    <color name="tmcra_ink">#171A18</color>
+    <color name="tmcra_muted">#626A64</color>
+    <color name="tmcra_line">#D9D5CC</color>
+    <color name="tmcra_signal">#2D6A4F</color>
+    <color name="tmcra_warning">#9A5B12</color>
+</resources>

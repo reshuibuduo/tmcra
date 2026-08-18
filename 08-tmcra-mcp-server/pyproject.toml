@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tmcra-mcp-server"
+version = "0.1.0"
+description = "Model Context Protocol server for the TMCRA Memory API"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "httpx>=0.27,<1",
+  "mcp>=1.28.1,<2",
+  "pydantic>=2.8,<3",
+]
+
+[project.scripts]
+tmcra-mcp = "tmcra_mcp.server:main"
+tmcra-mcp-smoke = "tmcra_mcp.server_smoke:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tmcra_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

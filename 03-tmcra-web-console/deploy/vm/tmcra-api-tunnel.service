@@ -1,0 +1,34 @@
+[Unit]
+Description=TMCRA restricted API tunnel
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=tmcra
+Group=tmcra
+Environment=TMCRA_API_SSH_PORT=22
+Environment=TMCRA_API_SSH_HOST=memory-api.example.invalid
+Environment=TMCRA_API_SSH_USER=tmcra
+Environment=TMCRA_API_SSH_KEY_PATH=/etc/tmcra/ssh/api-tunnel
+Environment=TMCRA_API_SSH_KNOWN_HOSTS_PATH=/etc/tmcra/ssh/api-known-hosts
+EnvironmentFile=-/opt/tmcra-release/shared/api-tunnel.env
+ExecStart=/usr/bin/ssh -N -T -p ${TMCRA_API_SSH_PORT} -i ${TMCRA_API_SSH_KEY_PATH} -o BatchMode=yes -o ExitOnForwardFailure=yes -o IdentitiesOnly=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -o UserKnownHostsFile=${TMCRA_API_SSH_KNOWN_HOSTS_PATH} -L 127.0.0.1:22009:127.0.0.1:2009 ${TMCRA_API_SSH_USER}@${TMCRA_API_SSH_HOST}
+Restart=always
+RestartSec=3s
+TimeoutStopSec=10s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

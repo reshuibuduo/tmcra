@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>TMCRA.AgentFramework</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Microsoft Agent Framework AIContextProvider for TMCRA memory.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI.Abstractions" Version="1.13.0" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+    <None Include="..\..\README.zh-CN.md" Pack="true" PackagePath="README.zh-CN.md" />
+    <None Include="..\..\INSTALL.md" Pack="true" PackagePath="INSTALL.md" />
+    <None Include="..\..\INSTALL.zh-CN.md" Pack="true" PackagePath="INSTALL.zh-CN.md" />
+  </ItemGroup>
+</Project>

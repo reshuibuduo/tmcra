@@ -1,0 +1,20 @@
+name: tmcra-hermes
+version: 0.1.0
+description: "TMCRA recall and completed-turn ingestion for Hermes Agent"
+kind: exclusive
+requires_env:
+  - name: TMCRA_BASE_URL
+    description: "HTTPS base URL for the TMCRA memory service"
+    secret: false
+  - name: TMCRA_TENANT_ID
+    description: "TMCRA tenant identifier"
+    secret: false
+  - name: TMCRA_API_KEY
+    description: "TMCRA API key, kept in the Hermes host environment"
+    secret: true
+  - name: TMCRA_IDENTITY_SECRET
+    description: "HMAC secret used to derive opaque scope/session/message IDs"
+    secret: true
+hooks:
+  - prefetch
+  - sync_turn

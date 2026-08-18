@@ -1,0 +1,28 @@
+{
+  "name": "tmcra-memory-mobile",
+  "version": "0.2.0",
+  "private": true,
+  "description": "TMCRA native Android audio-memory client with local speaker identity and text-only remote memory retrieval",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "sync": "cap sync",
+    "android:debug": "npm run test && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android.ps1 -Task assembleDebug",
+    "android:release": "npm run test && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android.ps1 -Task assembleRelease",
+    "android:bundle": "npm run test && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android.ps1 -Task bundleRelease",
+    "publish:android": "node scripts/publish-android-release.mjs",
+    "ios:sync": "npm run test && cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/core": "8.5.0",
+    "@capacitor/ios": "8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0"
+  }
+}

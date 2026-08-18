@@ -1,0 +1,63 @@
+{
+  "id": "tmcra-openclaw",
+  "name": "TMCRA Memory",
+  "description": "Recalls TMCRA memory before OpenClaw model execution and ingests completed turns.",
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "baseUrl": {
+        "type": "string",
+        "description": "HTTPS base URL of the TMCRA Memory API. May be supplied by TMCRA_BASE_URL instead."
+      },
+      "tenantId": {
+        "type": "string",
+        "description": "Server-side TMCRA tenant identifier. Do not use an end-user identifier."
+      },
+      "scopeNamespace": {
+        "type": "string",
+        "default": "openclaw"
+      },
+      "queuePath": {
+        "type": "string",
+        "description": "Local durable pending-ingest JSON path. Defaults under OPENCLAW_STATE_DIR or ~/.openclaw."
+      },
+      "requestTimeoutMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 600000,
+        "default": 15000
+      },
+      "maxContextChars": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 100000,
+        "default": 32000
+      },
+      "maxWindows": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 24,
+        "default": 8
+      },
+      "evidenceMode": {
+        "type": "string",
+        "enum": ["raw", "auto", "compiled"],
+        "default": "auto"
+      },
+      "drainIntervalMs": {
+        "type": "integer",
+        "minimum": 10000,
+        "maximum": 86400000,
+        "default": 60000
+      }
+    }
+  }
+}

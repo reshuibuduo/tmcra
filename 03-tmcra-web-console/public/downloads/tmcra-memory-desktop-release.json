@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "product": "TMCRA Memory",
+  "platform": "windows",
+  "architecture": "x64",
+  "version": "0.2.12",
+  "channel": "preview",
+  "installer": {
+    "latestPath": "/downloads/TMCRA-Memory-Setup-latest.exe",
+    "bytes": 100538780,
+    "sha256": "718a0a5bcca83a3d8008a05d7e620294736c5950c5cd7606d0511b9640c11a59",
+    "authenticodeSigned": false
+  },
+  "updater": {
+    "feedPath": "/downloads/desktop/windows/x64",
+    "artifacts": [
+      {
+        "name": "latest.yml",
+        "path": "/downloads/desktop/windows/x64/latest.yml",
+        "bytes": 364,
+        "sha256": "d16273583c7f070a6791976b3fb044c05c3505a93996dacc692830729e5081e1",
+        "contentType": "application/x-yaml; charset=utf-8"
+      },
+      {
+        "name": "TMCRA-Memory-Setup-0.2.12-x64.exe",
+        "path": "/downloads/desktop/windows/x64/TMCRA-Memory-Setup-0.2.12-x64.exe",
+        "bytes": 100538780,
+        "sha256": "718a0a5bcca83a3d8008a05d7e620294736c5950c5cd7606d0511b9640c11a59",
+        "contentType": "application/vnd.microsoft.portable-executable"
+      },
+      {
+        "name": "TMCRA-Memory-Setup-0.2.12-x64.exe.blockmap",
+        "path": "/downloads/desktop/windows/x64/TMCRA-Memory-Setup-0.2.12-x64.exe.blockmap",
+        "bytes": 107055,
+        "sha256": "49c03fe1abd00b6ae49c37ebe3e3d34b3d72f4d535052aa3968c3dbd490a5cf0",
+        "contentType": "application/octet-stream"
+      }
+    ]
+  },
+  "bundledCodexPlugin": {
+    "version": "0.2.10",
+    "sha256": "0ac6fdbb6018a367428f9d49afe4a4bbfc140ca4cc69cad6781afb731c308dff"
+  },
+  "generatedAtUtc": "2026-08-14T03:50:11.394Z"
+}

@@ -1,0 +1,30 @@
+# TMCRA mobile
+node_modules/
+.failed-node-modules-*/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+ios/App/DerivedData/
+.build-cache/
+
+# Android Studio / IDE
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Keystores and secrets
+*.jks
+*.keystore
+*.key
+google-services.json
+
+# JVM crash logs
+hs_err_pid*.log
+replay_pid*.log
+
+# OS
+Thumbs.db
+.DS_Store

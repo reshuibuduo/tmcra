@@ -1,0 +1,5 @@
+node_modules/
+dist/
+resources/*.zip
+resources/tmcra-codex-release.json
+!resources/README.md

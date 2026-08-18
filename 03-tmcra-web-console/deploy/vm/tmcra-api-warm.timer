@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep the TMCRA API reverse-proxy path warm
+
+[Timer]
+OnBootSec=10s
+OnUnitActiveSec=30s
+AccuracySec=5s
+Unit=tmcra-api-warm.service
+
+[Install]
+WantedBy=timers.target

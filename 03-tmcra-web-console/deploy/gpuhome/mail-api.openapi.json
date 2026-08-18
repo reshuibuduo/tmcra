@@ -1,0 +1,508 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TMCRA Website Mail APIs",
+    "version": "1.0.0",
+    "description": "Website verification and consent-based campaign APIs. 官网邮箱验证与基于订阅同意的推广邮件 API。"
+  },
+  "servers": [
+    {
+      "url": "https://tmcra.com"
+    }
+  ],
+  "paths": {
+    "/api/auth/v1/email-verifications": {
+      "post": {
+        "summary": "Request an email verification code / 请求邮箱验证码",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted without disclosing account existence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/auth/v1/email-verifications/confirm": {
+      "post": {
+        "summary": "Confirm a verification code / 确认验证码",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailConfirmation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified and website session created"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/account/v1/email-preferences": {
+      "get": {
+        "summary": "Read email preferences / 读取邮件偏好",
+        "security": [
+          {
+            "WebsiteSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current preference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update marketing opt-in / 更新推广邮件订阅",
+        "security": [
+          {
+            "WebsiteSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferenceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated preference"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/email/unsubscribe": {
+      "get": {
+        "summary": "Show unsubscribe confirmation / 显示退订确认页",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UnsubscribeToken"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTML confirmation page"
+          }
+        }
+      },
+      "post": {
+        "summary": "Unsubscribe from promotional email / 退订推广邮件",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UnsubscribeToken"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unsubscribed"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/internal/email/v1/campaigns": {
+      "get": {
+        "summary": "List campaigns / 列出推广活动",
+        "security": [
+          {
+            "MarketingBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest campaigns"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Queue a consent-based campaign / 将推广活动加入队列",
+        "security": [
+          {
+            "MarketingBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CampaignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "New campaign queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Existing identical idempotent campaign"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/internal/email/v1/campaigns/{campaign_id}": {
+      "get": {
+        "summary": "Read campaign status / 读取推广活动状态",
+        "security": [
+          {
+            "MarketingBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^cmp_[0-9a-f]{32}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campaign status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "WebsiteSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-tmcra_session"
+      },
+      "MarketingBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "opaque server token"
+      }
+    },
+    "parameters": {
+      "UnsubscribeToken": {
+        "name": "token",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "schemas": {
+      "EmailRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          }
+        }
+      },
+      "EmailConfirmation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EmailRequest"
+          },
+          {
+            "type": "object",
+            "required": [
+              "code"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[0-9]{6}$"
+              }
+            }
+          }
+        ]
+      },
+      "Accepted": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "status": {
+            "const": "accepted"
+          }
+        }
+      },
+      "PreferenceUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "marketing"
+        ],
+        "properties": {
+          "marketing": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PreferenceResponse": {
+        "type": "object",
+        "required": [
+          "ok",
+          "preferences"
+        ],
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "preferences": {
+            "type": "object",
+            "required": [
+              "marketing"
+            ],
+            "properties": {
+              "marketing": {
+                "type": "boolean"
+              },
+              "opted_in_at": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opted_out_at": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "CampaignRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "idempotency_key",
+          "subject",
+          "text_body",
+          "html_body"
+        ],
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$"
+          },
+          "audience": {
+            "const": "all_opted_in",
+            "default": "all_opted_in"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "text_body": {
+            "type": "string",
+            "maxLength": 100000
+          },
+          "html_body": {
+            "type": "string",
+            "maxLength": 200000
+          }
+        }
+      },
+      "Campaign": {
+        "type": "object",
+        "required": [
+          "id",
+          "idempotency_key",
+          "state",
+          "recipient_count",
+          "sent_count",
+          "failed_count",
+          "skipped_count",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^cmp_[0-9a-f]{32}$"
+          },
+          "idempotency_key": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "completed_with_errors"
+            ]
+          },
+          "recipient_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sent_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failed_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "skipped_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "integer"
+          },
+          "started_at": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "completed_at": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "CampaignResponse": {
+        "type": "object",
+        "required": [
+          "ok",
+          "campaign"
+        ],
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "campaign": {
+            "$ref": "#/components/schemas/Campaign"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Structured error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "ok",
+                "error"
+              ],
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "error": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

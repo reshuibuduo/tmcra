@@ -1,0 +1,43 @@
+{
+  "name": "@tmcra/typescript",
+  "version": "0.6.0",
+  "description": "Zero-runtime-dependency TypeScript client for the TMCRA Memory API",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.17"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "scripts/server-smoke.mjs",
+    "README.md",
+    "README.zh-CN.md",
+    "INSTALL.md",
+    "INSTALL.zh-CN.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "pretest": "npm run build",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "test:server": "node scripts/server-smoke.mjs",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm test && npm run typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "homepage": "https://tmcra.com",
+  "publishConfig": {
+    "access": "public"
+  }
+}

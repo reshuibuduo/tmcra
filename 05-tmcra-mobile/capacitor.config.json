@@ -1,0 +1,20 @@
+{
+  "appId": "com.tmcra.memory.mobile",
+  "appName": "TMCRA Memory",
+  "webDir": "www",
+  "server": {
+    "url": "https://tmcra.com/personal",
+    "cleartext": false,
+    "allowNavigation": [
+      "tmcra.com"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#F4F1EB"
+  },
+  "ios": {
+    "backgroundColor": "#F4F1EB",
+    "contentInset": "automatic"
+  }
+}

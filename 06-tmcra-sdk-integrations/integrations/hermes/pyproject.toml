@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tmcra-hermes-plugin"
+version = "0.1.0"
+description = "Native Hermes Agent MemoryProvider for TMCRA"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools]
+py-modules = ["tmcra_plugin", "server_smoke"]
+
+[project.scripts]
+tmcra-hermes-smoke = "server_smoke:main"
+
+[project.entry-points."hermes_agent.plugins"]
+tmcra-hermes = "tmcra_plugin"

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TMCRA Memory</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand" aria-label="TMCRA Memory">
+        <span class="brand-mark" aria-hidden="true"><img src="./assets/tmcra-mark.png" alt="" /></span>
+        <span class="brand-copy"><b>TMCRA</b><small>MEMORY / CODEX</small></span>
+      </div>
+      <div class="top-actions">
+        <span class="local-only" data-i18n="localOnly">本地安全控制</span>
+        <button id="languageToggle" class="language-toggle" type="button" aria-label="Switch language">
+          <span>中</span><span>EN</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="primary-column">
+        <div class="eyebrow"><span></span><b data-i18n="eyebrow">TMCRA WINDOWS 应用</b></div>
+        <h1 data-i18n="heroTitle">让 Codex 记住项目，<br />但不把项目混在一起。</h1>
+        <p class="hero-copy" data-i18n="heroCopy">
+          一次完成安装、登录和连接。每个项目保留自己的记忆边界，同一项目可以跨会话继续工作。
+        </p>
+
+        <section class="status-card" aria-live="polite">
+          <div class="status-card-head">
+            <span id="connectionPill" class="connection-pill" data-status="idle">
+              <i></i><span id="connectionLabel">尚未连接</span>
+            </span>
+            <span class="version">WINDOWS x64 · v0.1.0</span>
+          </div>
+          <h2 id="phaseTitle">准备连接 Codex</h2>
+          <p id="phaseDescription">应用会检查 Codex、安装记忆插件，再在安全窗口内完成登录。</p>
+
+          <div id="errorPanel" class="message-panel error-panel" hidden>
+            <strong id="errorTitle">连接未完成</strong>
+            <p id="errorDetail"></p>
+          </div>
+
+          <div id="authorizationPanel" class="message-panel authorization-panel" hidden>
+            <div>
+              <span data-i18n="authorizationCode">本次授权码</span>
+              <strong id="authorizationCode">—</strong>
+            </div>
+            <p data-i18n="authorizationHelp">请在应用打开的 TMCRA 登录窗口中确认授权。关闭窗口不会泄露凭据，可以重新打开。</p>
+            <button id="openAuthorizationButton" class="text-button" type="button" data-i18n="reopenAuthorization">重新打开授权窗口 →</button>
+          </div>
+
+          <div class="button-row">
+            <button id="setupButton" class="button primary-button" type="button">
+              <span id="setupButtonLabel">登录并连接 Codex</span><i aria-hidden="true">→</i>
+            </button>
+            <button id="cancelButton" class="button secondary-button" type="button" hidden data-i18n="cancelSetup">取消本次连接</button>
+            <button id="consoleButton" class="button secondary-button" type="button" data-i18n="openConsole">打开个人控制台</button>
+          </div>
+        </section>
+
+        <section class="security-note">
+          <span class="shield" aria-hidden="true">⌁</span>
+          <div>
+            <strong data-i18n="securityTitle">Token 不经过应用界面</strong>
+            <p data-i18n="securityCopy">授权凭据由安装进程直接写入当前 Windows 用户的受保护配置。应用只接收步骤状态，不读取、展示或复制 Token。</p>
+          </div>
+        </section>
+      </section>
+
+      <aside class="progress-panel" aria-labelledby="progressTitle">
+        <div class="panel-heading">
+          <div>
+            <span>SETUP FLOW</span>
+            <h2 id="progressTitle" data-i18n="progressTitle">连接进度</h2>
+          </div>
+          <span class="step-count">4 STEPS</span>
+        </div>
+
+        <ol class="step-list">
+          <li class="step" data-step="environment" data-status="pending">
+            <div class="step-index"><span>01</span><i></i></div>
+            <div class="step-copy">
+              <div><h3 data-i18n="stepEnvironment">检查 Codex</h3><span class="step-status">等待</span></div>
+              <p data-i18n="stepEnvironmentCopy">确认本机 Codex 支持插件安装。</p>
+            </div>
+          </li>
+          <li class="step" data-step="plugin" data-status="pending">
+            <div class="step-index"><span>02</span><i></i></div>
+            <div class="step-copy">
+              <div><h3 data-i18n="stepPlugin">安装记忆插件</h3><span class="step-status">等待</span></div>
+              <p data-i18n="stepPluginCopy">校验安装包，并放入稳定的用户目录。</p>
+            </div>
+          </li>
+          <li class="step" data-step="authorization" data-status="pending">
+            <div class="step-index"><span>03</span><i></i></div>
+            <div class="step-copy">
+              <div><h3 data-i18n="stepAuthorization">登录并验证远端服务</h3><span class="step-status">等待</span></div>
+              <p data-i18n="stepAuthorizationCopy">批准这台设备，再用不计费的身份与服务能力检查确认远端可用。</p>
+            </div>
+          </li>
+          <li class="step" data-step="hooks" data-status="pending">
+            <div class="step-index"><span>04</span><i></i></div>
+            <div class="step-copy">
+              <div><h3 data-i18n="stepHooks">在 Codex 确认 Hooks</h3><span class="step-status">等待</span></div>
+              <p data-i18n="stepHooksCopy">重启 Codex，逐项审阅并信任三项生命周期 Hook。</p>
+            </div>
+          </li>
+        </ol>
+
+        <section id="hookBoundary" class="hook-boundary" hidden>
+          <span>USER CONTROL</span>
+          <h3 data-i18n="hookBoundaryTitle">最后一步必须由你确认</h3>
+          <p data-i18n="hookBoundaryCopy">应用不能替你在 Codex 中批准 Hook。重启 Codex、启用 TMCRA Memory，并检查三项权限请求后再确认下面的按钮。</p>
+          <button id="acknowledgeHooksButton" class="text-button" type="button" data-i18n="acknowledgeHooks">我已在 Codex 完成确认 →</button>
+          <small data-i18n="acknowledgeBoundary">这只记录你的确认，不代表应用绕过或自动检测了 Codex 的信任决定。</small>
+        </section>
+
+        <section class="console-summary">
+          <div class="console-icon" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div>
+            <strong data-i18n="consoleTitle">个人控制台</strong>
+            <p data-i18n="consoleCopy">登录后查看服务端统计的额度、剩余额度、用量、连接和记忆图。</p>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </body>
+</html>

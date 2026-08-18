@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "product": "TMCRA Memory",
+  "platform": "macos",
+  "architecture": "x64",
+  "version": "0.2.13",
+  "channel": "preview",
+  "installer": {
+    "latestPath": "/downloads/TMCRA-Memory-latest-x64.dmg",
+    "bytes": 123030139,
+    "sha256": "552dbdd8fe7b89cb1138317d2a2fe2b40160d06e2b8ce46ff2ecafb92c8422d7",
+    "codeSigned": false,
+    "notarized": false
+  },
+  "updater": {
+    "enabled": false,
+    "feedPath": "/downloads/desktop/macos/x64",
+    "artifacts": [
+      {
+        "name": "latest-mac.yml",
+        "path": "/downloads/desktop/macos/x64/latest-mac.yml",
+        "bytes": 510,
+        "sha256": "3a9b773e97b415a94260f29ff0390f78ffd9937d7b0252d606ca5daa1be060fc",
+        "contentType": "application/x-yaml; charset=utf-8"
+      },
+      {
+        "name": "TMCRA-Memory-0.2.13-x64.dmg",
+        "path": "/downloads/desktop/macos/x64/TMCRA-Memory-0.2.13-x64.dmg",
+        "bytes": 123030139,
+        "sha256": "552dbdd8fe7b89cb1138317d2a2fe2b40160d06e2b8ce46ff2ecafb92c8422d7",
+        "contentType": "application/x-apple-diskimage"
+      },
+      {
+        "name": "TMCRA-Memory-0.2.13-x64.zip",
+        "path": "/downloads/desktop/macos/x64/TMCRA-Memory-0.2.13-x64.zip",
+        "bytes": 122824893,
+        "sha256": "05d02583e8efca5645595a8cde4fa4fce3a7bf55d2b5b78ec615e56b2b609ad8",
+        "contentType": "application/zip"
+      }
+    ]
+  },
+  "bundledCodexPlugin": {
+    "version": "0.2.10",
+    "sha256": "0ac6fdbb6018a367428f9d49afe4a4bbfc140ca4cc69cad6781afb731c308dff"
+  },
+  "generatedAtUtc": "2026-08-15T12:13:30.086Z"
+}

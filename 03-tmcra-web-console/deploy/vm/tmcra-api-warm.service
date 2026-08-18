@@ -1,0 +1,22 @@
+[Unit]
+Description=Warm the TMCRA API reverse-proxy path
+After=nginx.service tmcra-api-tunnel.service
+Requires=tmcra-api-tunnel.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+ExecStart=/usr/bin/curl --fail --silent --show-error --max-time 15 --resolve api.tmcra.com:443:127.0.0.1 https://api.tmcra.com/healthz --output /dev/null
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
