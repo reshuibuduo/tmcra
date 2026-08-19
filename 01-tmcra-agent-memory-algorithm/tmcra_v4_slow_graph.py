@@ -801,10 +801,12 @@ class DeepSeekProConfig(DeepSeekTierConfig):
 
 
 def _optional_config(prefix: str, model: str) -> DeepSeekTierConfig | None:
-    values = [os.getenv(prefix + suffix) for suffix in ("_BASE_URL", "_KEY_POOL", "_MAX_TOKENS")]
+    values = [os.getenv(prefix + suffix) for suffix in ("_BASE_URL", "_KEY_POOL", "_MAX_TOKENS", "_MODEL")]
     if not any(_clean(value) for value in values):
         return None
-    return DeepSeekTierConfig.from_env(prefix, model=model)
+    return DeepSeekTierConfig.from_env(
+        prefix, model=_clean(os.getenv(prefix + "_MODEL")) or model
+    )
 
 
 def _local_qwen_config() -> DeepSeekTierConfig:
@@ -861,17 +863,10 @@ def _local_qwen_config() -> DeepSeekTierConfig:
 
 class _DeepSeekTierClient:
     def __init__(self, config: DeepSeekTierConfig, *, route: str) -> None:
-        expected_model = {
-            "flash": "deepseek-v4-flash",
-            "pro": "deepseek-v4-pro",
-        }.get(route)
-        if expected_model is None:
+        if route not in {"flash", "pro"}:
             raise SlowGraphError(f"unsupported slow-graph route: {route!r}")
-        if config.provider == DEEPSEEK_PROVIDER and config.model != expected_model:
-            raise SlowGraphError(
-                f"slow-graph route {route!r} requires model {expected_model!r}, "
-                f"got {config.model!r}"
-            )
+        if config.provider == DEEPSEEK_PROVIDER and not _clean(config.model):
+            raise SlowGraphError(f"slow-graph route {route!r} requires a model")
         if config.provider == LOCAL_QWEN_PROVIDER and (
             not _is_loopback_openai_url(config.base_url)
             or not config.model
@@ -6638,10 +6633,7 @@ def resume_definite_billing_rejection_for_local_reroute(
         )
         route = _clean(metadata.get("route"))
         error = _clean(attempt["error"])
-        expected_model = {
-            "flash": "deepseek-v4-flash",
-            "pro": "deepseek-v4-pro",
-        }.get(route)
+        previous_model = _clean(metadata.get("model"))
         if (
             attempt["status"] != "failed"
             or _clean(job["last_error"]) != error
@@ -6653,7 +6645,7 @@ def resume_definite_billing_rejection_for_local_reroute(
             or _clean(metadata.get("status")) != "http_error"
             or int(metadata.get("http_status", 0) or 0) != 402
             or _clean(metadata.get("api_provider")) != DEEPSEEK_PROVIDER
-            or _clean(metadata.get("model")) != expected_model
+            or not previous_model
             or not _clean(metadata.get("physical_call_id"))
             or _clean(metadata.get("raw_response"))
             or _clean(metadata.get("content"))
@@ -6704,7 +6696,7 @@ def resume_definite_billing_rejection_for_local_reroute(
                 attempt["attempt_id"],
                 job["scope_id"],
                 DEEPSEEK_PROVIDER,
-                expected_model,
+                previous_model,
                 402,
                 error_sha256,
                 metadata_sha256,
@@ -6732,7 +6724,7 @@ def resume_definite_billing_rejection_for_local_reroute(
         "attempt_id": str(attempt["attempt_id"]),
         "scope_id": str(job["scope_id"]),
         "previous_provider": DEEPSEEK_PROVIDER,
-        "previous_model": expected_model,
+        "previous_model": previous_model,
         "previous_http_status": 402,
         "replacement_provider": LOCAL_QWEN_PROVIDER,
         "replacement_model": _configured_local_model(),

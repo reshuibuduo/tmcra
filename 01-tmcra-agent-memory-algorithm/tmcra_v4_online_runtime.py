@@ -3929,7 +3929,9 @@ def command_retrieve(args: argparse.Namespace) -> None:
                 "physical_api_calls": 1,
                 "stage": "recall_planner",
                 "provider": "deepseek",
-                "model": DEEPSEEK_FLASH_MODEL,
+                "model": os.environ.get(
+                    "TMCRA_RECALL_PLANNER_MODEL", DEEPSEEK_FLASH_MODEL
+                ),
                 "status": "completed_response_metadata_lost_after_process_failure",
                 "planner_version": "recovered_from_layered_retrieval_audit",
                 "prompt_version": "unknown_prior_process",

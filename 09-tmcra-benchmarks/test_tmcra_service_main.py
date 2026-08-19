@@ -170,6 +170,39 @@ class ServiceMainTests(unittest.TestCase):
                 "deepseek-v4-flash",
             )
 
+    def test_local_routes_preserve_independent_operator_model_aliases(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            key_file = Path(directory) / "local.key"
+            key_file.write_text("local-test-key\n", encoding="utf-8")
+            with patch.dict(
+                os.environ,
+                {
+                    "TMCRA_DEEPSEEK_WRITER_BASE_URL": "https://api.example.invalid/v1",
+                    "TMCRA_DEEPSEEK_WRITER_KEY_POOL": "disabled-provider-key",
+                    "TMCRA_WRITER_PROVIDER": "local-qwen",
+                    "TMCRA_RECALL_PLANNER_PROVIDER": "local-qwen",
+                    "TMCRA_WRITER_REVIEWER_PROVIDER": "local-qwen",
+                    "TMCRA_SLOW_GRAPH_PROVIDER": "local-qwen",
+                    "TMCRA_LOCAL_WRITER_API_KEY_FILE": str(key_file),
+                    "TMCRA_WRITER_MODEL": "operator-writer-v1",
+                    "TMCRA_RECALL_PLANNER_MODEL": "operator-planner-v2",
+                    "TMCRA_WRITER_REVIEWER_MODEL": "operator-reviewer-v3",
+                    "TMCRA_SLOW_GRAPH_MODEL": "operator-graph-v4",
+                },
+                clear=True,
+            ):
+                _configure_writer_aliases()
+                self.assertEqual(os.environ["TMCRA_WRITER_MODEL"], "operator-writer-v1")
+                self.assertEqual(
+                    os.environ["TMCRA_RECALL_PLANNER_MODEL"], "operator-planner-v2"
+                )
+                self.assertEqual(
+                    os.environ["TMCRA_WRITER_REVIEWER_MODEL"], "operator-reviewer-v3"
+                )
+                self.assertEqual(
+                    os.environ["TMCRA_SLOW_GRAPH_MODEL"], "operator-graph-v4"
+                )
+
     def test_shared_core_manifest_matches_checkout(self) -> None:
         if os.getenv("TMCRA_VERIFY_SHARED_CORE") != "1":
             self.skipTest("production shared-core verification is deployment-only")

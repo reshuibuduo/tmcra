@@ -20,6 +20,7 @@ from tmcra_v4_evidence_operations import (
     PLAN_SCHEMA,
 )
 from tmcra_v4_route_policy import (
+    PRODUCTION_ANSWER_PROTOCOL,
     RETRIEVAL_CONTRACT_SCHEMA,
     RoutePolicyError,
     assert_production_answer_runner,
@@ -107,17 +108,45 @@ class V4EvaluationTests(unittest.TestCase):
 
     def test_production_route_is_locked_to_operation_bound_source_evidence(self):
         report = validate_production_evidence([self.production_row()])
-        self.assertEqual(report["answer_protocol"], "evidence_operation_bound_v5")
+        self.assertEqual(report["answer_protocol"], PRODUCTION_ANSWER_PROTOCOL)
         assert_production_answer_runner(Path("/opt/tmcra/run_tmcra_v4_gpt54_answers.py"))
         validate_production_answers(
             [
                 {
                     "question_id": "q1",
-                    "answer_protocol": "evidence_operation_bound_v5",
+                    "answer_protocol": PRODUCTION_ANSWER_PROTOCOL,
                     "answer_model": "gpt-5.4",
                 }
             ]
         )
+        validate_production_answers(
+            [
+                {
+                    "question_id": "q1",
+                    "answer_protocol": PRODUCTION_ANSWER_PROTOCOL,
+                    "answer_model": "operator-answer-v1",
+                }
+            ],
+            expected_model="operator-answer-v1",
+        )
+
+    def test_production_answers_reject_only_missing_or_inconsistent_models(self):
+        rows = [
+            {
+                "question_id": "q1",
+                "answer_protocol": PRODUCTION_ANSWER_PROTOCOL,
+                "answer_model": "operator-answer-v1",
+            },
+            {
+                "question_id": "q2",
+                "answer_protocol": PRODUCTION_ANSWER_PROTOCOL,
+                "answer_model": "operator-answer-v2",
+            },
+        ]
+        with self.assertRaisesRegex(RoutePolicyError, "mixed model identities"):
+            validate_production_answers(rows)
+        with self.assertRaisesRegex(RoutePolicyError, "configured model"):
+            validate_production_answers(rows[:1], expected_model="another-model")
 
     def test_production_route_accepts_legacy_implicit_source_group_identity(self):
         row = self.production_row()
@@ -712,7 +741,7 @@ class V4EvaluationTests(unittest.TestCase):
                                 "hypothesis": "answer",
                                 "evidence_sha256": "hash",
                                 "answer_model": "gpt-5.4",
-                                "answer_protocol": "evidence_operation_bound_v5",
+                                "answer_protocol": PRODUCTION_ANSWER_PROTOCOL,
                             }
                         )
                         + "\n",

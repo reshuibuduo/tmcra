@@ -111,7 +111,11 @@ def _configure_writer_aliases() -> None:
         primary = {
             "TMCRA_WRITER_PROVIDER": DEEPSEEK_PROVIDER,
             "TMCRA_WRITER_BASE_URL": deepseek_base_url,
-            "TMCRA_WRITER_MODEL": "deepseek-v4-flash",
+            "TMCRA_WRITER_MODEL": str(
+                os.getenv("TMCRA_WRITER_MODEL")
+                or os.getenv("TMCRA_DEEPSEEK_FLASH_MODEL")
+                or "deepseek-v4-flash"
+            ).strip(),
             "TMCRA_WRITER_API_KEY_POOL": deepseek_key_pool,
             "TMCRA_WRITER_PROMPT_ADAPTER": "none",
         }
@@ -126,7 +130,9 @@ def _configure_writer_aliases() -> None:
                 os.getenv("TMCRA_LOCAL_WRITER_BASE_URL") or LOCAL_QWEN_BASE_URL
             ).strip(),
             "TMCRA_WRITER_MODEL": str(
-                os.getenv("TMCRA_LOCAL_WRITER_MODEL") or LOCAL_QWEN_MODEL
+                os.getenv("TMCRA_LOCAL_WRITER_MODEL")
+                or os.getenv("TMCRA_WRITER_MODEL")
+                or LOCAL_QWEN_MODEL
             ).strip(),
             "TMCRA_WRITER_API_KEY_POOL": _local_writer_key(local_key_file),
             "TMCRA_WRITER_PROMPT_ADAPTER": str(
@@ -143,7 +149,10 @@ def _configure_writer_aliases() -> None:
         planner = {
             "TMCRA_RECALL_PLANNER_PROVIDER": DEEPSEEK_PROVIDER,
             "TMCRA_RECALL_PLANNER_BASE_URL": deepseek_base_url,
-            "TMCRA_RECALL_PLANNER_MODEL": "deepseek-v4-flash",
+            "TMCRA_RECALL_PLANNER_MODEL": str(
+                os.getenv("TMCRA_RECALL_PLANNER_MODEL")
+                or primary["TMCRA_WRITER_MODEL"]
+            ).strip(),
             "TMCRA_RECALL_PLANNER_API_KEY_POOL": deepseek_key_pool,
             "TMCRA_RECALL_PLANNER_PROMPT_ADAPTER": "none",
         }
@@ -159,7 +168,9 @@ def _configure_writer_aliases() -> None:
                 os.getenv("TMCRA_LOCAL_PLANNER_BASE_URL") or LOCAL_QWEN_BASE_URL
             ).strip(),
             "TMCRA_RECALL_PLANNER_MODEL": str(
-                os.getenv("TMCRA_LOCAL_PLANNER_MODEL") or LOCAL_QWEN_MODEL
+                os.getenv("TMCRA_LOCAL_PLANNER_MODEL")
+                or os.getenv("TMCRA_RECALL_PLANNER_MODEL")
+                or primary["TMCRA_WRITER_MODEL"]
             ).strip(),
             "TMCRA_RECALL_PLANNER_API_KEY_POOL": _local_writer_key(
                 local_planner_key_file
@@ -189,7 +200,9 @@ def _configure_writer_aliases() -> None:
                 os.getenv("TMCRA_LOCAL_REVIEWER_BASE_URL") or LOCAL_QWEN_BASE_URL
             ).strip(),
             "TMCRA_WRITER_REVIEWER_MODEL": str(
-                os.getenv("TMCRA_LOCAL_REVIEWER_MODEL") or LOCAL_QWEN_MODEL
+                os.getenv("TMCRA_LOCAL_REVIEWER_MODEL")
+                or os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+                or primary["TMCRA_WRITER_MODEL"]
             ).strip(),
             "TMCRA_WRITER_REVIEWER_API_KEY_POOL": _local_writer_key(
                 local_reviewer_key_file
@@ -203,7 +216,11 @@ def _configure_writer_aliases() -> None:
         reviewer = {
             "TMCRA_WRITER_REVIEWER_PROVIDER": DEEPSEEK_PROVIDER,
             "TMCRA_WRITER_REVIEWER_BASE_URL": deepseek_base_url,
-            "TMCRA_WRITER_REVIEWER_MODEL": "deepseek-v4-pro",
+            "TMCRA_WRITER_REVIEWER_MODEL": str(
+                os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+                or os.getenv("TMCRA_DEEPSEEK_PRO_MODEL")
+                or "deepseek-v4-pro"
+            ).strip(),
             "TMCRA_WRITER_REVIEWER_API_KEY_POOL": deepseek_key_pool,
             "TMCRA_WRITER_REVIEWER_PROMPT_ADAPTER": "none",
         }
@@ -223,8 +240,16 @@ def _configure_writer_aliases() -> None:
         )
         slow = {
             "TMCRA_SLOW_GRAPH_PROVIDER": LOCAL_QWEN_PROVIDER,
-            "TMCRA_SLOW_GRAPH_BASE_URL": primary["TMCRA_WRITER_BASE_URL"],
-            "TMCRA_SLOW_GRAPH_MODEL": primary["TMCRA_WRITER_MODEL"],
+            "TMCRA_SLOW_GRAPH_BASE_URL": str(
+                os.getenv("TMCRA_LOCAL_SLOW_GRAPH_BASE_URL")
+                or os.getenv("TMCRA_SLOW_GRAPH_BASE_URL")
+                or primary["TMCRA_WRITER_BASE_URL"]
+            ).strip(),
+            "TMCRA_SLOW_GRAPH_MODEL": str(
+                os.getenv("TMCRA_LOCAL_SLOW_GRAPH_MODEL")
+                or os.getenv("TMCRA_SLOW_GRAPH_MODEL")
+                or primary["TMCRA_WRITER_MODEL"]
+            ).strip(),
             "TMCRA_SLOW_GRAPH_API_KEY_POOL": _local_writer_key(
                 local_slow_key_file
             ),

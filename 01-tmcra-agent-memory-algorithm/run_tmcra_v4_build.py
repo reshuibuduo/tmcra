@@ -65,7 +65,7 @@ def _load_shell_environment(path: Path) -> dict[str, str]:
 
 
 def _key_pool(environment: Mapping[str, str]) -> list[str]:
-    raw = environment.get("TMCRA_DEEPSEEK_WRITER_KEY_POOL", "")
+    raw = environment.get("TMCRA_WRITER_API_KEY_POOL") or environment.get("TMCRA_DEEPSEEK_WRITER_KEY_POOL", "")
     keys = [item.strip() for item in raw.split(",") if item.strip()]
     if not keys or len(keys) != len(set(keys)):
         raise BuildError("DeepSeek writer key pool must be non-empty and unique")
@@ -85,21 +85,26 @@ def _worker_environment(base: Mapping[str, str], keys: Sequence[str], worker_ind
     pool = _rotated(keys, worker_index)
     base_url = environment.get("TMCRA_DEEPSEEK_WRITER_BASE_URL") or environment.get("TMCRA_WRITER_BASE_URL") or "https://api.deepseek.com/v1"
     max_tokens = environment.get("TMCRA_WRITER_MAX_TOKENS", "16384")
+    writer_model = environment.get("TMCRA_WRITER_MODEL") or environment.get("TMCRA_DEEPSEEK_FLASH_MODEL") or "deepseek-v4-flash"
+    reviewer_model = environment.get("TMCRA_WRITER_REVIEWER_MODEL") or environment.get("TMCRA_DEEPSEEK_PRO_MODEL") or "deepseek-v4-pro"
     environment.update(
         {
             "TMCRA_WRITER_MAX_TOKENS": max_tokens,
             "TMCRA_WRITER_BASE_URL": base_url,
-            "TMCRA_WRITER_MODEL": "deepseek-v4-flash",
+            "TMCRA_WRITER_MODEL": writer_model,
+            "TMCRA_WRITER_REVIEWER_MODEL": reviewer_model,
             "TMCRA_WRITER_API_KEY_POOL": pool,
             "TMCRA_DEEPSEEK_FLASH_BASE_URL": base_url,
             "TMCRA_DEEPSEEK_FLASH_KEY_POOL": pool,
             "TMCRA_DEEPSEEK_FLASH_MAX_TOKENS": max_tokens,
+            "TMCRA_DEEPSEEK_FLASH_MODEL": writer_model,
             "TMCRA_DEEPSEEK_FLASH_PROMPT_COST_PER_MILLION": "1",
             "TMCRA_DEEPSEEK_FLASH_COMPLETION_COST_PER_MILLION": "2",
             "TMCRA_DEEPSEEK_FLASH_CACHE_COST_PER_MILLION": "0.02",
             "TMCRA_DEEPSEEK_PRO_BASE_URL": base_url,
             "TMCRA_DEEPSEEK_PRO_KEY_POOL": pool,
             "TMCRA_DEEPSEEK_PRO_MAX_TOKENS": max_tokens,
+            "TMCRA_DEEPSEEK_PRO_MODEL": reviewer_model,
             "TMCRA_DEEPSEEK_PRO_PROMPT_COST_PER_MILLION": "3",
             "TMCRA_DEEPSEEK_PRO_COMPLETION_COST_PER_MILLION": "6",
             "TMCRA_DEEPSEEK_PRO_CACHE_COST_PER_MILLION": "0.025",
@@ -359,6 +364,12 @@ def _slow_worker_resume(
 def _subject_attribution_stage(
     out_dir: Path, environment: Mapping[str, str]
 ) -> dict[str, Any]:
+    expected_model = str(
+        environment.get("TMCRA_SUBJECT_ATTRIBUTION_MODEL")
+        or environment.get("TMCRA_WRITER_REVIEWER_MODEL")
+        or environment.get("TMCRA_WRITER_MODEL")
+        or "deepseek-v4-pro"
+    ).strip()
     report_path = out_dir / "subject_attribution_report.json"
     if not report_path.exists():
         _run(
@@ -383,7 +394,7 @@ def _subject_attribution_stage(
         or report.get("status") != "complete"
         or report.get("mode") != "apply"
         or report.get("prompt_version") != SUBJECT_ATTRIBUTION_PROMPT_VERSION
-        or report.get("model") != "deepseek-v4-pro"
+        or report.get("model") != expected_model
     ):
         raise BuildError("subject-attribution stage is incomplete or drifted")
     _stage(

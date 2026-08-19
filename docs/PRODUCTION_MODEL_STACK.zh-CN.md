@@ -23,7 +23,7 @@ flowchart LR
   PLAN["召回角色规划器<br/>Qwen3.6-35B-A3B"]
   COMPILE["确定性证据编译器"]
   PACK["有来源约束的证据包"]
-  AGENT["部署方 Agent 模型<br/>或固定参考答案链路"]
+  AGENT["部署方 Agent 模型<br/>或已公开参考答案链路"]
 
   EVENT --> WRITER --> REVIEW --> STORE
   STORE --> EMBED
@@ -34,8 +34,8 @@ flowchart LR
 ```
 
 外层 Agent 由部署方选择。任何能够正确消费结构化证据、并遵守指令与证据边界的模型
-都可以接入。固定的 GPT-5.4 只用于公开参考/评测答案链路；Memory API 集成可以使用
-自己的业务模型。
+都可以接入。公开参考/评测运行使用 GPT-5.4；答案与 Judge 脚本也已支持部署方配置的
+其他型号。
 
 ## 每个模型负责什么
 
@@ -50,7 +50,31 @@ flowchart LR
 | TMCRA 本地 reranker | `tmcra_v3_reranker.pt` | 融合 Cross Encoder 表征/分数以及 dense、graph、selection、recency 通道 | 本地 GPU，checkpoint 随仓库提供 | `TMCRA_CHECKPOINT`；组件 02 提供 Apache-2.0 声明和校验值 |
 | 召回规划器 | `Qwen3.6-35B-A3B` | 解析当前问题，为各证据层分配 evidence/context 角色并保留原始证据池 | 本地 OpenAI-compatible 地址 | `TMCRA_RECALL_PLANNER_PROVIDER=local-qwen`、`qwen36-planner-v1`；默认输出 512 tokens、超时 60 秒 |
 | 证据编译器 | 不使用模型 | 绑定 Source ID，执行时间、计数、排序、集合运算并生成可验证证据包 | 确定性 Python 代码 | 不允许用自由生成模型替代确定性计算 |
-| 答案/业务 Agent | 部署方选择 | 消费 prompt-ready 证据，完成客服、助手、业务 Agent 等产品任务 | 应用或 Agent 宿主 | 可使用自己的模型；公开参考/评测答案链路固定为 `gpt-5.4` |
+| 答案/业务 Agent | 部署方选择 | 消费 prompt-ready 证据，完成客服、助手、业务 Agent 等产品任务 | 应用或 Agent 宿主 | 可使用自己的模型；已公开的参考/评测运行使用 `gpt-5.4` |
+
+## 全角色型号开放配置
+
+所有生成角色都接受任意非空型号标识，主要配置入口如下：
+
+| 角色 | 型号配置 | 路由配置 |
+|---|---|---|
+| Writer | `TMCRA_WRITER_MODEL` | `TMCRA_WRITER_PROVIDER`、`TMCRA_WRITER_BASE_URL` |
+| Reviewer | `TMCRA_WRITER_REVIEWER_MODEL` | `TMCRA_WRITER_REVIEWER_PROVIDER` |
+| 召回规划器 | `TMCRA_RECALL_PLANNER_MODEL` | `TMCRA_RECALL_PLANNER_PROVIDER` |
+| 慢速图谱 | `TMCRA_SLOW_GRAPH_MODEL` | `TMCRA_SLOW_GRAPH_PROVIDER` |
+| Session Graph | `TMCRA_SESSION_GRAPH_MODEL` 或 `TMCRA_SESSION_GRAPH_LOCAL_MODEL` | `TMCRA_SESSION_GRAPH_PROVIDER` |
+| 证据规划器 | `TMCRA_EVIDENCE_PLANNER_MODEL` 或 `--planner-model` | `--planner-provider`、`--planner-base-url` |
+| 主体归因 | `TMCRA_SUBJECT_ATTRIBUTION_MODEL` | 归因服务地址与 Key Pool |
+| Benchmark/业务答案 | `TMCRA_ANSWER_MODEL` | `TMCRA_ANSWER_BASE_URL`、`TMCRA_ANSWER_API_KEY` |
+| Benchmark Judge | `TMCRA_JUDGE_MODEL` | 默认沿用答案型号 |
+
+旧变量 `TMCRA_DEEPSEEK_FLASH_MODEL` 与 `TMCRA_DEEPSEEK_PRO_MODEL` 继续作为兼容
+回退项，其默认值用于复现历史路由，不构成型号白名单。Embedding 与 Cross Encoder 也支持
+部署方提供的本地模型路径或 API 型号。
+
+安全校验保留在契约边界：型号必须非空；真实接口需要暴露已配置的别名；结构化响应必须
+通过 Schema 与来源归因校验；续跑缓存、调用日志和 Benchmark 产物必须与创建它们的型号
+一致。这些校验防止混合产物，不限制模型家族。
 
 ## 源码内置召回参数
 
@@ -82,7 +106,7 @@ flowchart LR
 - 本地 BGE-M3 与 BGE reranker V2 M3：向量召回和 Cross Encoder 重排；
 - 仓库内置 TMCRA reranker checkpoint：本地学习排序融合；
 - 确定性证据编译器：计算和绑定 Source ID；
-- GPT-5.4：仅用于固定参考/评测答案链路。
+- GPT-5.4：用于已公开的参考/评测运行。
 
 本地 Qwen 在单机配置中绑定 loopback，API Key 文件位于部署方控制的本地模型状态目录。
 启用 Provider 后，调用会进入日志和 Tenant/Scope 用量归因；凭证保存在

@@ -173,19 +173,24 @@ class DeepSeekProConfig:
             raise SlowGraphError(
                 "TMCRA_DEEPSEEK_PRO_MAX_TOKENS must be an integer"
             ) from exc
-        if not base_url or not keys or max_tokens <= 0:
+        model = _clean(
+            os.getenv("TMCRA_DEEPSEEK_PRO_MODEL")
+            or os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+            or "deepseek-v4-pro"
+        )
+        if not base_url or not model or not keys or max_tokens <= 0:
             raise SlowGraphError(
-                "DeepSeek requires BASE_URL, KEY_POOL, and positive MAX_TOKENS"
+                "slow graph requires BASE_URL, MODEL, KEY_POOL, and positive MAX_TOKENS"
             )
-        return cls(base_url.rstrip("/"), keys, max_tokens)
+        return cls(base_url.rstrip("/"), keys, max_tokens, model=model)
 
 
 class DeepSeekProGraphPatchManager:
     """The only production patch manager: no fallback and no hidden defaults."""
 
     def __init__(self, config: DeepSeekProConfig) -> None:
-        if config.model != "deepseek-v4-pro":
-            raise SlowGraphError("DeepSeek model must be deepseek-v4-pro")
+        if not _clean(config.model):
+            raise SlowGraphError("slow-graph model is required")
         self.config = config
         self._key_index = 0
         self.model_config = {
@@ -264,7 +269,7 @@ class DeepSeekProGraphPatchManager:
         key = self.config.key_pool[key_index]
         self._key_index += 1
         body = {
-            "model": "deepseek-v4-pro",
+            "model": self.config.model,
             "temperature": 0,
             "max_tokens": self.config.max_tokens,
             "thinking": {"type": "disabled"},

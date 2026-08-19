@@ -3733,7 +3733,10 @@ def create_app(settings: ServiceSettings) -> FastAPI:
                     job_id=None,
                     stage_id=planner_stage_id,
                     operation="graph_trace_planner",
-                    default_model="deepseek-v4-flash",
+                    default_model=os.getenv(
+                        "TMCRA_RECALL_PLANNER_MODEL",
+                        os.getenv("TMCRA_WRITER_MODEL", "deepseek-v4-flash"),
+                    ),
                     usage_attribution=usage_attribution,
                 )
             except Exception as exc:

@@ -449,8 +449,8 @@ class DeepSeekEvidenceOperationPlanner:
         self.model = _text(model)
         self.provider = _text(provider)
         self.call_index = 0
-        if not self.base_url or not self.api_keys or not self.model or self.provider not in {"deepseek", "xiaomi_mimo"} or self.timeout <= 0 or self.max_tokens <= 0:
-            raise EvidencePlannerError("planner base URL, key pool, timeout, and max tokens are required")
+        if not self.base_url or not self.api_keys or not self.model or not self.provider or self.timeout <= 0 or self.max_tokens <= 0:
+            raise EvidencePlannerError("planner provider, base URL, model, key pool, timeout, and max tokens are required")
 
     def plan(self, catalog: Mapping[str, Any], *, review_context: Mapping[str, Any] | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
         payload = planner_payload(catalog)

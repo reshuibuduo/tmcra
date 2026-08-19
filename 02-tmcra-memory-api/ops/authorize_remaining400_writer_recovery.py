@@ -39,6 +39,16 @@ def _inspect_worker(worker: Path, index: int) -> list[dict[str, Any]]:
     if not database.is_file():
         raise RuntimeError(f"worker {index}: database is missing")
     actions: list[dict[str, Any]] = []
+    writer_model = str(
+        os.getenv("TMCRA_WRITER_MODEL")
+        or os.getenv("TMCRA_DEEPSEEK_FLASH_MODEL")
+        or "deepseek-v4-flash"
+    ).strip()
+    reviewer_model = str(
+        os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+        or os.getenv("TMCRA_DEEPSEEK_PRO_MODEL")
+        or "deepseek-v4-pro"
+    ).strip()
     with sqlite3.connect(database) as connection:
         connection.row_factory = sqlite3.Row
         quick_check = str(connection.execute("PRAGMA quick_check").fetchone()[0])
@@ -75,7 +85,7 @@ def _inspect_worker(worker: Path, index: int) -> list[dict[str, Any]]:
                     "prior_error": error,
                     "call_artifact_count": call_count,
                     "raw_response_artifact_count": raw_count,
-                    "replacement_model": "deepseek-v4-flash",
+                    "replacement_model": writer_model,
                     "replacement_authorized": True,
                 }
             )
@@ -120,7 +130,7 @@ def _inspect_worker(worker: Path, index: int) -> list[dict[str, Any]]:
                     "prior_response_metadata": metadata,
                     "call_artifact_count": call_count,
                     "raw_response_artifact_count": raw_count,
-                    "replacement_model": "deepseek-v4-pro",
+                    "replacement_model": reviewer_model,
                     "replacement_authorized": True,
                 }
             )

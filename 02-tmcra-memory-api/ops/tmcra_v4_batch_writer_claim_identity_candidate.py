@@ -1466,10 +1466,8 @@ class DeepSeekBatchClient:
         self.timeout = float(timeout)
         self.max_tokens = int(max_tokens)
         self.call_count = 0
-        if not self.base_url or not self.api_keys or self.timeout <= 0 or self.max_tokens <= 0:
-            raise ProductWriterError("base URL and API key pool are required")
-        if self.model not in {"deepseek-v4-flash", "deepseek-v4-pro"}:
-            raise ProductWriterError(f"unsupported V4 writer model: {self.model!r}")
+        if not self.base_url or not self.model or not self.api_keys or self.timeout <= 0 or self.max_tokens <= 0:
+            raise ProductWriterError("base URL, model, API key pool, and positive limits are required")
 
     @staticmethod
     def _usage(value: Any) -> dict[str, int]:
@@ -1612,13 +1610,9 @@ class DeepSeekBatchClient:
         return content, metadata
 
     def complete(self, payload: Mapping[str, Any]) -> tuple[str, dict[str, Any]]:
-        if self.model != "deepseek-v4-flash":
-            raise ProductWriterError("batch extraction client must use deepseek-v4-flash")
         return self._complete(model=self.model, system_prompt=BATCH_SYSTEM_PROMPT, payload=payload, stage="batch_flash")
 
     def reconcile(self, payload: Mapping[str, Any]) -> tuple[str, dict[str, Any]]:
-        if self.model != "deepseek-v4-pro":
-            raise ProductWriterError("reconciliation client must use deepseek-v4-pro")
         prompt = (
             "You bind one new cited assertion to a compact controller-retrieved candidate-slot set. "
             "Use only supplied source quotes and candidate IDs. Return exactly one JSON object and no prose: "
@@ -3700,6 +3694,8 @@ class V4BatchWriter:
         self.store = store
         self.flash_client = flash_client
         self.pro_client = pro_client
+        self.writer_model = clean_text(getattr(flash_client, "model", "")) or "deepseek-v4-flash"
+        self.reviewer_model = clean_text(getattr(pro_client, "model", "")) or "deepseek-v4-pro"
         self.graph_factory = graph_factory
         self.log_dir = Path(log_dir) if log_dir is not None else None
         if self.log_dir is not None:
@@ -4060,7 +4056,7 @@ class V4BatchWriter:
             call_key=call_key,
             batch=batch,
             stage="batch_flash_interrupted",
-            model="deepseek-v4-flash",
+            model=self.writer_model,
         )
         return self.store.abandon_interrupted_batch_call(batch.batch_id)
 
@@ -4096,7 +4092,7 @@ class V4BatchWriter:
                 "batch_id": batch.batch_id,
                 "scope_id": batch.scope_id,
                 "session_id": batch.session_id,
-                "model": "deepseek-v4-flash",
+                "model": self.writer_model,
                 "prior_physical_call_id": clean_text(
                     metadata.get("physical_call_id")
                 ),
@@ -4127,7 +4123,7 @@ class V4BatchWriter:
             call_key=call_key,
             batch=batch,
             stage="reconciliation_pro_interrupted",
-            model="deepseek-v4-pro",
+            model=self.reviewer_model,
             job_id=job_id,
         )
         job = self.store.abandon_interrupted_reconciliation_call(job_id)
@@ -4546,7 +4542,7 @@ class V4BatchWriter:
                 call_key=f"pro:{job_id}",
                 batch=batch,
                 stage="reconciliation_pro",
-                model="deepseek-v4-pro",
+                model=self.reviewer_model,
                 response=result,
                 metadata=metadata,
                 job_id=job_id,
@@ -4614,7 +4610,7 @@ class V4BatchWriter:
                 call_key=f"pro:{job_id}",
                 batch=batch,
                 stage="reconciliation_pro",
-                model="deepseek-v4-pro",
+                model=self.reviewer_model,
                 metadata=metadata,
                 job_id=job_id,
             )
@@ -4626,7 +4622,7 @@ class V4BatchWriter:
                 call_key=f"pro:{job_id}",
                 batch=batch,
                 stage="reconciliation_pro",
-                model="deepseek-v4-pro",
+                model=self.reviewer_model,
                 metadata=call_metadata,
                 job_id=job_id,
                 error=error,
@@ -5147,7 +5143,7 @@ class V4BatchWriter:
                         call_key=f"flash:{batch.batch_id}",
                         batch=batch,
                         stage="batch_flash",
-                        model="deepseek-v4-flash",
+                        model=self.writer_model,
                         response=result,
                         metadata=metadata,
                     )
@@ -5158,7 +5154,7 @@ class V4BatchWriter:
                         call_key=f"flash:{batch.batch_id}",
                         batch=batch,
                         stage="batch_flash",
-                        model="deepseek-v4-flash",
+                        model=self.writer_model,
                         metadata={
                             **metadata,
                             "request_content_sha256": _hash_json(request),
@@ -5172,7 +5168,7 @@ class V4BatchWriter:
                         call_key=f"flash:{batch.batch_id}",
                         batch=batch,
                         stage="batch_flash",
-                        model="deepseek-v4-flash",
+                        model=self.writer_model,
                         metadata=call_metadata,
                         error=error,
                     )
@@ -5242,9 +5238,7 @@ def _build_cli_client(*, reviewer_model: str, timeout: float, max_tokens: int) -
     model = clean_text(os.getenv("TMCRA_WRITER_MODEL"))
     keys = [clean_text(value) for value in os.getenv("TMCRA_WRITER_API_KEY_POOL", "").split(",") if clean_text(value)]
     if not base_url or not model or not reviewer_model or not keys:
-        raise ProductWriterError("explicit writer base URL, Flash model, Pro model, and API key pool are required")
-    if model != "deepseek-v4-flash" or reviewer_model != "deepseek-v4-pro":
-        raise ProductWriterError("V4 requires deepseek-v4-flash and deepseek-v4-pro")
+        raise ProductWriterError("explicit writer base URL, writer model, reviewer model, and API key pool are required")
     return (
         DeepSeekBatchClient(base_url=base_url, model=model, api_keys=keys, timeout=timeout, max_tokens=max_tokens),
         DeepSeekBatchClient(base_url=base_url, model=reviewer_model, api_keys=keys, timeout=timeout, max_tokens=max_tokens),
@@ -5256,7 +5250,14 @@ def main() -> int:
     parser.add_argument("--input", required=True)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--repo", required=True)
-    parser.add_argument("--reviewer-model", default="deepseek-v4-pro")
+    parser.add_argument(
+        "--reviewer-model",
+        default=clean_text(
+            os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+            or os.getenv("TMCRA_DEEPSEEK_PRO_MODEL")
+            or "deepseek-v4-pro"
+        ),
+    )
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
     parser.add_argument("--max-tokens", type=int, default=16384)
     parser.add_argument(

@@ -34,6 +34,7 @@ from .writer_provider import (
     DEEPSEEK_PROVIDER,
     LOCAL_QWEN_MODEL,
     LOCAL_QWEN_PROVIDER,
+    OPENAI_COMPATIBLE_PROVIDER,
     primary_writer_route,
     reviewer_writer_route,
 )
@@ -78,6 +79,8 @@ DEEPSEEK_V4_PRICES_MICRO_CNY = {
 DEEPSEEK_PRICING_SOURCE = "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/"
 LOCAL_QWEN_PRICE_VERSION = "tmcra-local-qwen36-iq3s-2026-08-05"
 LOCAL_QWEN_PRICING_SOURCE = "self-hosted; external provider API cost is zero"
+OPERATOR_PRICE_VERSION = "operator-configured-v1"
+UNPRICED_MODEL_VERSION = "operator-pricing-not-configured"
 WRITER_RECOVERY_MODES = frozenset(
     {
         "none",
@@ -830,7 +833,11 @@ class LeasedDeepSeekClient:
         self.prompt_adapter = str(prompt_adapter).strip()
         self.stage_name = stage_name or model
         self.usage_attribution = usage_attribution
-        if self.provider not in {DEEPSEEK_PROVIDER, LOCAL_QWEN_PROVIDER}:
+        if self.provider not in {
+            DEEPSEEK_PROVIDER,
+            LOCAL_QWEN_PROVIDER,
+            OPENAI_COMPATIBLE_PROVIDER,
+        }:
             raise ProductionWriterError(f"unsupported Writer provider: {self.provider}")
         if self.provider == LOCAL_QWEN_PROVIDER and not self.model:
             raise ProductionWriterError("local Writer model alias is required")
@@ -925,11 +932,39 @@ class LeasedDeepSeekClient:
         if self.provider == LOCAL_QWEN_PROVIDER:
             return (0, 0, 0), LOCAL_QWEN_PRICE_VERSION, LOCAL_QWEN_PRICING_SOURCE
         rates = DEEPSEEK_V4_PRICES_MICRO_CNY.get(self.model)
-        if rates is None:
-            raise ProductionWriterError(
-                f"unsupported DeepSeek V4 model for ledger: {self.model}"
+        if rates is not None:
+            return rates, DEEPSEEK_V4_PRICE_VERSION, DEEPSEEK_PRICING_SOURCE
+        names = (
+            "TMCRA_WRITER_PRICE_CACHE_HIT_MICRO_CNY_PER_MILLION",
+            "TMCRA_WRITER_PRICE_CACHE_MISS_MICRO_CNY_PER_MILLION",
+            "TMCRA_WRITER_PRICE_OUTPUT_MICRO_CNY_PER_MILLION",
+        )
+        raw_rates = [str(os.getenv(name) or "").strip() for name in names]
+        if any(raw_rates):
+            if not all(raw_rates):
+                raise ProductionWriterError(
+                    "custom model pricing requires all three TMCRA_WRITER_PRICE_* values"
+                )
+            try:
+                configured = tuple(int(value) for value in raw_rates)
+            except ValueError as exc:
+                raise ProductionWriterError(
+                    "custom model pricing values must be non-negative integers"
+                ) from exc
+            if any(value < 0 for value in configured):
+                raise ProductionWriterError(
+                    "custom model pricing values must be non-negative integers"
+                )
+            return (
+                configured,
+                str(os.getenv("TMCRA_WRITER_PRICE_VERSION") or OPERATOR_PRICE_VERSION),
+                str(os.getenv("TMCRA_WRITER_PRICING_SOURCE") or "operator configuration"),
             )
-        return rates, DEEPSEEK_V4_PRICE_VERSION, DEEPSEEK_PRICING_SOURCE
+        return (
+            (0, 0, 0),
+            UNPRICED_MODEL_VERSION,
+            "no operator pricing configured; usage is recorded without cost",
+        )
 
     @staticmethod
     def _metadata(value: Any) -> dict[str, Any]:
@@ -972,7 +1007,9 @@ class LeasedDeepSeekClient:
     def _cost(self, usage: Mapping[str, int]) -> int | None:
         if not usage:
             return None
-        rates, _price_version, _source = self._price_contract()
+        rates, price_version, _source = self._price_contract()
+        if price_version == UNPRICED_MODEL_VERSION:
+            return None
         hit_cost = int(usage["cache_hit_tokens"]) * rates[0]
         miss_cost = int(usage["cache_miss_tokens"]) * rates[1]
         output_cost = int(usage["output_tokens"]) * rates[2]
@@ -1579,7 +1616,14 @@ def main() -> int:
     parser.add_argument("--job-id")
     parser.add_argument("--stage-id")
     parser.add_argument("--stage-attempt", type=int, default=1)
-    parser.add_argument("--reviewer-model", default="deepseek-v4-pro")
+    parser.add_argument(
+        "--reviewer-model",
+        default=(
+            os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+            or os.getenv("TMCRA_DEEPSEEK_PRO_MODEL")
+            or "deepseek-v4-pro"
+        ),
+    )
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
     parser.add_argument("--max-tokens", type=int, default=16384)
     parser.add_argument(

@@ -1775,7 +1775,7 @@ class LocalSessionGraphAgent:
         ) or (
             self.provider == SESSION_GRAPH_PROVIDER_DEDICATED
             and self.base_url == DEDICATED_DEEPSEEK_BASE_URL
-            and self.model == DEDICATED_DEEPSEEK_MODEL
+            and bool(self.model)
         ) or approved_openai
         if not allowed_route:
             raise SessionGraphError(
@@ -3517,7 +3517,12 @@ class SessionGraphAgentRouter:
             base_url=_text(
                 env.get("TMCRA_SESSION_GRAPH_LOCAL_BASE_URL") or LOCAL_QWEN_BASE_URL
             ),
-            model=_text(env.get("TMCRA_SESSION_GRAPH_LOCAL_MODEL") or LOCAL_QWEN_MODEL),
+            model=_text(
+                env.get("TMCRA_SESSION_GRAPH_LOCAL_MODEL")
+                or env.get("TMCRA_WRITER_MODEL")
+                or env.get("TMCRA_LOCAL_WRITER_MODEL")
+                or LOCAL_QWEN_MODEL
+            ),
             api_key=local_key,
             api_key_file=local_key_file,
             timeout_seconds=_text(

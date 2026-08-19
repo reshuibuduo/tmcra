@@ -229,14 +229,7 @@ def create_qwen36_batch_client(*, v4: Any, **kwargs: Any) -> Any:
             requested_model = str(client_kwargs.get("model") or "")
             if not requested_model:
                 raise ValueError("qwen36-v5 requires a local model alias")
-            base_kwargs = dict(client_kwargs)
-            # The unchanged V4 transport constructor allows only its two
-            # historical DeepSeek aliases. Initialize transport state through
-            # that audited path, then restore the already route-validated local
-            # alias used on the actual OpenAI-compatible request.
-            base_kwargs["model"] = "deepseek-v4-flash"
-            super().__init__(**base_kwargs)
-            self.model = requested_model
+            super().__init__(**client_kwargs)
             self.id_slot = LOCAL_QWEN_WRITER_SLOT_ID
 
         @staticmethod

@@ -73,7 +73,7 @@ def recall_planner_route(
     )
     if provider == DEEPSEEK_PROVIDER:
         _require_https(base_url)
-        if model != "deepseek-v4-flash" or adapter != "none":
+        if not model or adapter != "none":
             raise ValueError("DeepSeek recall planner route drifted from its contract")
         return RecallPlannerRoute(
             provider=provider,

@@ -244,11 +244,14 @@ def _selection_payload(row: Mapping[str, Any], max_selected: int) -> tuple[dict[
     }, by_id
 
 
-def _cost_cny(metadata: Sequence[Mapping[str, Any]], rates: Mapping[str, tuple[float, float, float]]) -> float:
+def _cost_cny(metadata: Sequence[Mapping[str, Any]], rates: Mapping[str, tuple[float, float, float]]) -> float | None:
     total = 0.0
     for item in metadata:
         usage = dict(item.get("usage") or {})
-        prompt_rate, completion_rate, cache_rate = rates[str(item["model"])]
+        rate = rates.get(str(item["model"]))
+        if rate is None:
+            return None
+        prompt_rate, completion_rate, cache_rate = rate
         total += (
             int(usage.get("prompt_cache_miss_tokens", 0)) * prompt_rate
             + int(usage.get("completion_tokens", 0)) * completion_rate
@@ -258,7 +261,7 @@ def _cost_cny(metadata: Sequence[Mapping[str, Any]], rates: Mapping[str, tuple[f
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Select complete source evidence groups with DeepSeek Flash and conditional Pro review")
+    parser = argparse.ArgumentParser(description="Select complete source evidence groups with configurable writer and reviewer models")
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--qid-list", type=Path)
@@ -280,6 +283,8 @@ def main() -> int:
     environment = _load_shell_environment(args.writer_env.resolve())
     keys = _key_pool(environment)
     base_url = environment.get("TMCRA_DEEPSEEK_WRITER_BASE_URL") or environment.get("TMCRA_WRITER_BASE_URL") or "https://api.deepseek.com/v1"
+    writer_model = environment.get("TMCRA_WRITER_MODEL") or environment.get("TMCRA_DEEPSEEK_FLASH_MODEL") or "deepseek-v4-flash"
+    reviewer_model = environment.get("TMCRA_WRITER_REVIEWER_MODEL") or environment.get("TMCRA_DEEPSEEK_PRO_MODEL") or "deepseek-v4-pro"
     out_dir = args.out_dir.resolve()
     journal_dir = out_dir / "rows"
     journal_dir.mkdir(parents=True, exist_ok=True)
@@ -315,7 +320,7 @@ def main() -> int:
             flash, flash_meta = _call(
                 base_url=base_url,
                 api_key=keys[index % len(keys)],
-                model="deepseek-v4-flash",
+                model=writer_model,
                 system_prompt=SYSTEM_PROMPT,
                 payload=payload,
                 timeout=args.timeout,
@@ -360,7 +365,7 @@ def main() -> int:
                 pro, pro_meta = _call(
                     base_url=base_url,
                     api_key=keys[(index + 1) % len(keys)],
-                    model="deepseek-v4-pro",
+                    model=reviewer_model,
                     system_prompt=PRO_SYSTEM_PROMPT,
                     payload=pro_payload,
                     timeout=args.timeout,
@@ -464,8 +469,12 @@ def main() -> int:
             "schema_version": "tmcra.v4.evidence-selector-run.1",
             "status": "complete",
             "row_count": len(ordered),
-            "flash_call_count": sum(call["model"] == "deepseek-v4-flash" for call in all_calls),
-            "pro_call_count": sum(call["model"] == "deepseek-v4-pro" for call in all_calls),
+            "flash_call_count": len(ordered),
+            "pro_call_count": sum(
+                bool(row["evidence_selection"]["reviewed_by_pro"]) for row in ordered
+            ),
+            "writer_model": writer_model,
+            "reviewer_model": reviewer_model,
             "physical_call_count": len(all_calls),
             "review_policy": args.review_policy,
             "selected_count_total": sum(len(row["evidence_windows"]) for row in ordered),

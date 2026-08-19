@@ -330,10 +330,11 @@ def retrieve(args: argparse.Namespace) -> dict[str, Any]:
     environment = {**os.environ, **shell_environment}
     keys = _key_pool(environment)
     base_url = environment.get("TMCRA_DEEPSEEK_WRITER_BASE_URL") or environment.get("TMCRA_WRITER_BASE_URL") or "https://api.deepseek.com/v1"
+    planner_model = environment.get("TMCRA_RECALL_PLANNER_MODEL") or environment.get("TMCRA_WRITER_MODEL") or "deepseek-v4-flash"
     environment.update(
         {
             "TMCRA_RECALL_PLANNER_BASE_URL": base_url,
-            "TMCRA_RECALL_PLANNER_MODEL": "deepseek-v4-flash",
+            "TMCRA_RECALL_PLANNER_MODEL": planner_model,
             "TMCRA_RECALL_PLANNER_API_KEY_POOL": ",".join(keys),
             "TMCRA_NODE_MODEL_PATH": str(args.node_model.resolve()),
             "TMCRA_PATH_MODEL_PATH": str(args.path_model.resolve()),

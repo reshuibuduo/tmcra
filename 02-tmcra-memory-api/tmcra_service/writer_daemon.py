@@ -268,7 +268,11 @@ def serve(repo: Path) -> int:
                     job_id=_request_text(request, "job_id"),
                     stage_id=_request_text(request, "stage_id"),
                     stage_attempt=int(request.get("stage_attempt", 0) or 0),
-                    reviewer_model="deepseek-v4-pro",
+                    reviewer_model=str(
+                        os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+                        or os.getenv("TMCRA_DEEPSEEK_PRO_MODEL")
+                        or "deepseek-v4-pro"
+                    ).strip(),
                     timeout_seconds=float(request.get("timeout_seconds", 180.0)),
                     max_tokens=int(request.get("max_tokens", 16384)),
                     recovery_mode=str(request.get("recovery_mode") or "none"),

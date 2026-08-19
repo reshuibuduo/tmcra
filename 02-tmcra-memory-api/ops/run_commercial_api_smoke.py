@@ -338,8 +338,8 @@ def main() -> int:
     wire_api = _text(os.getenv("TMCRA_ANSWER_WIRE_API")).lower() or "chat_completions"
     if not args.memory_base_url or not memory_api_key:
         raise SmokeError("memory base URL and TMCRA_SMOKE_MEMORY_API_KEY are required")
-    if not answer_base_url or not answer_api_key or answer_model != "gpt-5.4":
-        raise SmokeError("fixed GPT-5.4 answer environment is required")
+    if not answer_base_url or not answer_api_key or not answer_model:
+        raise SmokeError("answer base URL, API key, and model are required")
 
     started_at = datetime.now(timezone.utc)
     run_id = uuid.uuid4().hex

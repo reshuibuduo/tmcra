@@ -41,14 +41,14 @@ def main() -> int:
     with patch.dict(os.environ, worker_environment, clear=True):
         manager = TieredGraphPatchManager.from_env()
     if manager.flash is None or manager.pro is None:
-        raise RuntimeError("DeepSeek Flash/Pro configuration is incomplete")
+        raise RuntimeError("slow-graph writer/reviewer configuration is incomplete")
 
     answer_environment = _load_shell_environment(ANSWER_ENV)
     with patch.dict(os.environ, answer_environment, clear=True):
         harness = load_harness(HARNESS)
         answer_base_url, answer_model, answer_key = harness.answer_llm_config()
-    if answer_model != "gpt-5.4" or not answer_base_url or not answer_key:
-        raise RuntimeError("GPT-5.4 answer configuration is incomplete")
+    if not answer_model or not answer_base_url or not answer_key:
+        raise RuntimeError("answer model configuration is incomplete")
 
     report = {
         "schema_version": "tmcra.v4.api-config-preflight.1",

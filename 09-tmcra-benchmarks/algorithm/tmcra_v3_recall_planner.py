@@ -11,9 +11,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 
+DEEPSEEK_FLASH_MODEL = "deepseek-v4-flash"  # Backward-compatible default only.
 PLANNER_VERSION = "tmcra.recall-plan.v4"
 PLANNER_PROMPT_VERSION = "tmcra-recall-planner-2026-07-11.1"
-DEEPSEEK_FLASH_MODEL = "deepseek-v4-flash"
 MODES = frozenset(
     {
         "FAST_ONLY",
@@ -106,11 +106,11 @@ def _sha256(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def _metadata(*, key_index: int, started: float, finish_reason: str, content: str = "", usage: Mapping[str, Any] | None = None, http_status: int | None = None, error_type: str | None = None, request_sha256: str = "") -> dict[str, Any]:
+def _metadata(*, model: str, key_index: int, started: float, finish_reason: str, content: str = "", usage: Mapping[str, Any] | None = None, http_status: int | None = None, error_type: str | None = None, request_sha256: str = "") -> dict[str, Any]:
     usage = usage or {}
     result = {
         "provider": "deepseek",
-        "model": DEEPSEEK_FLASH_MODEL,
+        "model": model,
         "api_key_index": key_index,
         "physical_call_count": 1,
         "latency_seconds": round(time.time() - started, 3),
@@ -227,10 +227,8 @@ class DeepSeekFlashRecallPlanner:
         self.timeout = max(1.0, float(timeout))
         self.max_tokens = max(128, int(max_tokens))
         self.request_index = 0
-        if not self.base_url or not self.api_keys:
-            raise RecallPlannerError("planner base_url and API key pool are required")
-        if self.model != DEEPSEEK_FLASH_MODEL:
-            raise RecallPlannerError(f"recall planner requires {DEEPSEEK_FLASH_MODEL}, got {self.model!r}")
+        if not self.base_url or not self.model or not self.api_keys:
+            raise RecallPlannerError("planner base_url, model, and API key pool are required")
 
     def plan(self, *, query: str, question_date: str, available_layers: Mapping[str, Any], recent_dialogue: Sequence[Mapping[str, Any]] | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
         if not _text(query) or not _text(question_date):
@@ -243,7 +241,7 @@ class DeepSeekFlashRecallPlanner:
         key_index = self.request_index % len(self.api_keys)
         self.request_index += 1
         request_body = {
-            "model": DEEPSEEK_FLASH_MODEL,
+            "model": self.model,
             "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False, separators=(",", ":"))}],
             "temperature": 0,
             "max_tokens": self.max_tokens,
@@ -264,20 +262,20 @@ class DeepSeekFlashRecallPlanner:
                 response_payload = json.loads(raw_http)
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:1000]
-            raise RecallPlannerResponseError(f"recall planner HTTP {exc.code}: {detail}", response_content=detail, request_metadata=_metadata(key_index=key_index, started=started, finish_reason="http_error", content=detail, http_status=exc.code, request_sha256=request_sha256)) from exc
+            raise RecallPlannerResponseError(f"recall planner HTTP {exc.code}: {detail}", response_content=detail, request_metadata=_metadata(model=self.model, key_index=key_index, started=started, finish_reason="http_error", content=detail, http_status=exc.code, request_sha256=request_sha256)) from exc
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raw = locals().get("raw_http", "")
-            raise RecallPlannerResponseError("recall planner returned invalid HTTP JSON", response_content=raw, request_metadata=_metadata(key_index=key_index, started=started, finish_reason="invalid_http_json", content=raw, error_type=exc.__class__.__name__, request_sha256=request_sha256)) from exc
+            raise RecallPlannerResponseError("recall planner returned invalid HTTP JSON", response_content=raw, request_metadata=_metadata(model=self.model, key_index=key_index, started=started, finish_reason="invalid_http_json", content=raw, error_type=exc.__class__.__name__, request_sha256=request_sha256)) from exc
         except Exception as exc:
-            raise RecallPlannerResponseError(f"recall planner request failed: {exc.__class__.__name__}: {exc}", request_metadata=_metadata(key_index=key_index, started=started, finish_reason="request_error", error_type=exc.__class__.__name__, request_sha256=request_sha256)) from exc
+            raise RecallPlannerResponseError(f"recall planner request failed: {exc.__class__.__name__}: {exc}", request_metadata=_metadata(model=self.model, key_index=key_index, started=started, finish_reason="request_error", error_type=exc.__class__.__name__, request_sha256=request_sha256)) from exc
         usage = response_payload.get("usage") if isinstance(response_payload, Mapping) else {}
         choices = response_payload.get("choices") if isinstance(response_payload, Mapping) else None
         if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], Mapping):
-            raise RecallPlannerResponseError("recall planner response must contain exactly one choice", response_content=raw_http, request_metadata=_metadata(key_index=key_index, started=started, finish_reason="invalid_response", content=raw_http, usage=usage if isinstance(usage, Mapping) else {}, request_sha256=request_sha256))
+            raise RecallPlannerResponseError("recall planner response must contain exactly one choice", response_content=raw_http, request_metadata=_metadata(model=self.model, key_index=key_index, started=started, finish_reason="invalid_response", content=raw_http, usage=usage if isinstance(usage, Mapping) else {}, request_sha256=request_sha256))
         choice = choices[0]
         content = (choice.get("message") or {}).get("content") if isinstance(choice.get("message"), Mapping) else None
         finish_reason = _text(choice.get("finish_reason"))
-        metadata = _metadata(key_index=key_index, started=started, finish_reason=finish_reason, content=content if isinstance(content, str) else raw_http, usage=usage if isinstance(usage, Mapping) else {}, request_sha256=request_sha256)
+        metadata = _metadata(model=self.model, key_index=key_index, started=started, finish_reason=finish_reason, content=content if isinstance(content, str) else raw_http, usage=usage if isinstance(usage, Mapping) else {}, request_sha256=request_sha256)
         if finish_reason != "stop" or not isinstance(content, str):
             raise RecallPlannerResponseError("recall planner response did not finish with a JSON string", response_content=raw_http, request_metadata=metadata)
         try:

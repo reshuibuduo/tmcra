@@ -17,13 +17,13 @@ from math import isfinite
 from typing import Any
 
 from tmcra_v3_recall_planner import (
-    DEEPSEEK_FLASH_MODEL,
     RecallPlannerError,
     RecallPlannerResponseError,
     _reject_gold,
     _sha256,
 )
 
+DEEPSEEK_FLASH_MODEL = "deepseek-v4-flash"  # Backward-compatible default only.
 ROLE_PLAN_SCHEMA = "tmcra.recall-role-plan.v1"
 PLANNER_VERSION = ROLE_PLAN_SCHEMA
 PLANNER_PROMPT_VERSION = "tmcra-recall-role-planner-2026-07-12.3"
@@ -172,6 +172,7 @@ def _normalize_usage(value: Any) -> dict[str, int]:
 
 def _metadata_v4(
     *,
+    model: str,
     physical_call_id: str,
     key_index: int,
     started: float,
@@ -189,7 +190,7 @@ def _metadata_v4(
         "physical_api_calls": 1,
         "stage": "recall_planner",
         "provider": "deepseek",
-        "model": DEEPSEEK_FLASH_MODEL,
+        "model": model,
         "api_key_index": key_index,
         "latency_seconds": round(time.time() - started, 3),
         "response_sha256": _sha256(content),
@@ -220,10 +221,8 @@ class DeepSeekFlashRecallRolePlanner:
         self.api_keys = list(dict.fromkeys(_text(key) for key in api_keys if _text(key)))
         self.timeout, self.max_tokens, self.request_index = max(1.0, float(timeout)), max(128, int(max_tokens)), 0
         self.user_id = ""
-        if not self.base_url or not self.api_keys:
-            raise RecallPlannerError("planner base_url and API key pool are required")
-        if self.model != DEEPSEEK_FLASH_MODEL:
-            raise RecallPlannerError(f"recall role planner requires {DEEPSEEK_FLASH_MODEL}, got {self.model!r}")
+        if not self.base_url or not self.model or not self.api_keys:
+            raise RecallPlannerError("planner base_url, model, and API key pool are required")
 
     def plan(self, *, query: str, question_date: str, available_layers: Mapping[str, Any], recent_dialogue: Sequence[Mapping[str, Any]] | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
         query, question_date = _text(query), _text(question_date)
@@ -236,7 +235,7 @@ class DeepSeekFlashRecallRolePlanner:
         payload = {"query": query, "question_date": question_date, "recent_dialogue": dialogue, "available_layers": dict(available_layers)}
         key_index = self.request_index % len(self.api_keys)
         self.request_index += 1
-        body = {"model": DEEPSEEK_FLASH_MODEL, "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False, separators=(",", ":"))}], "temperature": 0, "max_tokens": self.max_tokens, "response_format": {"type": "json_object"}, "thinking": {"type": "disabled"}, "enable_thinking": False}
+        body = {"model": self.model, "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False, separators=(",", ":"))}], "temperature": 0, "max_tokens": self.max_tokens, "response_format": {"type": "json_object"}, "thinking": {"type": "disabled"}, "enable_thinking": False}
         user_id = _text(getattr(self, "user_id", ""))
         if user_id:
             if len(user_id) > 512 or re.fullmatch(r"[A-Za-z0-9_-]+", user_id) is None:
@@ -253,12 +252,12 @@ class DeepSeekFlashRecallRolePlanner:
                 response_payload = json.loads(raw_http)
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:1000]
-            raise RecallPlannerResponseError(f"recall role planner HTTP {exc.code}: {detail}", response_content=detail, request_metadata=_metadata_v4(physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="http_error", content=detail, http_status=exc.code, request_sha256=request_sha256)) from exc
+            raise RecallPlannerResponseError(f"recall role planner HTTP {exc.code}: {detail}", response_content=detail, request_metadata=_metadata_v4(model=self.model, physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="http_error", content=detail, http_status=exc.code, request_sha256=request_sha256)) from exc
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raw = locals().get("raw_http", "")
-            raise RecallPlannerResponseError("recall role planner returned invalid HTTP JSON", response_content=raw, request_metadata=_metadata_v4(physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="invalid_http_json", content=raw, error_type=exc.__class__.__name__, request_sha256=request_sha256, http_status=locals().get("http_status"))) from exc
+            raise RecallPlannerResponseError("recall role planner returned invalid HTTP JSON", response_content=raw, request_metadata=_metadata_v4(model=self.model, physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="invalid_http_json", content=raw, error_type=exc.__class__.__name__, request_sha256=request_sha256, http_status=locals().get("http_status"))) from exc
         except Exception as exc:
-            raise RecallPlannerResponseError(f"recall role planner request failed: {exc.__class__.__name__}: {exc}", request_metadata=_metadata_v4(physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="request_error", error_type=exc.__class__.__name__, request_sha256=request_sha256)) from exc
+            raise RecallPlannerResponseError(f"recall role planner request failed: {exc.__class__.__name__}: {exc}", request_metadata=_metadata_v4(model=self.model, physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="request_error", error_type=exc.__class__.__name__, request_sha256=request_sha256)) from exc
         try:
             usage = _normalize_usage(
                 response_payload.get("usage") if isinstance(response_payload, Mapping) else None
@@ -268,6 +267,7 @@ class DeepSeekFlashRecallRolePlanner:
                 f"recall role planner response usage is invalid: {exc}",
                 response_content=raw_http,
                 request_metadata=_metadata_v4(
+                    model=self.model,
                     physical_call_id=physical_call_id,
                     key_index=key_index,
                     started=started,
@@ -280,11 +280,11 @@ class DeepSeekFlashRecallRolePlanner:
             ) from exc
         choices = response_payload.get("choices") if isinstance(response_payload, Mapping) else None
         if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], Mapping):
-            raise RecallPlannerResponseError("recall role planner response must contain exactly one choice", response_content=raw_http, request_metadata=_metadata_v4(physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="invalid_response", content=raw_http, usage=usage, request_sha256=request_sha256, http_status=http_status, response_id=_text(response_payload.get("id"))))
+            raise RecallPlannerResponseError("recall role planner response must contain exactly one choice", response_content=raw_http, request_metadata=_metadata_v4(model=self.model, physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason="invalid_response", content=raw_http, usage=usage, request_sha256=request_sha256, http_status=http_status, response_id=_text(response_payload.get("id"))))
         choice, message = choices[0], choices[0].get("message")
         content = message.get("content") if isinstance(message, Mapping) else None
         finish_reason = _text(choice.get("finish_reason"))
-        metadata = _metadata_v4(physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason=finish_reason, content=content if isinstance(content, str) else raw_http, usage=usage, request_sha256=request_sha256, http_status=http_status, response_id=_text(response_payload.get("id")))
+        metadata = _metadata_v4(model=self.model, physical_call_id=physical_call_id, key_index=key_index, started=started, finish_reason=finish_reason, content=content if isinstance(content, str) else raw_http, usage=usage, request_sha256=request_sha256, http_status=http_status, response_id=_text(response_payload.get("id")))
         if finish_reason != "stop" or not isinstance(content, str):
             raise RecallPlannerResponseError("recall role planner response did not finish with a JSON string", response_content=raw_http, request_metadata=metadata)
         try:

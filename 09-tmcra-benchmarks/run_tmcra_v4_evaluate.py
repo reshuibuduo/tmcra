@@ -14,7 +14,6 @@ from run_tmcra_v4_build import BASE, DEFAULT_DATA, _now, _resume_log, _run
 from run_tmcra_v4_retrieve import DEFAULT_HARNESS
 from tmcra_v4_route_policy import (
     POLICY_SCHEMA,
-    PRODUCTION_ANSWER_MODEL,
     PRODUCTION_ANSWER_PROTOCOL,
     PRODUCTION_ANSWER_RUNNER,
     PRODUCTION_LANE,
@@ -455,10 +454,13 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
 
         loaded = _load_environment(args.answer_env.resolve())
         environment = {**os.environ, **loaded}
-        if environment.get("TMCRA_ANSWER_MODEL") != PRODUCTION_ANSWER_MODEL:
-            raise EvaluationError(
-                f"answer layer must remain fixed to {PRODUCTION_ANSWER_MODEL}"
-            )
+        configured_answer_model = str(environment.get("TMCRA_ANSWER_MODEL") or "").strip()
+        if not configured_answer_model:
+            raise EvaluationError("answer layer requires TMCRA_ANSWER_MODEL")
+        configured_judge_model = str(
+            environment.get("TMCRA_JUDGE_MODEL") or configured_answer_model
+        ).strip()
+        route_report["answer_model"] = configured_answer_model
         _run(
             [
                 sys.executable,
@@ -489,7 +491,9 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         )
         answers = _read_jsonl(answer_dir / "answers.jsonl")
         try:
-            validate_production_answers(answers)
+            validate_production_answers(
+                answers, expected_model=configured_answer_model
+            )
         except RoutePolicyError as exc:
             raise EvaluationError(f"production route policy rejected answers: {exc}") from exc
         if [item.get("question_id") for item in answers] != expected_qids:
@@ -506,7 +510,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
                 sys.executable,
                 str(args.judge.resolve()),
                 "--metric-model",
-                "gpt-5.4",
+                configured_judge_model,
                 "--hyp-file",
                 str(answer_dir / "answers.jsonl"),
                 "--ref-file",
@@ -536,8 +540,8 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             raise EvaluationError("answer rows do not match frozen qid order")
         if [item.get("question_id") for item in judged] != expected_qids:
             raise EvaluationError("judge rows do not match frozen qid order")
-        if any(item.get("answer_model") != PRODUCTION_ANSWER_MODEL for item in answers):
-            raise EvaluationError(f"answer output did not use {PRODUCTION_ANSWER_MODEL}")
+        if any(item.get("answer_model") != configured_answer_model for item in answers):
+            raise EvaluationError("answer output did not use the configured model")
         labels = [official_judge_correct(item) for item in judged]
         correct_count = sum(labels)
         reference = _read_reference(args.data.resolve())
@@ -635,7 +639,8 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             "route_report": route_report,
             "retrieval_tag": args.retrieval_tag,
             "evaluated_count": len(judged),
-            "answer_model": PRODUCTION_ANSWER_MODEL,
+            "answer_model": configured_answer_model,
+            "judge_model": configured_judge_model,
             "answer_attempt_limit": int(args.answer_attempts),
             "judge_retry_limit": 0,
             "judge_label_field": "autoeval_label.label",

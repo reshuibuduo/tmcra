@@ -50,6 +50,15 @@ OpenAI-compatible 契约，并通过实际可用性校验。`Qwen3.6-35B-A3B` �
 再运行预检与回归评测。反向代理、模型来源、手动安装和回滚见
 [部署指南](docs/DEPLOYMENT.md)。
 
+所有生成角色均已取消型号白名单。部署方可分别配置
+`TMCRA_WRITER_MODEL`、`TMCRA_WRITER_REVIEWER_MODEL`、
+`TMCRA_RECALL_PLANNER_MODEL`、`TMCRA_SLOW_GRAPH_MODEL`、
+`TMCRA_SESSION_GRAPH_MODEL`、`TMCRA_EVIDENCE_PLANNER_MODEL`、
+`TMCRA_SUBJECT_ATTRIBUTION_MODEL`、`TMCRA_ANSWER_MODEL` 和
+`TMCRA_JUDGE_MODEL`。运行时仍会检查型号非空、接口真实可用、响应 Schema 合法，以及续跑
+产物所记录的型号与当前配置一致。新 Writer 型号可用 `TMCRA_WRITER_PRICE_*` 配置成本；
+未配置价格时仍记录用量，并将成本标记为未定价。
+
 ## 为什么需要 TMCRA
 
 普通聊天记录只是按时间排列的文本，难以精确召回，也容易混淆不同用户或项目。
@@ -142,7 +151,7 @@ Reviewer、召回规划与慢速图谱生成。DeepSeek Flash/Pro 保留为可�
 | 本地学习排序 | 仓库内置 `tmcra_v3_reranker.pt` | 在本地融合 Cross Encoder、dense、graph、selection 与 recency 信号 |
 | 召回角色规划 | 本地 `Qwen3.6-35B-A3B` | 为证据层分配角色并保留原始证据池 |
 | 证据编译 | 确定性代码，不使用模型 | 绑定 Source ID，执行日期、计数、排序与集合运算 |
-| 业务 Agent / 答案 | 部署方选择 | 消费有限证据包；固定参考/评测答案链路使用 `gpt-5.4` |
+| 业务 Agent / 答案 | 部署方选择 | 消费有限证据包；已公开的参考/评测运行使用 `gpt-5.4` |
 
 外层业务 Agent 由部署方选择。应用可以通过 SDK、生命周期 Adapter、REST API 或 MCP
 使用自己的模型和 Agent 框架。公开生产配置在本地加载 Qwen3.6-35B-A3B、BGE-M3、

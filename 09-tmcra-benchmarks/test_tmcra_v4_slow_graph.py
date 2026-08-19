@@ -3860,13 +3860,13 @@ class V4SlowGraphTests(unittest.TestCase):
         client = slow_graph.DeepSeekProGraphPatchManager(config)
         self.assertEqual(client.config.model, "deepseek-v4-pro")
 
-    def test_api_client_model_must_match_controller_route(self):
-        with self.assertRaises(slow_graph.SlowGraphError):
-            slow_graph.DeepSeekFlashGraphPatchManager(
-                slow_graph.DeepSeekTierConfig(
-                    "http://example.invalid", ("key",), 20, model="deepseek-v4-pro"
-                )
+    def test_api_client_accepts_operator_selected_model(self):
+        client = slow_graph.DeepSeekFlashGraphPatchManager(
+            slow_graph.DeepSeekTierConfig(
+                "http://example.invalid", ("key",), 20, model="operator-graph-v1"
             )
+        )
+        self.assertEqual(client.config.model, "operator-graph-v1")
 
     def test_missing_flash_is_explicit_failure_without_pro_fallback(self):
         pro = RecordingClient({"operations": []})

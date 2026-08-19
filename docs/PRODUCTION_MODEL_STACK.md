@@ -28,7 +28,7 @@ flowchart LR
   PLAN["Recall role planner<br/>Qwen3.6-35B-A3B"]
   COMPILE["Deterministic evidence compiler"]
   PACK["Bounded evidence pack"]
-  AGENT["Operator's agent model<br/>or fixed reference answer route"]
+  AGENT["Operator's agent model<br/>or published reference answer route"]
 
   EVENT --> WRITER --> REVIEW --> STORE
   STORE --> EMBED
@@ -40,8 +40,8 @@ flowchart LR
 
 The operator selects the outer agent. An application may use any model that can
 consume the returned evidence object while preserving the trust boundary. The
-fixed GPT-5.4 answer route belongs only to the published reference/evaluation
-pipeline; Memory API integrations can use their own application model.
+published reference/evaluation run used GPT-5.4; the answer and judge runners
+now accept operator-selected model identities as well.
 
 ## Models and deterministic stages
 
@@ -56,7 +56,35 @@ pipeline; Memory API integrations can use their own application model.
 | TMCRA runtime reranker | `tmcra_v3_reranker.pt` | Fuse cross-encoder representations/logits with dense, graph, selection, and recency channels | Local GPU; checkpoint is included | `TMCRA_CHECKPOINT`; Apache-2.0 declaration and checksum are in component 02 |
 | Recall role planner | `Qwen3.6-35B-A3B` | Resolve the current query and assign evidence/context roles while preserving the source reservoir | Local OpenAI-compatible endpoint | `TMCRA_RECALL_PLANNER_PROVIDER=local-qwen`, `qwen36-planner-v1`; defaults are 512 output tokens and 60-second timeout |
 | Evidence compiler | No model | Bind source IDs, execute dates/counts/ordering/set operations, and produce a verifiable packet | Deterministic Python code | Not replaceable by an untrusted free-form model response |
-| Answer / application agent | Operator-selected | Consume prompt-ready evidence and complete the product task | Application or agent host | Any model/API may be used; the reference answer/evaluation route is fixed to `gpt-5.4` |
+| Answer / application agent | Operator-selected | Consume prompt-ready evidence and complete the product task | Application or agent host | Any model/API may be used; the published reference/evaluation run used `gpt-5.4` |
+
+## Model selection without name allowlists
+
+The code accepts any non-empty model identity at every generation role. The
+following variables are the primary model selectors:
+
+| Role | Model selector | Related route setting |
+|---|---|---|
+| Writer | `TMCRA_WRITER_MODEL` | `TMCRA_WRITER_PROVIDER`, `TMCRA_WRITER_BASE_URL` |
+| Reviewer | `TMCRA_WRITER_REVIEWER_MODEL` | `TMCRA_WRITER_REVIEWER_PROVIDER` |
+| Recall planner | `TMCRA_RECALL_PLANNER_MODEL` | `TMCRA_RECALL_PLANNER_PROVIDER` |
+| Slow graph | `TMCRA_SLOW_GRAPH_MODEL` | `TMCRA_SLOW_GRAPH_PROVIDER` |
+| Session graph | `TMCRA_SESSION_GRAPH_MODEL` or `TMCRA_SESSION_GRAPH_LOCAL_MODEL` | `TMCRA_SESSION_GRAPH_PROVIDER` |
+| Evidence planner | `TMCRA_EVIDENCE_PLANNER_MODEL` or `--planner-model` | `--planner-provider`, `--planner-base-url` |
+| Subject attribution | `TMCRA_SUBJECT_ATTRIBUTION_MODEL` | attribution base URL and key pool |
+| Benchmark/application answer | `TMCRA_ANSWER_MODEL` | `TMCRA_ANSWER_BASE_URL`, `TMCRA_ANSWER_API_KEY` |
+| Benchmark judge | `TMCRA_JUDGE_MODEL` | defaults to the configured answer model |
+
+Legacy `TMCRA_DEEPSEEK_FLASH_MODEL` and `TMCRA_DEEPSEEK_PRO_MODEL` variables
+remain compatible fallbacks. Their default values reproduce the historical
+route and do not form an allowlist. Embedding and cross-encoder paths also
+accept operator-owned local model paths or configured API identities.
+
+Safety checks remain at the contract boundary: the configured model identity
+must be non-empty; a live endpoint must expose the requested alias; structured
+responses must pass schema and attribution validation; and resumed caches,
+journals, or benchmark files must match the model that created them. These
+checks prevent mixed artifacts without restricting a model family.
 
 ## Retrieval profile shipped in source
 
@@ -89,7 +117,7 @@ The public production default uses:
 - local BGE-M3 and BGE reranker V2 M3 for retrieval;
 - the bundled TMCRA runtime reranker checkpoint for learned local fusion;
 - deterministic evidence compilation; and
-- GPT-5.4 only in the fixed reference answer/evaluation path.
+- GPT-5.4 in the published reference answer/evaluation run.
 
 The Qwen endpoint binds to loopback in the single-node profile. Its API key file
 lives under the operator-owned local-model state directory. Provider calls,

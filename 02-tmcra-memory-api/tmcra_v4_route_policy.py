@@ -532,12 +532,22 @@ def validate_production_evidence(rows: Sequence[Mapping[str, Any]]) -> dict[str,
     }
 
 
-def validate_production_answers(rows: Sequence[Mapping[str, Any]]) -> None:
+def validate_production_answers(
+    rows: Sequence[Mapping[str, Any]], *, expected_model: str | None = None
+) -> None:
     if not rows:
         raise RoutePolicyError("production answers are empty")
+    configured_model = _text(expected_model)
+    observed_models: set[str] = set()
     for index, row in enumerate(rows):
         qid = _text(row.get("question_id")) or f"row {index}"
         if row.get("answer_protocol") != PRODUCTION_ANSWER_PROTOCOL:
             raise RoutePolicyError(f"{qid}: answer protocol is not production-approved")
-        if row.get("answer_model") != PRODUCTION_ANSWER_MODEL:
-            raise RoutePolicyError(f"{qid}: answer model is not production-approved")
+        answer_model = _text(row.get("answer_model"))
+        if not answer_model:
+            raise RoutePolicyError(f"{qid}: answer model is missing")
+        if configured_model and answer_model != configured_model:
+            raise RoutePolicyError(f"{qid}: answer model does not match the configured model")
+        observed_models.add(answer_model)
+    if len(observed_models) != 1:
+        raise RoutePolicyError("production answers contain mixed model identities")

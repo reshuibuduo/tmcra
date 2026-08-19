@@ -168,7 +168,7 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--timeout", type=float, default=180.0)
     parser.add_argument("--max-tokens", type=int, default=16384)
-    parser.add_argument("--planner-provider", choices=("deepseek", "xiaomi_mimo"), default="deepseek")
+    parser.add_argument("--planner-provider", default="deepseek")
     parser.add_argument("--planner-model")
     parser.add_argument("--planner-base-url")
     parser.add_argument("--planner-key-file", type=Path)
@@ -186,16 +186,24 @@ def main() -> int:
         environment = _load_shell_environment(args.writer_env.resolve())
         keys = _key_pool(environment)
         base_url = args.planner_base_url or environment.get("TMCRA_DEEPSEEK_WRITER_BASE_URL") or environment.get("TMCRA_WRITER_BASE_URL") or "https://api.deepseek.com/v1"
-        model = args.planner_model or "deepseek-v4-pro"
+        model = args.planner_model or environment.get("TMCRA_WRITER_REVIEWER_MODEL") or environment.get("TMCRA_DEEPSEEK_PRO_MODEL") or "deepseek-v4-pro"
     else:
         if not args.planner_key_file or not args.planner_key_file.is_file():
-            raise SemanticCompileError("xiaomi_mimo requires --planner-key-file")
+            raise SemanticCompileError("non-DeepSeek planners require --planner-key-file")
         key = args.planner_key_file.read_text(encoding="utf-8").strip()
         if not key:
             raise SemanticCompileError("planner key file is empty")
         keys = [key]
-        base_url = args.planner_base_url or "https://api.xiaomimimo.com/v1"
-        model = args.planner_model or "mimo-v2.5"
+        base_url = args.planner_base_url or (
+            "https://api.xiaomimimo.com/v1" if args.planner_provider == "xiaomi_mimo" else ""
+        )
+        model = args.planner_model or (
+            "mimo-v2.5" if args.planner_provider == "xiaomi_mimo" else ""
+        )
+        if not base_url or not model:
+            raise SemanticCompileError(
+                "custom planner providers require --planner-base-url and --planner-model"
+            )
     out_dir = args.out_dir.resolve()
     journal_dir = out_dir / "rows"
     journal_dir.mkdir(parents=True, exist_ok=True)

@@ -939,19 +939,19 @@ class OnlineRuntimeTests(unittest.TestCase):
                 )
             )
 
-    def test_product_writer_requires_flash_and_pro_models(self) -> None:
+    def test_product_writer_accepts_operator_selected_models(self) -> None:
         common = {"base_url": "https://example.invalid/v1", "api_keys": ["test"], "timeout": 1, "max_tokens": 256}
-        with self.assertRaises(ProductWriterError):
-            DeepSeekProductWriter(model="deepseek-chat", reviewer_model="deepseek-v4-pro", **common)
-        with self.assertRaises(ProductWriterError):
-            DeepSeekProductWriter(model="deepseek-v4-flash", reviewer_model="deepseek-chat", **common)
         writer = DeepSeekProductWriter(
-            model="deepseek-v4-flash",
-            reviewer_model="deepseek-v4-pro",
+            model="operator-writer-v1",
+            reviewer_model="operator-reviewer-v2",
             **common,
         )
-        self.assertEqual(writer.model, "deepseek-v4-flash")
-        self.assertEqual(writer.reviewer_model, "deepseek-v4-pro")
+        self.assertEqual(writer.model, "operator-writer-v1")
+        self.assertEqual(writer.reviewer_model, "operator-reviewer-v2")
+        with self.assertRaises(ProductWriterError):
+            DeepSeekProductWriter(model="", reviewer_model="operator-reviewer-v2", **common)
+        with self.assertRaises(ProductWriterError):
+            DeepSeekProductWriter(model="operator-writer-v1", reviewer_model="", **common)
 
     def test_product_writer_reports_length_finish_as_fatal_with_raw_response(self) -> None:
         writer = DeepSeekProductWriter(

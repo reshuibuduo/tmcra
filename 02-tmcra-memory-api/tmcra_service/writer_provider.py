@@ -138,8 +138,8 @@ def primary_writer_route(
     prompt_adapter = _value(environment, "TMCRA_WRITER_PROMPT_ADAPTER", "none")
     if provider == DEEPSEEK_PROVIDER:
         _validate_https_provider_url(base_url, name="TMCRA_WRITER_BASE_URL")
-        if model != "deepseek-v4-flash":
-            raise ValueError("DeepSeek Writer model must be deepseek-v4-flash")
+        if not model:
+            raise ValueError("DeepSeek Writer model is required")
         if prompt_adapter != "none":
             raise ValueError("DeepSeek Writer must not use a local prompt adapter")
         return WriterProviderRoute(
@@ -321,8 +321,8 @@ def reviewer_writer_route(
     _validate_https_provider_url(
         base_url, name="TMCRA_WRITER_REVIEWER_BASE_URL"
     )
-    if model != "deepseek-v4-pro":
-        raise ValueError("Writer reviewer model must be deepseek-v4-pro")
+    if not model:
+        raise ValueError("Writer reviewer model is required")
     return WriterProviderRoute(
         provider=provider,
         base_url=base_url,

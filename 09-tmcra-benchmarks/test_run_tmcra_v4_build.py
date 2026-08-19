@@ -30,6 +30,20 @@ class V4BuildResumeTests(unittest.TestCase):
             overridden["TMCRA_DEEPSEEK_FLASH_MAX_TOKENS"], "24576"
         )
 
+    def test_worker_environment_preserves_operator_selected_models(self):
+        environment = build._worker_environment(
+            {
+                "TMCRA_WRITER_MODEL": "operator-writer-v1",
+                "TMCRA_WRITER_REVIEWER_MODEL": "operator-reviewer-v2",
+            },
+            ["key-a"],
+            0,
+        )
+        self.assertEqual(environment["TMCRA_WRITER_MODEL"], "operator-writer-v1")
+        self.assertEqual(environment["TMCRA_DEEPSEEK_FLASH_MODEL"], "operator-writer-v1")
+        self.assertEqual(environment["TMCRA_WRITER_REVIEWER_MODEL"], "operator-reviewer-v2")
+        self.assertEqual(environment["TMCRA_DEEPSEEK_PRO_MODEL"], "operator-reviewer-v2")
+
     def test_writer_quality_report_exposes_tolerated_semantic_loss(self):
         with tempfile.TemporaryDirectory() as temp:
             worker_dir = Path(temp)

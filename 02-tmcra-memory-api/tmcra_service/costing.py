@@ -11,7 +11,11 @@ from .writer import (
     DEEPSEEK_V4_PRICES_MICRO_CNY,
     DEEPSEEK_V4_PRICE_VERSION,
 )
-from .writer_provider import DEEPSEEK_PROVIDER, LOCAL_QWEN_PROVIDER
+from .writer_provider import (
+    DEEPSEEK_PROVIDER,
+    LOCAL_QWEN_PROVIDER,
+    OPENAI_COMPATIBLE_PROVIDER,
+)
 
 
 LOCAL_EXTERNAL_PRICE_VERSION = "tmcra-local-external-api-cost-v1"
@@ -146,27 +150,28 @@ def journal_deepseek_calls(
     for call in calls:
         provider = str(call.get("provider") or DEEPSEEK_PROVIDER).strip().lower()
         model = str(call.get("model") or default_model).strip()
-        if provider not in {DEEPSEEK_PROVIDER, LOCAL_QWEN_PROVIDER}:
+        if provider not in {
+            DEEPSEEK_PROVIDER,
+            LOCAL_QWEN_PROVIDER,
+            OPENAI_COMPATIBLE_PROVIDER,
+        }:
             raise ProviderMetadataError(f"unsupported provider metadata: {provider}")
         if store.get_provider_call(str(call["physical_call_id"])) is not None:
             continue
         usage, usage_state = _usage(call)
         terminal = _terminal_status(call)
-        rates = (
-            DEEPSEEK_V4_PRICES_MICRO_CNY.get(model)
-            if provider == DEEPSEEK_PROVIDER
-            else (0, 0, 0)
-        )
-        price_version = (
-            DEEPSEEK_V4_PRICE_VERSION
-            if provider == DEEPSEEK_PROVIDER
-            else LOCAL_EXTERNAL_PRICE_VERSION
-        )
-        pricing_source = (
-            DEEPSEEK_PRICING_SOURCE
-            if provider == DEEPSEEK_PROVIDER
-            else LOCAL_EXTERNAL_PRICING_SOURCE
-        )
+        if provider == DEEPSEEK_PROVIDER:
+            rates = DEEPSEEK_V4_PRICES_MICRO_CNY.get(model)
+            price_version = DEEPSEEK_V4_PRICE_VERSION
+            pricing_source = DEEPSEEK_PRICING_SOURCE
+        elif provider == LOCAL_QWEN_PROVIDER:
+            rates = (0, 0, 0)
+            price_version = LOCAL_EXTERNAL_PRICE_VERSION
+            pricing_source = LOCAL_EXTERNAL_PRICING_SOURCE
+        else:
+            rates = None
+            price_version = "operator-pricing-not-configured"
+            pricing_source = "operator pricing not configured"
         if rates is not None:
             store.upsert_provider_price(
                 provider,

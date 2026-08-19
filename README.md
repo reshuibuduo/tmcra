@@ -62,6 +62,16 @@ Planner, and slow-graph prompt adapters, followed by preflight and regression
 evaluation. See the [deployment guide](docs/DEPLOYMENT.md) for reverse proxy,
 model-source, manual install, and rollback details.
 
+No generation role has a model-name allowlist. Operators may configure each
+role independently with `TMCRA_WRITER_MODEL`, `TMCRA_WRITER_REVIEWER_MODEL`,
+`TMCRA_RECALL_PLANNER_MODEL`, `TMCRA_SLOW_GRAPH_MODEL`,
+`TMCRA_SESSION_GRAPH_MODEL`, `TMCRA_EVIDENCE_PLANNER_MODEL`,
+`TMCRA_SUBJECT_ATTRIBUTION_MODEL`, `TMCRA_ANSWER_MODEL`, and
+`TMCRA_JUDGE_MODEL`. The runtime still verifies non-empty identities, endpoint
+availability, response schemas, and model consistency for resumed artifacts.
+Unknown Writer pricing can be supplied through the `TMCRA_WRITER_PRICE_*`
+variables; without it, usage remains recorded and cost is marked unpriced.
+
 ## Why TMCRA
 
 Ordinary chat history is ordered text. It is difficult to retrieve precisely,
@@ -193,7 +203,7 @@ slow-graph generation. DeepSeek Flash/Pro remains an optional provider route.
 | Local learned fusion | bundled `tmcra_v3_reranker.pt` | Fuse cross-encoder, dense, graph, selection, and recency signals locally |
 | Recall-role planning | local `Qwen3.6-35B-A3B` | Assign evidence/context roles while preserving the immutable source reservoir |
 | Evidence compilation | deterministic code, no model | Bind Source IDs and execute dates, counts, ordering, and set operations |
-| Product agent / answer | operator-selected | Consume the bounded evidence pack; the fixed reference/evaluation answer route uses `gpt-5.4` |
+| Product agent / answer | operator-selected | Consume the bounded evidence pack; the published reference/evaluation run used `gpt-5.4` |
 
 The operator selects the outer product Agent. Applications may use their own
 model or Agent framework through the SDK, lifecycle adapter, REST API, or MCP

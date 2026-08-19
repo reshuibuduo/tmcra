@@ -90,11 +90,16 @@ _LOCAL_INFERENCE_CANCELLATION_PROOF_FILE = (
 def _active_local_writer_model() -> str:
     """Return the configured local model alias without pinning a model family."""
 
-    return str(
+    configured = str(
         os.getenv("TMCRA_WRITER_MODEL")
         or os.getenv("TMCRA_LOCAL_WRITER_MODEL")
-        or LOCAL_QWEN_MODEL
+        or ""
     ).strip()
+    if configured:
+        return configured
+    if str(os.getenv("TMCRA_WRITER_PROVIDER") or "deepseek").strip() == "local-qwen":
+        return LOCAL_QWEN_MODEL
+    return "deepseek-v4-flash"
 
 
 def _raw_token_estimate(content: str) -> int:
@@ -5018,8 +5023,7 @@ class V4StorageAdapter:
             and str(record.get("session_id") or "") == session_id
             and record_job_id in {"", job_id}
             and str(record.get("stage") or "") == "batch_flash"
-            and str(record.get("model") or "")
-            in {"deepseek-v4-flash", _active_local_writer_model()}
+            and str(record.get("model") or "") == _active_local_writer_model()
             and str(record.get("raw_response_sha256") or "") == raw_hash
             and str(record.get("metadata_response_sha256") or "") == raw_hash
             and expected_hash == raw_hash
@@ -7082,7 +7086,11 @@ class V4StorageAdapter:
             job_id=ledger_job_id,
             stage_id=ledger_stage_id,
             operation="subject_attribution_pro",
-            default_model="deepseek-v4-pro",
+            default_model=str(
+                os.getenv("TMCRA_SUBJECT_ATTRIBUTION_MODEL")
+                or os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+                or _active_local_writer_model()
+            ).strip(),
             usage_attribution=usage_attribution,
         )
         if (
@@ -7125,7 +7133,11 @@ class V4StorageAdapter:
                 job_id=ledger_job_id,
                 stage_id=ledger_stage_id,
                 operation="slow_graph_manager",
-                default_model="deepseek-v4-pro",
+                default_model=str(
+                    os.getenv("TMCRA_SLOW_GRAPH_MODEL")
+                    or os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+                    or _active_local_writer_model()
+                ).strip(),
                 usage_attribution=usage_attribution,
             )
         result = {
@@ -8395,7 +8407,11 @@ class V4StorageAdapter:
             job_id=None,
             stage_id=ledger_stage_id,
             operation="evidence_compiler",
-            default_model="deepseek-v4-pro",
+            default_model=str(
+                os.getenv("TMCRA_EVIDENCE_PLANNER_MODEL")
+                or os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+                or _active_local_writer_model()
+            ).strip(),
             usage_attribution=usage_attribution,
         )
         if compile_error is not None:

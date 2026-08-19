@@ -29,7 +29,12 @@ from tmcra_v4_batch_writer import DeepSeekBatchClient
 
 
 PROMPT_VERSION = "tmcra-v4-subject-attribution-2026-07-14.3"
-MODEL = "deepseek-v4-pro"
+MODEL = (
+    os.getenv("TMCRA_SUBJECT_ATTRIBUTION_MODEL")
+    or os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+    or os.getenv("TMCRA_WRITER_MODEL")
+    or "deepseek-v4-pro"
+).strip()
 CURRENT_STATES = {"active", "parallel_active", "promoted", "challenged"}
 DECISIONS = {"keep_user", "quarantine_third_party", "quarantine_ambiguous"}
 
@@ -81,19 +86,23 @@ class AttributionClient(Protocol):
 class DeepSeekProAttributionClient:
     def __init__(self) -> None:
         base_url = (
-            os.getenv("TMCRA_DEEPSEEK_PRO_BASE_URL")
+            os.getenv("TMCRA_SUBJECT_ATTRIBUTION_BASE_URL")
+            or os.getenv("TMCRA_WRITER_REVIEWER_BASE_URL")
+            or os.getenv("TMCRA_DEEPSEEK_PRO_BASE_URL")
             or os.getenv("TMCRA_WRITER_BASE_URL")
             or "https://api.deepseek.com/v1"
         )
         raw_keys = (
-            os.getenv("TMCRA_DEEPSEEK_PRO_KEY_POOL")
+            os.getenv("TMCRA_SUBJECT_ATTRIBUTION_API_KEY_POOL")
+            or os.getenv("TMCRA_WRITER_REVIEWER_API_KEY_POOL")
+            or os.getenv("TMCRA_DEEPSEEK_PRO_KEY_POOL")
             or os.getenv("TMCRA_WRITER_API_KEY_POOL")
             or os.getenv("TMCRA_DEEPSEEK_WRITER_KEY_POOL")
             or ""
         )
         keys = [item.strip() for item in raw_keys.split(",") if item.strip()]
-        if not keys:
-            raise AttributionError("DeepSeek Pro key pool is empty; no fallback is allowed")
+        if not MODEL or not keys:
+            raise AttributionError("subject-attribution model and API key pool are required")
         max_tokens = int(os.getenv("TMCRA_DEEPSEEK_PRO_MAX_TOKENS", "16384"))
         self.client = DeepSeekBatchClient(
             base_url=base_url,

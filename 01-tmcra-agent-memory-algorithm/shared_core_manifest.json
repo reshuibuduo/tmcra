@@ -9,11 +9,11 @@
     },
     {
       "path": "run_tmcra_v4_build.py",
-      "sha256": "33f53611fa19897ab09357b6e6e5951bccf05efafc350fdf5b014b8c4fb5c899"
+      "sha256": "1ebc54751fcfea91bbd8ea019cac45ca79cf60ce229bf7249d0427955093f93e"
     },
     {
       "path": "run_tmcra_v4_compile_evidence.py",
-      "sha256": "d1b2a5d4011debf9ff99e0b4ee8d2fe3e2af75c5b8d4a75f9a7399b84a1f3f89"
+      "sha256": "e869c9069bb0c8ad66e7f9bf469f17526269450cd0f58981ec9676d524234166"
     },
     {
       "path": "tmp_tmcra_v2_lme_pipeline.py",
@@ -29,19 +29,19 @@
     },
     {
       "path": "tmcra_v3_product_writer.py",
-      "sha256": "29ad8493caaf13223384fefe5c6ab9d7aa0eb73b110eade7c89576786e002af6"
+      "sha256": "6ded6febcf59e24d78957669790f2200c21cb5247adfd1963ca5bf31085b60c5"
     },
     {
       "path": "tmcra_v3_recall_planner.py",
-      "sha256": "e01e814433562e7bd37fd56465a35fe84a3e096f3a3f37888b97140f2e9c233b"
+      "sha256": "4d4070fd3dbdd34afb91f6f40edc4d34921dba79963c65f93965ab3abc8f26c6"
     },
     {
       "path": "tmcra_v3_slow_graph.py",
-      "sha256": "8246d27e094cdc8288e4d21b23c32cd4725e74c433a72505b2d3ce1dec3d306b"
+      "sha256": "03d719c386d179d2df0753c89c874f79b72fb70728856c5f151ab92fa160b324"
     },
     {
       "path": "tmcra_v4_batch_writer.py",
-      "sha256": "56142ecb4a4a60c0dac54b39b54eb8cd8763a63db8c994db40a54f18ac0e15f4"
+      "sha256": "352568d64d831dbb28a228e9cd898f688636330b13ac2ff99e5ed36226a4dbf2"
     },
     {
       "path": "tmcra_v4_cost_report.py",
@@ -53,23 +53,23 @@
     },
     {
       "path": "tmcra_v4_evidence_planner.py",
-      "sha256": "26b083a600f0e32f511ee430f54a04d87d9456d29ef61e1ca54e2416248d56c8"
+      "sha256": "99dd6cd40bd205a4e9f10bc748b05aff848e187c9ce5f5f6fca9237a9d32aa99"
     },
     {
       "path": "tmcra_v4_online_runtime.py",
-      "sha256": "3477b8130e15f1bf3211ee82f471dba69439842da173d382f25ef8bcbcd4002f"
+      "sha256": "4fee0d591cd4140353d0adf57287e93534607e06db7c92b5ab42fbb0afe45db2"
     },
     {
       "path": "tmcra_v4_slow_graph.py",
-      "sha256": "af1e49b012db79cc9176aa331e71ce2223584d8c6408456e9c0aeaedd46c216b"
+      "sha256": "985e2aab12eba2b96bd53cc05e7352412fb45bd3d9fee3a0a8213b26ff4dba0b"
     },
     {
       "path": "tmcra_v4_recall_planner.py",
-      "sha256": "4875b34b28e040b393ff4374d2b6b640e0d34877e67600555ccce22525d230cc"
+      "sha256": "0e64119ac9c13f62f218e0a631b9722bddb6af092602e40d51092c6bdac32ce9"
     },
     {
       "path": "tmcra_v4_route_policy.py",
-      "sha256": "e670e2a6fe6d82af06a7f5da36f2595e8869684211cdaaf6242793a9ee482826"
+      "sha256": "7731bde4d9c5d4480483b0e59497a064f8e8144febc1a32bcc284f17dd369bba"
     },
     {
       "path": "tmcra_v4_task_contract.py",

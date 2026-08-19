@@ -874,12 +874,10 @@ class DeepSeekProductWriter:
         self.request_index = 0
         self.timeout = max(1.0, float(timeout))
         self.max_tokens = max(256, int(max_tokens))
-        if not self.base_url or not self.api_keys:
-            raise ProductWriterError("writer base URL and API key pool are required")
-        if self.model != "deepseek-v4-flash":
-            raise ProductWriterError(f"product writer requires deepseek-v4-flash, got {self.model!r}")
-        if self.reviewer_model != "deepseek-v4-pro":
-            raise ProductWriterError(f"product writer requires deepseek-v4-pro, got {self.reviewer_model!r}")
+        if not self.base_url or not self.model or not self.reviewer_model or not self.api_keys:
+            raise ProductWriterError(
+                "writer base URL, writer model, reviewer model, and API key pool are required"
+            )
 
     def _request(
         self,
@@ -2443,7 +2441,7 @@ def pending_interaction_candidates(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="TMCRA V3 product message writer with strict DeepSeek extraction")
+    parser = argparse.ArgumentParser(description="TMCRA V3 product message writer with OpenAI-compatible extraction")
     parser.add_argument("--input", required=True)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--repo", required=True)
@@ -2467,7 +2465,10 @@ def main() -> int:
 
     base_url = clean_text(os.getenv("TMCRA_WRITER_BASE_URL"))
     model = clean_text(os.getenv("TMCRA_WRITER_MODEL"))
-    reviewer_model = clean_text(os.getenv("TMCRA_WRITER_REVIEW_MODEL"))
+    reviewer_model = clean_text(
+        os.getenv("TMCRA_WRITER_REVIEWER_MODEL")
+        or os.getenv("TMCRA_WRITER_REVIEW_MODEL")
+    )
     api_keys = [
         clean_text(value)
         for value in os.getenv("TMCRA_WRITER_API_KEY_POOL", "").split(",")
@@ -2475,7 +2476,7 @@ def main() -> int:
     ]
     if not base_url or not model or not reviewer_model or not api_keys:
         raise ProductWriterError(
-            "explicit TMCRA writer base URL, Flash model, Pro model, and API key pool are required"
+            "explicit TMCRA writer base URL, writer model, reviewer model, and API key pool are required"
         )
     writer = DeepSeekProductWriter(
         base_url=base_url,
@@ -2897,7 +2898,9 @@ def main() -> int:
                     elif call_metadata["model"] == reviewer_model:
                         totals["pro_writer_calls"] += physical_call_count
                     else:
-                        raise ProductWriterError(f"{message_id}: routed writer selected an unsupported model")
+                        raise ProductWriterError(
+                            f"{message_id}: routed writer model does not match the configured writer/reviewer identities"
+                        )
                     totals["api_calls"] += physical_call_count
                     capacity_segment_count = int(call_metadata.get("capacity_segment_count", 0) or 0)
                     if capacity_segment_count:

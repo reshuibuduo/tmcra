@@ -97,6 +97,8 @@ def atomic_write_jsonl(path: Path, rows: list[Mapping[str, Any]]) -> None:
 def bind_existing_answers_to_evidence(
     existing: dict[str, dict[str, Any]],
     rows: list[dict[str, Any]],
+    *,
+    expected_model: str | None = None,
 ) -> tuple[dict[str, str], int]:
     evidence_by_qid = {clean_text(row.get("question_id")): row for row in rows}
     if not all(evidence_by_qid) or len(evidence_by_qid) != len(rows):
@@ -109,6 +111,9 @@ def bind_existing_answers_to_evidence(
         expected = evidence_by_qid[qid]
         expected_hash = hashes[qid]
         observed_hash = clean_text(row.get("evidence_sha256"))
+        observed_model = clean_text(row.get("answer_model"))
+        if clean_text(expected_model) and observed_model != clean_text(expected_model):
+            raise RuntimeError(f"{qid}: existing answer used a different configured model")
         if observed_hash and observed_hash != expected_hash:
             raise RuntimeError(f"{qid}: existing answer is bound to different retrieval evidence")
         if not observed_hash:
@@ -116,7 +121,11 @@ def bind_existing_answers_to_evidence(
                 clean_text(row.get("question")) != clean_text(expected.get("question"))
                 or list(row.get("selected_session_ids") or [])
                 != list(expected.get("selected_session_ids") or [])
-                or clean_text(row.get("answer_model")) != "gpt-5.4"
+                or not clean_text(row.get("answer_model"))
+                or (
+                    clean_text(expected_model)
+                    and clean_text(row.get("answer_model")) != clean_text(expected_model)
+                )
             ):
                 raise RuntimeError(f"{qid}: legacy answer cannot be bound to current evidence")
             row["evidence_sha256"] = expected_hash
@@ -585,10 +594,10 @@ def main() -> int:
     answer_model = clean_text(os.getenv("TMCRA_ANSWER_MODEL"))
     answer_base_url = clean_text(os.getenv("TMCRA_ANSWER_BASE_URL"))
     answer_api_key = clean_text(os.getenv("TMCRA_ANSWER_API_KEY"))
-    if answer_model != "gpt-5.4":
-        raise RuntimeError(f"fixed answer model must be exactly gpt-5.4, got {answer_model!r}")
-    if not answer_base_url or not answer_api_key:
-        raise RuntimeError("TMCRA_ANSWER_BASE_URL and TMCRA_ANSWER_API_KEY are required")
+    if not answer_model or not answer_base_url or not answer_api_key:
+        raise RuntimeError(
+            "TMCRA_ANSWER_MODEL, TMCRA_ANSWER_BASE_URL, and TMCRA_ANSWER_API_KEY are required"
+        )
     fixed_answer_layer = fixed_answer_environment(args.answer_window_limit)
     os.environ.update(fixed_answer_layer)
     rows = read_jsonl(Path(args.evidence))
@@ -612,14 +621,16 @@ def main() -> int:
             validate_production_evidence(rows)
         except RoutePolicyError as exc:
             raise RuntimeError(
-                f"production route failed before GPT-5.4 calls: {exc}"
+                f"production route failed before answer-model calls: {exc}"
             ) from exc
     harness = load_harness(Path(args.harness))
     configured_base_url, configured_model, configured_api_key = harness.answer_llm_config()
-    if clean_text(configured_model) != "gpt-5.4":
-        raise RuntimeError(f"harness resolved unexpected model: {configured_model!r}")
+    if clean_text(configured_model) != answer_model:
+        raise RuntimeError(
+            f"harness model {configured_model!r} does not match TMCRA_ANSWER_MODEL {answer_model!r}"
+        )
     if not clean_text(configured_base_url) or not clean_text(configured_api_key):
-        raise RuntimeError("harness did not resolve the required GPT5.4 endpoint")
+        raise RuntimeError("harness did not resolve the configured answer endpoint")
 
     # The legacy harness contains optional answer-side repair hooks. Keep its
     # primary prompt, but make one logical GPT call the enforced contract.
@@ -646,7 +657,7 @@ def main() -> int:
                     raise RuntimeError(f"duplicate existing answer row: {qid}")
                 existing[qid] = row
     evidence_hashes, legacy_evidence_hash_backfills = bind_existing_answers_to_evidence(
-        existing, rows
+        existing, rows, expected_model=configured_model
     )
     lock = threading.Lock()
 
@@ -759,7 +770,7 @@ def main() -> int:
         if not answer:
             assert last_error is not None
             raise RuntimeError(
-                f"{qid}: GPT5.4 failed after {max(1, args.attempts)} same-model attempts: "
+                f"{qid}: answer model failed after {max(1, args.attempts)} same-model attempts: "
                 f"{last_error.__class__.__name__}:{last_error}"
             )
         gold = clean_text(row.get("gold_answer"))
