@@ -7,6 +7,14 @@ TMCRA（Temporal Memory-Centric Retrieval Architecture）是面向产品和 AI A
 将近期信息快速变为可检索记忆；再以批处理方式形成可演化的长期语义图谱；最终返回
 有来源、可追溯、长度受控的召回证据。
 
+**默认生产生成模型：`Qwen3.6-35B-A3B`（总参数 35B、每个 token 约激活 3B），由部署方
+在自己的 GPU 上运行。** 它承担 Writer、Reviewer、召回规划与慢速图谱生成；检索链路
+使用本地 `BAAI/bge-m3`、`BAAI/bge-reranker-v2-m3` 和仓库内置 TMCRA reranker。
+
+**受支持生产链路中的召回证据可 100% 追溯来源。** 每个返回证据块都绑定不可变的
+Source ID、Actor、来源应用和时间坐标；SDK、REST 与 MCP 接入方获得相同的归因边界，
+可以直接展示在产品界面或审计日志中。
+
 部署方自行掌握服务器、数据、模型、供应商凭证、Tenant 与 Scope 规则。TMCRA
 提供可部署的记忆服务、客户端、SDK、MCP、插件和评测工具；它不是依赖 TMCRA
 托管账号的服务。
@@ -81,28 +89,32 @@ flowchart LR
   RETRIEVAL --> INDEX
 ~~~
 
-浏览器不是可信的记忆客户端。Web 控制台使用服务端 BFF 将登录账号解析为服务端维护的
+浏览器按非可信记忆客户端边界处理。Web 控制台使用服务端 BFF 将登录账号解析为服务端维护的
 Tenant/Scope 绑定；浏览器不会获得生产 API 密钥，也不能任意选择 Scope。MCP 使用
 本地 stdio，凭证始终由宿主进程控制。
 
 ## 生产模型栈
 
-TMCRA 不是某一个基础模型。原生记忆算法由本地开源检索模型、仓库内置 TMCRA reranker、
-Provider 或本地 Writer/Planner、确定性证据编译器，以及部署方自己的业务 Agent 共同组成。
+TMCRA 是一个长期记忆运行时，由本地开源检索模型、仓库内置 TMCRA reranker、
+本地 Writer/Planner、确定性证据编译器，以及部署方自己的业务 Agent 共同组成。
+
+**默认生产生成模型为 `Qwen3.6-35B-A3B`（总参数 35B、每个 token 约激活 3B）。**
+单卡生产配置通过本地部署别名 `tmcra-qwen3.6-35b-a3b-iq3s` 提供服务，统一承担 Writer、
+Reviewer、召回规划与慢速图谱生成。DeepSeek Flash/Pro 保留为可选 Provider 路由。
 
 | 生产阶段 | 参考配置 | 实际职责 |
 |---|---|---|
-| 写入提取 | `deepseek-v4-flash` 或严格校验的本地 Qwen 路由 | 生成带 Actor/来源的原始记录与快速记忆断言 |
-| 审核与慢速图谱 | `deepseek-v4-pro`，Flash 承担首阶段；或本地 Qwen | 审核歧义写入，批量构建长期语义胶囊 |
+| 写入提取 | 本地 `Qwen3.6-35B-A3B` | 生成带 Actor/来源的原始记录与快速记忆断言 |
+| 审核与慢速图谱 | 本地 `Qwen3.6-35B-A3B` | 审核歧义写入，批量构建长期语义胶囊 |
 | 向量召回 | 本地 `BAAI/bge-m3` | 生成 1024 维 Query/证据向量候选 |
 | Cross Encoder | 本地 `BAAI/bge-reranker-v2-m3` | 对 Query/证据对进行最终重排 |
 | 本地学习排序 | 仓库内置 `tmcra_v3_reranker.pt` | 在本地融合 Cross Encoder、dense、graph、selection 与 recency 信号 |
-| 召回角色规划 | `deepseek-v4-flash` 或本地 Qwen | 为证据层分配角色，但不能删除原始证据池 |
+| 召回角色规划 | 本地 `Qwen3.6-35B-A3B` | 为证据层分配角色并保留原始证据池 |
 | 证据编译 | 确定性代码，不使用模型 | 绑定 Source ID，执行日期、计数、排序与集合运算 |
 | 业务 Agent / 答案 | 部署方选择 | 消费有限证据包；固定参考/评测答案链路使用 `gpt-5.4` |
 
-外层业务 Agent **不被 GPT-5.4 或 DeepSeek 锁定**。应用可以通过 SDK、生命周期 Adapter、
-REST API 或 MCP 使用自己的模型和 Agent 框架。公开生产配置在本地加载 BGE-M3、
+外层业务 Agent 由部署方选择。应用可以通过 SDK、生命周期 Adapter、REST API 或 MCP
+使用自己的模型和 Agent 框架。公开生产配置在本地加载 Qwen3.6-35B-A3B、BGE-M3、
 BGE-reranker-v2-m3 和内置 TMCRA checkpoint；第三方权重由部署方自行下载并遵守上游条款。
 
 完整请求图、环境变量、候选数量、本地 Qwen 路由、自有模型替换规则和语音模型链路见

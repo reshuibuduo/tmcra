@@ -8,6 +8,17 @@ events into durable, attributable evidence; makes recent facts searchable
 quickly; periodically consolidates longer-lived semantic relationships; and
 returns bounded recall evidence that an application or model can safely use.
 
+**Default production generation model: `Qwen3.6-35B-A3B` (35B total, about 3B
+active parameters per token), self-hosted on the operator's GPU.** It drives
+Writer, Reviewer, recall planning, and slow-graph generation. Retrieval uses
+local `BAAI/bge-m3`, `BAAI/bge-reranker-v2-m3`, and the bundled TMCRA reranker.
+
+**100% source-traceable recall evidence in the supported production path.**
+Every returned evidence block binds back to its immutable Source ID, actor,
+source application, and time coordinate. SDK, REST, and MCP consumers receive
+the same attribution boundary and can expose it directly in product UI or audit
+logs.
+
 中文概览：TMCRA 是可私有化部署的长时记忆平台。它把对话和业务事件保存为可追溯
 证据，以快速层和慢速层逐步形成可检索的记忆图谱，并向 Web、桌面端、Android、
 SDK、MCP 与 Agent 插件提供带来源信息的召回结果。部署方掌握数据、模型、算力和
@@ -130,26 +141,31 @@ not a remote intermediary, controls the credential.
 
 ## Production model stack
 
-TMCRA is not one foundation model. The native memory algorithm combines local
-open retrieval models, the bundled TMCRA runtime reranker, provider-backed or
-self-hosted Writer/Planner roles, deterministic evidence compilation, and an
-operator-controlled outer agent.
+TMCRA is a memory runtime that combines local open retrieval models, the bundled
+TMCRA runtime reranker, self-hosted Writer/Planner roles, deterministic evidence
+compilation, and an operator-controlled outer agent.
+
+**The default production generation model is `Qwen3.6-35B-A3B` (35B total
+parameters, about 3B active parameters per token).** The validated single-GPU
+profile serves it locally through the deployment alias
+`tmcra-qwen3.6-35b-a3b-iq3s`. It powers Writer, Reviewer, recall planning, and
+slow-graph generation. DeepSeek Flash/Pro remains an optional provider route.
 
 | Production stage | Reference configuration | Responsibility |
 |---|---|---|
-| Write extraction | `deepseek-v4-flash` or the strict local Qwen route | Create attributed source records and fast-memory assertions |
-| Review and slow graph | `deepseek-v4-pro`, with Flash first-stage work; or local Qwen | Reconcile ambiguous writes and build durable semantic capsules in batches |
+| Write extraction | local `Qwen3.6-35B-A3B` | Create attributed source records and fast-memory assertions |
+| Review and slow graph | local `Qwen3.6-35B-A3B` | Reconcile ambiguous writes and build durable semantic capsules in batches |
 | Dense retrieval | local `BAAI/bge-m3` | Generate the 1,024-dimensional source/query shortlist |
 | Cross encoding | local `BAAI/bge-reranker-v2-m3` | Rerank query/evidence pairs before packing |
 | Local learned fusion | bundled `tmcra_v3_reranker.pt` | Fuse cross-encoder, dense, graph, selection, and recency signals locally |
-| Recall-role planning | `deepseek-v4-flash` or local Qwen | Assign evidence/context roles without deleting the immutable source reservoir |
+| Recall-role planning | local `Qwen3.6-35B-A3B` | Assign evidence/context roles while preserving the immutable source reservoir |
 | Evidence compilation | deterministic code, no model | Bind Source IDs and execute dates, counts, ordering, and set operations |
 | Product agent / answer | operator-selected | Consume the bounded evidence pack; the fixed reference/evaluation answer route uses `gpt-5.4` |
 
-The outer product Agent is **not locked to GPT-5.4 or DeepSeek**. Applications
-may use their own model or Agent framework through the SDK, lifecycle adapter,
-REST API, or MCP boundary. The public production profile loads BGE-M3,
-BGE-reranker-v2-m3, and the included TMCRA checkpoint locally; third-party model
+The operator selects the outer product Agent. Applications may use their own
+model or Agent framework through the SDK, lifecycle adapter, REST API, or MCP
+boundary. The public production profile loads Qwen3.6-35B-A3B, BGE-M3,
+BGE-reranker-v2-m3, and the included TMCRA checkpoint locally. Third-party model
 weights are downloaded separately and remain subject to their upstream terms.
 
 See the complete [production model stack](docs/PRODUCTION_MODEL_STACK.md) for

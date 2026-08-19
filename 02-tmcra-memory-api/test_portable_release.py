@@ -28,7 +28,17 @@ class PortableReleaseTests(unittest.TestCase):
             self.assertIn("experiments/replacement/adapters/memory_adapters.py", names)
             self.assertIn("experiments/replacement/memory_graph.py", names)
             self.assertIn("core/session_memory.py", names)
+            self.assertIn("build_v3_runtime_dataset.py", names)
+            self.assertIn("tmcra_v3_reranker.py", names)
+            self.assertIn("tmcra_v3_schema.py", names)
             self.assertIn("models/tmcra_v3_reranker.pt", names)
+            self.assertIn("deploy/tmcra-local-llm-control.sh", names)
+            self.assertIn("deploy/tmcra-production-maintenance.sh", names)
+            self.assertIn("deploy/writer.env.example", names)
+
+            writer_template = (extract / "deploy" / "writer.env.example").read_bytes()
+            self.assertNotIn(b"\r\n", writer_template)
+            self.assertIn(b"TMCRA_WRITER_PROVIDER=local-qwen\n", writer_template)
 
             environment = dict(os.environ)
             environment["PYTHONDONTWRITEBYTECODE"] = "1"

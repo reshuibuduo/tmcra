@@ -14,9 +14,12 @@ from typing import Iterable
 
 
 STATIC_FILES = (
+    "deploy/tmcra-local-llm-control.sh",
     "deploy/tmcra-memory-api-control.sh",
     "deploy/tmcra-memory-api.service",
+    "deploy/tmcra-production-maintenance.sh",
     "deploy/tmcra-service.env.example",
+    "deploy/writer.env.example",
     "requirements-tmcra-service.txt",
     "models/tmcra_v3_reranker.pt",
     "models/README.md",

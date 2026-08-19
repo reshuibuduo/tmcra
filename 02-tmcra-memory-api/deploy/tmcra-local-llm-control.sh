@@ -13,6 +13,16 @@ set -a
 source "$ENV_FILE"
 set +a
 
+WRITER_ENV="${TMCRA_WRITER_ENV:-}"
+[[ -n "$WRITER_ENV" && -f "$WRITER_ENV" && ! -L "$WRITER_ENV" ]] || {
+  echo "writer environment file is missing or unsafe: ${WRITER_ENV:-<unset>}" >&2
+  exit 1
+}
+set -a
+# shellcheck disable=SC1090
+source "$WRITER_ENV"
+set +a
+
 STATE_DIR="${TMCRA_SERVICE_STATE_DIR:?TMCRA_SERVICE_STATE_DIR is required}"
 CONTROL_ACTION="${1:-status}"
 

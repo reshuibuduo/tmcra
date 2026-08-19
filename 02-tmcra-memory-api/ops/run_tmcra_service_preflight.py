@@ -14,6 +14,10 @@ import os
 import re
 from pathlib import Path
 
+from tmcra_service.__main__ import (
+    _configure_writer_aliases,
+    _load_shell_environment,
+)
 from tmcra_service.app import build_components
 from tmcra_service.settings import ServiceSettings
 
@@ -41,6 +45,10 @@ def main() -> int:
     parser.add_argument("--env-file", required=True, type=Path)
     args = parser.parse_args()
     load_env_file(args.env_file)
+    writer_env = os.getenv("TMCRA_WRITER_ENV", "").strip()
+    if writer_env and Path(writer_env).expanduser().resolve() != args.env_file.resolve():
+        _load_shell_environment(writer_env)
+    _configure_writer_aliases()
     settings = ServiceSettings.from_env()
     components = build_components(settings)
     try:

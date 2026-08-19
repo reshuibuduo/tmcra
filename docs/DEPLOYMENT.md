@@ -77,17 +77,53 @@ sudoedit /etc/tmcra/writer.env
 python ops/run_tmcra_service_preflight.py --env-file /etc/tmcra/service.env
 ```
 
-`writer.env` contains the operator's provider credential and must stay outside
-Git. Set the public HTTPS origin, state/model paths, CUDA device settings, and
-provider configuration in `service.env`. Do not publish either file, the state
-directory, or the bootstrap-key file.
+`writer.env` contains the local-model route and credential boundary and must
+stay outside Git. The default production generation model is
+`Qwen3.6-35B-A3B` (35B total parameters, about 3B active parameters per token),
+served through the loopback OpenAI-compatible endpoint. Set the public HTTPS
+origin, state/model paths, CUDA device settings, and provider configuration in
+`service.env`. Do not publish either file, the state directory, or any key file.
 
 The exact Writer, reviewer, slow-graph, embedding, runtime-reranker,
 cross-encoder, recall-planner, evidence-compiler, and outer-agent boundaries are
 documented in [PRODUCTION_MODEL_STACK.md](PRODUCTION_MODEL_STACK.md). The
 service template declares `TMCRA_EMBEDDING_MODEL`, `TMCRA_CROSS_MODEL`,
 `TMCRA_CHECKPOINT`, and recall-pool GPU estimates explicitly; the Writer
-template contains only placeholders and must never be used unchanged.
+template contains operator-owned path and key placeholders that must be set
+before startup.
+
+### Start the default Qwen3.6 model route
+
+Place the operator-licensed `Qwen3.6-35B-A3B` GGUF and a CUDA build of
+`llama-server` at the paths configured by `TMCRA_LOCAL_LLM_MODEL` and
+`TMCRA_LLAMA_SERVER_BIN`. The repository does not redistribute Qwen weights.
+The validated public profile uses the alias
+`tmcra-qwen3.6-35b-a3b-iq3s`, loopback port `11435`, and at least 65,536 context
+tokens per parallel slot.
+
+Create one mode-restricted lane key at the path declared by
+`TMCRA_LOCAL_WRITER_API_KEY_FILE` in `writer.env`:
+
+```bash
+sudo install -d -m 700 /opt/tmcra-data/local-llm/secrets
+sudo install -m 600 /dev/null /opt/tmcra-data/local-llm/secrets/qwen36-api.key
+python3 -c 'import secrets; print(secrets.token_urlsafe(48))' \
+  | sudo tee /opt/tmcra-data/local-llm/secrets/qwen36-api.key >/dev/null
+```
+
+Start and verify the local model before running the TMCRA service preflight:
+
+```bash
+export TMCRA_SERVICE_ENV_FILE=/etc/tmcra/service.env
+bash 02-tmcra-memory-api/deploy/tmcra-local-llm-control.sh start
+bash 02-tmcra-memory-api/deploy/tmcra-local-llm-control.sh status
+python 02-tmcra-memory-api/ops/run_tmcra_service_preflight.py \
+  --env-file /etc/tmcra/service.env
+```
+
+The control script loads both `service.env` and its declared `TMCRA_WRITER_ENV`,
+validates the exact executable/model/alias/port/context contract, then probes
+every configured authenticated lane.
 
 Install `deploy/tmcra-memory-api.service` on a systemd host. When systemd is
 not available, use `deploy/tmcra-memory-api-control.sh start`; its supervisor

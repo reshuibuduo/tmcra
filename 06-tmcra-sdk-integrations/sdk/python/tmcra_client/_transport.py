@@ -136,8 +136,11 @@ class SyncTransport:
         params: Mapping[str, Any] | None = None,
         idempotency_key: str | None = None,
         allow_statuses: frozenset[int] = frozenset(),
+        headers: Mapping[str, str] | None = None,
     ) -> Any:
         request_headers = dict(self._headers)
+        if headers:
+            request_headers.update(headers)
         if idempotency_key is not None:
             request_headers["idempotency-key"] = validate_idempotency_key(idempotency_key)
         normalized_method = method.upper()
@@ -171,6 +174,47 @@ class SyncTransport:
                 time.sleep(retry_delay(response, attempt, self.retry))
                 continue
             return decode_response(response, allow_statuses=allow_statuses)
+        raise AssertionError("unreachable retry loop")
+
+    def request_bytes(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+    ) -> bytes:
+        """Download a binary response with the normal safe-GET retry policy."""
+
+        request_headers = dict(self._headers)
+        request_headers["accept"] = "application/octet-stream, application/zip"
+        url = f"{self.base_url}/{path.lstrip('/')}"
+        for attempt in range(self.retry.max_retries + 1):
+            try:
+                response = self._client.get(
+                    url,
+                    params=params,
+                    headers=request_headers,
+                )
+            except httpx.TimeoutException as exc:
+                if attempt < self.retry.max_retries:
+                    time.sleep(retry_delay(None, attempt, self.retry))
+                    continue
+                raise RequestTimeoutError(
+                    f"TMCRA request timed out: GET {path}"
+                ) from exc
+            except httpx.RequestError as exc:
+                if attempt < self.retry.max_retries:
+                    time.sleep(retry_delay(None, attempt, self.retry))
+                    continue
+                raise TransportError(f"TMCRA request failed: GET {path}") from exc
+            if (
+                response.status_code in RETRYABLE_STATUSES
+                and attempt < self.retry.max_retries
+            ):
+                time.sleep(retry_delay(response, attempt, self.retry))
+                continue
+            if response.status_code >= 400:
+                decode_response(response)
+            return bytes(response.content)
         raise AssertionError("unreachable retry loop")
 
     def close(self) -> None:
@@ -209,8 +253,11 @@ class AsyncTransport:
         params: Mapping[str, Any] | None = None,
         idempotency_key: str | None = None,
         allow_statuses: frozenset[int] = frozenset(),
+        headers: Mapping[str, str] | None = None,
     ) -> Any:
         request_headers = dict(self._headers)
+        if headers:
+            request_headers.update(headers)
         if idempotency_key is not None:
             request_headers["idempotency-key"] = validate_idempotency_key(idempotency_key)
         normalized_method = method.upper()
@@ -244,6 +291,47 @@ class AsyncTransport:
                 await asyncio.sleep(retry_delay(response, attempt, self.retry))
                 continue
             return decode_response(response, allow_statuses=allow_statuses)
+        raise AssertionError("unreachable retry loop")
+
+    async def request_bytes(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+    ) -> bytes:
+        """Download a binary response with the normal safe-GET retry policy."""
+
+        request_headers = dict(self._headers)
+        request_headers["accept"] = "application/octet-stream, application/zip"
+        url = f"{self.base_url}/{path.lstrip('/')}"
+        for attempt in range(self.retry.max_retries + 1):
+            try:
+                response = await self._client.get(
+                    url,
+                    params=params,
+                    headers=request_headers,
+                )
+            except httpx.TimeoutException as exc:
+                if attempt < self.retry.max_retries:
+                    await asyncio.sleep(retry_delay(None, attempt, self.retry))
+                    continue
+                raise RequestTimeoutError(
+                    f"TMCRA request timed out: GET {path}"
+                ) from exc
+            except httpx.RequestError as exc:
+                if attempt < self.retry.max_retries:
+                    await asyncio.sleep(retry_delay(None, attempt, self.retry))
+                    continue
+                raise TransportError(f"TMCRA request failed: GET {path}") from exc
+            if (
+                response.status_code in RETRYABLE_STATUSES
+                and attempt < self.retry.max_retries
+            ):
+                await asyncio.sleep(retry_delay(response, attempt, self.retry))
+                continue
+            if response.status_code >= 400:
+                decode_response(response)
+            return bytes(response.content)
         raise AssertionError("unreachable retry loop")
 
     async def close(self) -> None:

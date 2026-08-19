@@ -38,6 +38,23 @@ class PollingTimeoutError(TMCRAError, TimeoutError):
         self.timeout = timeout
 
 
+class LifecycleIngestError(TMCRAError):
+    """Automatic lifecycle ingestion reached a failed terminal state."""
+
+    def __init__(self, receipt: Any) -> None:
+        job_id = getattr(receipt, "job_id", None)
+        status = getattr(receipt, "final_status", None) or getattr(
+            receipt, "observed_status", "failed"
+        )
+        job_label = str(job_id) if job_id else "<unknown>"
+        super().__init__(
+            f"TMCRA automatic ingest job {job_label} ended as {status}"
+        )
+        self.receipt = receipt
+        self.job_id = job_id
+        self.status = status
+
+
 class APIError(TMCRAError):
     """A non-success HTTP response from the service."""
 

@@ -292,12 +292,14 @@ silent fallback.
 local contract development. Production deployment must use `full` and treats a
 failed preflight as a hard startup failure.
 
-The reference production route is explicit: local `BAAI/bge-m3` embedding,
-local `BAAI/bge-reranker-v2-m3` cross encoding, the bundled TMCRA runtime
-reranker, DeepSeek V4 Flash/Pro Writer and graph roles, and a Flash recall-role
-planner. The Memory API returns a bounded evidence pack, so the calling product
-may use its own outer Agent model. Exact model roles, local Qwen routes,
-retrieval sizes, environment variables, and replacement contracts are in
+The default production route is explicit: local `Qwen3.6-35B-A3B` for Writer,
+Reviewer, recall planning, and slow-graph generation; local `BAAI/bge-m3`
+embedding; local `BAAI/bge-reranker-v2-m3` cross encoding; and the bundled TMCRA
+runtime reranker. The Qwen model has 35B total parameters and about 3B active
+parameters per token. DeepSeek V4 Flash/Pro is an optional provider route. The
+Memory API returns a bounded evidence pack, so the calling product may use its
+own outer Agent model. Exact model roles, retrieval sizes, environment
+variables, and replacement contracts are in
 [`docs/PRODUCTION_MODEL_STACK.md`](../../docs/PRODUCTION_MODEL_STACK.md).
 
 On a normal systemd host, install
