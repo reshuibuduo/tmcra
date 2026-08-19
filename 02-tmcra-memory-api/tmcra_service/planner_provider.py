@@ -6,9 +6,8 @@ from urllib.parse import urlsplit
 
 from .writer_provider import (
     DEEPSEEK_PROVIDER,
-    LOCAL_QWEN_BASE_URL,
-    LOCAL_QWEN_MODEL,
     LOCAL_QWEN_PROVIDER,
+    validate_loopback_openai_compatible_url,
 )
 
 
@@ -85,19 +84,17 @@ def recall_planner_route(
             paid=True,
         )
     if provider == LOCAL_QWEN_PROVIDER:
-        if (
-            base_url.rstrip("/") != LOCAL_QWEN_BASE_URL
-            or model != LOCAL_QWEN_MODEL
-            or adapter != LOCAL_QWEN_PLANNER_ADAPTER
-            or len(api_keys) != 1
-        ):
+        validate_loopback_openai_compatible_url(
+            base_url, name="TMCRA_RECALL_PLANNER_BASE_URL"
+        )
+        if not model or adapter != LOCAL_QWEN_PLANNER_ADAPTER or len(api_keys) != 1:
             raise ValueError("local Qwen recall planner route drifted from its contract")
         return RecallPlannerRoute(
             provider=provider,
-            base_url=LOCAL_QWEN_BASE_URL,
-            model=LOCAL_QWEN_MODEL,
+            base_url=base_url.rstrip("/"),
+            model=model,
             api_keys=api_keys,
-            prompt_adapter=LOCAL_QWEN_PLANNER_ADAPTER,
+            prompt_adapter=adapter,
             paid=False,
         )
     raise ValueError(f"unsupported recall planner provider: {provider}")

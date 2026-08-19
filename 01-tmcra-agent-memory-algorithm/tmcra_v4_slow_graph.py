@@ -12,6 +12,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 import errno
 import hashlib
+import ipaddress
 import json
 import os
 import re
@@ -23,6 +24,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
+from urllib.parse import urlsplit
 
 import tmcra_v3_slow_graph as _v3
 
@@ -111,6 +113,33 @@ ZERO_CALL_CONFIGURATION_ERRORS = {
     "flash": "flash client is not configured; no fallback is allowed",
     "pro": "pro client is not configured; no fallback is allowed",
 }
+
+
+def _configured_local_model() -> str:
+    return _clean(
+        os.getenv("TMCRA_SLOW_GRAPH_MODEL")
+        or os.getenv("TMCRA_WRITER_MODEL")
+        or os.getenv("TMCRA_LOCAL_WRITER_MODEL")
+        or LOCAL_QWEN_MODEL
+    )
+
+
+def _is_loopback_openai_url(base_url: str) -> bool:
+    parsed = urlsplit(base_url)
+    if (
+        parsed.scheme != "http"
+        or not parsed.hostname
+        or parsed.path.rstrip("/") != "/v1"
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+    ):
+        return False
+    try:
+        return ipaddress.ip_address(parsed.hostname).is_loopback
+    except ValueError:
+        return parsed.hostname.lower() == "localhost"
 
 
 class TieredAPIError(DeepSeekCallError):
@@ -810,14 +839,14 @@ def _local_qwen_config() -> DeepSeekTierConfig:
             "TMCRA_SLOW_GRAPH_MAX_TOKENS must be an integer"
         ) from exc
     if (
-        base_url != LOCAL_QWEN_BASE_URL
-        or model != LOCAL_QWEN_MODEL
+        not _is_loopback_openai_url(base_url)
+        or not model
         or len(key_pool) != 1
         or max_tokens <= 0
         or prompt_adapter != LOCAL_QWEN_SLOW_PROMPT_ADAPTER
     ):
         raise SlowGraphError(
-            "local slow graph requires the fixed loopback Qwen route, one key, "
+            "local slow graph requires a loopback OpenAI-compatible route, one key, "
             "a positive token limit, and qwen36-slow-graph-v1"
         )
     return DeepSeekTierConfig(
@@ -844,8 +873,8 @@ class _DeepSeekTierClient:
                 f"got {config.model!r}"
             )
         if config.provider == LOCAL_QWEN_PROVIDER and (
-            config.base_url != LOCAL_QWEN_BASE_URL
-            or config.model != LOCAL_QWEN_MODEL
+            not _is_loopback_openai_url(config.base_url)
+            or not config.model
             or config.prompt_adapter != LOCAL_QWEN_SLOW_PROMPT_ADAPTER
         ):
             raise SlowGraphError("local slow-graph route identity is invalid")
@@ -1207,7 +1236,6 @@ class _DeepSeekTierClient:
         if (
             self.config.provider == LOCAL_QWEN_PROVIDER
             and self.config.base_url == LOCAL_QWEN_BASE_URL
-            and self.config.model == LOCAL_QWEN_MODEL
         ):
             body["id_slot"] = LOCAL_QWEN_GRAPH_SLOT_ID
         if self.config.provider == DEEPSEEK_PROVIDER:
@@ -6643,7 +6671,7 @@ def resume_definite_billing_rejection_for_local_reroute(
                 "error_sha256": error_sha256,
                 "call_metadata_sha256": metadata_sha256,
                 "new_provider": LOCAL_QWEN_PROVIDER,
-                "new_model": LOCAL_QWEN_MODEL,
+                "new_model": _configured_local_model(),
             }
         )[:32]
         created_at = _v3._now()
@@ -6681,7 +6709,7 @@ def resume_definite_billing_rejection_for_local_reroute(
                 error_sha256,
                 metadata_sha256,
                 LOCAL_QWEN_PROVIDER,
-                LOCAL_QWEN_MODEL,
+                _configured_local_model(),
                 LOCAL_QWEN_SLOW_PROMPT_ADAPTER,
                 SLOW_PROVIDER_REROUTE_RECOVERY_VERSION,
                 created_at,
@@ -6707,7 +6735,7 @@ def resume_definite_billing_rejection_for_local_reroute(
         "previous_model": expected_model,
         "previous_http_status": 402,
         "replacement_provider": LOCAL_QWEN_PROVIDER,
-        "replacement_model": LOCAL_QWEN_MODEL,
+        "replacement_model": _configured_local_model(),
         "replacement_prompt_adapter": LOCAL_QWEN_SLOW_PROMPT_ADAPTER,
         "status": "pending",
         "created_at": created_at,

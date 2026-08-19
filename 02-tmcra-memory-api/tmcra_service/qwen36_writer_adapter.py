@@ -227,10 +227,8 @@ def create_qwen36_batch_client(*, v4: Any, **kwargs: Any) -> Any:
     class Qwen36BatchClient(v4.DeepSeekBatchClient):
         def __init__(self, **client_kwargs: Any) -> None:
             requested_model = str(client_kwargs.get("model") or "")
-            if requested_model != LOCAL_QWEN_MODEL:
-                raise ValueError(
-                    f"qwen36-v5 requires the fixed local model {LOCAL_QWEN_MODEL!r}"
-                )
+            if not requested_model:
+                raise ValueError("qwen36-v5 requires a local model alias")
             base_kwargs = dict(client_kwargs)
             # The unchanged V4 transport constructor allows only its two
             # historical DeepSeek aliases. Initialize transport state through

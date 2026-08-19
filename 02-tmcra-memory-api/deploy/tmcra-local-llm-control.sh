@@ -31,7 +31,7 @@ LLAMA_ROOT="${TMCRA_LLAMA_ROOT:-$LLM_ROOT/llama.cpp-b10276}"
 BINARY="${TMCRA_LLAMA_SERVER_BIN:-$LLAMA_ROOT/build-cuda-sm120a/bin/llama-server}"
 MODEL="${TMCRA_LOCAL_LLM_MODEL:-$LLM_ROOT/models/qwen3.6-35b-a3b-ud-iq3-s/Qwen3.6-35B-A3B-UD-IQ3_S.gguf}"
 MODEL_ALIAS="${TMCRA_LOCAL_LLM_ALIAS:-tmcra-qwen3.6-35b-a3b-iq3s}"
-MODEL_BYTES="${TMCRA_LOCAL_LLM_MODEL_BYTES:-13676723168}"
+MODEL_BYTES="${TMCRA_LOCAL_LLM_MODEL_BYTES:-}"
 HOST="${TMCRA_LOCAL_LLM_HOST:-127.0.0.1}"
 PORT="${TMCRA_LOCAL_LLM_PORT:-11435}"
 PARALLEL="${TMCRA_LOCAL_LLM_PARALLEL:-2}"
@@ -99,6 +99,12 @@ for value in "$PORT" "$PARALLEL" "$CTX_PER_SLOT" "$CTX_SIZE" \
     exit 1
   }
 done
+if [[ -n "$MODEL_BYTES" ]]; then
+  positive_integer "$MODEL_BYTES" || {
+    echo "TMCRA_LOCAL_LLM_MODEL_BYTES must be empty or a positive integer" >&2
+    exit 1
+  }
+fi
 [[ "$CTX_SIZE" -eq $((CTX_PER_SLOT * PARALLEL)) ]] || {
   echo "local model context must equal context-per-slot multiplied by parallel slots" >&2
   exit 1
@@ -303,10 +309,11 @@ start_model() {
   prepare_key_file
   [[ -x "$BINARY" ]] || { echo "llama-server is missing: $BINARY" >&2; return 1; }
   [[ -f "$MODEL" && ! -L "$MODEL" ]] || { echo "local model is missing: $MODEL" >&2; return 1; }
-  [[ "$(stat -c '%s' "$MODEL")" == "$MODEL_BYTES" ]] || {
-    echo "local model size does not match the pinned artifact" >&2
+  [[ -n "$MODEL_ALIAS" ]] || { echo "local model alias is required" >&2; return 1; }
+  if [[ -n "$MODEL_BYTES" && "$(stat -c '%s' "$MODEL")" != "$MODEL_BYTES" ]]; then
+    echo "local model size does not match TMCRA_LOCAL_LLM_MODEL_BYTES" >&2
     return 1
-  }
+  fi
   if pid=$(verified_running_pid); then
     echo "tmcra local model is already verified and ready (pid $pid)"
     return 0

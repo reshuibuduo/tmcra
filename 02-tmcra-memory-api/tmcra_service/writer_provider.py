@@ -111,18 +111,21 @@ def _local_writer_identity(
         if reviewer
         else DESKTOP_LOCAL_QWEN_PROMPT_ADAPTER
     )
-    if (base_url, model, prompt_adapter) == (
-        LOCAL_QWEN_BASE_URL,
-        LOCAL_QWEN_MODEL,
-        legacy_adapter,
-    ):
-        return "server-qwen36"
     if model == DESKTOP_LOCAL_QWEN_MODEL and prompt_adapter == desktop_adapter:
         validate_loopback_openai_compatible_url(
             base_url, name="desktop local Qwen Writer base URL"
         )
         return "desktop-qwen3"
-    raise ValueError("local Qwen Writer route identity is invalid")
+    validate_loopback_openai_compatible_url(
+        base_url, name="local Writer base URL"
+    )
+    if not model:
+        raise ValueError("local Writer model alias is required")
+    if prompt_adapter != legacy_adapter:
+        raise ValueError(
+            f"local Writer must use the configured {legacy_adapter} prompt adapter"
+        )
+    return "server-local"
 
 
 def primary_writer_route(
@@ -164,7 +167,7 @@ def primary_writer_route(
             api_keys=keys,
             pool_name=(
                 "local-qwen-writer"
-                if identity == "server-qwen36"
+                if identity == "server-local"
                 else "local-qwen-writer-desktop"
             ),
             prompt_adapter=prompt_adapter,
@@ -242,7 +245,7 @@ def reviewer_writer_route(
             api_keys=keys,
             pool_name=(
                 "local-qwen-writer"
-                if identity == "server-qwen36"
+                if identity == "server-local"
                 else "local-qwen-writer-desktop"
             ),
             prompt_adapter=prompt_adapter,

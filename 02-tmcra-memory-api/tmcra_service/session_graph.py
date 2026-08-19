@@ -1752,11 +1752,8 @@ class LocalSessionGraphAgent:
         self.reserved_production_slots = max(0, int(reserved_production_slots))
         self.opener = opener or urllib.request.urlopen
         self.gpu_scheduler = gpu_scheduler
-        approved_local = (self.base_url, self.model) == (
-            LOCAL_QWEN_BASE_URL,
-            LOCAL_QWEN_MODEL,
-        )
-        if self.model in DESKTOP_LOCAL_QWEN_MODELS:
+        approved_local = False
+        if self.provider == SESSION_GRAPH_PROVIDER_LOCAL and self.model:
             try:
                 validate_loopback_openai_compatible_url(
                     self.base_url, name="TMCRA_SESSION_GRAPH_BASE_URL"
@@ -1847,8 +1844,16 @@ class LocalSessionGraphAgent:
             default_base_url = ""
             default_model = ""
         else:
-            default_base_url = LOCAL_QWEN_BASE_URL
-            default_model = LOCAL_QWEN_MODEL
+            default_base_url = _text(
+                env.get("TMCRA_WRITER_BASE_URL")
+                or env.get("TMCRA_LOCAL_WRITER_BASE_URL")
+                or LOCAL_QWEN_BASE_URL
+            )
+            default_model = _text(
+                env.get("TMCRA_WRITER_MODEL")
+                or env.get("TMCRA_LOCAL_WRITER_MODEL")
+                or LOCAL_QWEN_MODEL
+            )
         return cls(
             base_url=_text(env.get("TMCRA_SESSION_GRAPH_BASE_URL") or default_base_url),
             model=_text(env.get("TMCRA_SESSION_GRAPH_MODEL") or default_model),
@@ -1925,7 +1930,6 @@ class LocalSessionGraphAgent:
         if (
             self.provider == SESSION_GRAPH_PROVIDER_LOCAL
             and self.base_url == LOCAL_QWEN_BASE_URL
-            and self.model == LOCAL_QWEN_MODEL
         ):
             local_slot_id = (
                 LOCAL_QWEN_GRAPH_SLOT_ID if slot_id is None else int(slot_id)
@@ -1970,7 +1974,6 @@ class LocalSessionGraphAgent:
             if self.gpu_scheduler is not None
             and self.provider == SESSION_GRAPH_PROVIDER_LOCAL
             and self.base_url == LOCAL_QWEN_BASE_URL
-            and self.model == LOCAL_QWEN_MODEL
             else nullcontext()
         )
         try:
@@ -2059,7 +2062,6 @@ class LocalSessionGraphAgent:
         if (
             self.provider == SESSION_GRAPH_PROVIDER_LOCAL
             and self.base_url == LOCAL_QWEN_BASE_URL
-            and self.model == LOCAL_QWEN_MODEL
         ):
             for index, slot in enumerate(slots):
                 if not isinstance(slot, Mapping):
@@ -2091,7 +2093,6 @@ class LocalSessionGraphAgent:
         if not (
             self.provider == SESSION_GRAPH_PROVIDER_LOCAL
             and self.base_url == LOCAL_QWEN_BASE_URL
-            and self.model == LOCAL_QWEN_MODEL
             and self.gpu_scheduler is not None
             and self.gpu_scheduler.can_start(
                 GpuWorkload.GRAPH_BORROWED_PLANNER
@@ -2131,7 +2132,6 @@ class LocalSessionGraphAgent:
             if self.provider == SESSION_GRAPH_PROVIDER_OPENAI
             else "dedicated-local-slot"
             if self.base_url == LOCAL_QWEN_BASE_URL
-            and self.model == LOCAL_QWEN_MODEL
             else "shared-local-reserve"
         )
 
@@ -3759,7 +3759,6 @@ class SessionGraphService:
             isinstance(agent, LocalSessionGraphAgent)
             and agent.provider == SESSION_GRAPH_PROVIDER_LOCAL
             and agent.base_url == LOCAL_QWEN_BASE_URL
-            and agent.model == LOCAL_QWEN_MODEL
         )
 
     def _journal_agent_call(

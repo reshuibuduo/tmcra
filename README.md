@@ -29,6 +29,39 @@ API, chooses the model providers and storage location, creates tenants and
 scopes, and decides which client applications are allowed to write or recall
 memory.
 
+## Quick deployment
+
+The shortest supported path targets a CUDA-ready Linux host with Python 3,
+`git`, `curl`, `cmake`, a C++ compiler, and `nvcc`. The installer downloads the
+pinned Qwen3.6 UD-IQ3_S, BGE-M3, and BGE reranker artifacts, builds the pinned
+CUDA `llama-server`, creates private configuration and keys, runs full
+preflight, starts the API, and waits for `/readyz`.
+
+~~~bash
+sudo apt-get update && sudo apt-get install -y git curl cmake build-essential python3-venv
+git clone https://github.com/reshuibuduo/tmcra.git && cd tmcra
+sudo ./install.sh --public-url https://memory.example.com
+tmcra status
+~~~
+
+The default download is about 21 GB before Python/CUDA caches. Supply existing
+files to avoid duplicate downloads or to use another local model:
+
+~~~bash
+sudo ./install.sh --public-url https://memory.example.com \
+  --model-path /models/your-model.gguf --model-alias your-model \
+  --llama-server /usr/local/bin/llama-server \
+  --embedding-model /models/bge-m3 \
+  --cross-model /models/bge-reranker-v2-m3
+~~~
+
+The local generation model is configurable; it only needs an
+OpenAI-compatible endpoint and a non-empty alias. Qwen3.6-35B-A3B is the tested
+default. A replacement model may require changes to the Writer, Reviewer,
+Planner, and slow-graph prompt adapters, followed by preflight and regression
+evaluation. See the [deployment guide](docs/DEPLOYMENT.md) for reverse proxy,
+model-source, manual install, and rollback details.
+
 ## Why TMCRA
 
 Ordinary chat history is ordered text. It is difficult to retrieve precisely,
@@ -409,20 +442,9 @@ capacity for selected models, an HTTPS reverse proxy, and its own provider
 credentials.
 
 ~~~bash
-git clone https://github.com/OWNER/tmcra.git
-cd tmcra/02-tmcra-memory-api
-
-python -m venv .venv
-. .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements-tmcra-service.txt
-
-# Install the component at an operator-controlled runtime location, then:
-cp deploy/tmcra-service.env.example /etc/tmcra/service.env
-cp deploy/writer.env.example /etc/tmcra/writer.env
-# Replace every placeholder with operator-owned paths and credentials.
-# Keep both files outside Git.
-python ops/run_tmcra_service_preflight.py --env-file /etc/tmcra/service.env
+git clone https://github.com/reshuibuduo/tmcra.git && cd tmcra
+sudo ./install.sh --public-url https://memory.example.com
+tmcra status
 ~~~
 
 Before the preflight gate, set the public HTTPS origin, state paths, device

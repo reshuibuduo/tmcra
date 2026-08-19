@@ -101,18 +101,21 @@ sudo chmod 600 /etc/tmcra/service.env /etc/tmcra/writer.env
 
 ## 本地开源模型和自有模型接入
 
-严格的本地 Qwen 路由是默认生产路由，承担 Writer、Reviewer、Recall Planner 和
-Slow Graph。已测试模型为 `Qwen3.6-35B-A3B`，服务端部署身份为
-`tmcra-qwen3.6-35b-a3b-iq3s`，通过固定的本机 OpenAI-compatible 地址和分角色 Prompt
-Adapter 运行。GPU Scheduler 会分别调度 Writer、Planner 和慢速图谱 Lane。
+本地生成路由是默认生产路由，承担 Writer、Reviewer、Recall Planner 和 Slow Graph。
+已测试模型为 `Qwen3.6-35B-A3B`，参考部署别名为
+`tmcra-qwen3.6-35b-a3b-iq3s`，通过本机 OpenAI-compatible 地址和分角色 Prompt Adapter
+运行。模型别名、GGUF 路径、文件大小校验值和 `llama-server` 路径均可配置；运行时校验
+配置身份、回环地址和真实接口可用性，不再限制模型家族。
 
-这个名称是部署别名。仓库不重新分发对应权重；部署方需要自行准备权重、固定 checksum
-并核对许可证。DeepSeek V4 Flash/Pro 保留为可选 Provider 路由，启用时必须显式配置
-Provider 与部署方自己的 Key Pool。
+GPU Scheduler 会分别调度 Writer、Planner 和慢速图谱 Lane。仓库不重新分发对应权重；
+部署方需要自行准备权重、固定 checksum 并核对许可证。换用其他模型后，需要调整 Writer、
+Reviewer、Planner、Slow Graph 四组 Prompt，并重新执行预检、接入测试与 Benchmark 回归。
+DeepSeek V4 Flash/Pro 保留为可选 Provider 路由，启用时必须显式配置 Provider 与部署方
+自己的 Key Pool。
 
 Writer/Reviewer 还提供经过 URL、Schema 和 Prompt Adapter 校验的
-OpenAI-compatible Provider 边界。但“可以填写模型名”不等于任意模型已经兼容：替换
-模型必须验证结构化输出、Source 归因、上下文长度、超时、重试和失败语义。
+OpenAI-compatible Provider 边界。模型可配置只代表接口入口开放；替换模型仍须验证
+结构化输出、Source 归因、上下文长度、超时、重试和失败语义。
 
 如果要接入自己的记忆算法，可在事件适配、召回适配或选定业务流边界接入，详见
 [自有系统接入与扩展](INTEGRATION_AND_EXTENSION.md)。如果只是更换业务 Agent 模型，

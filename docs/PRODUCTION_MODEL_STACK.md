@@ -110,20 +110,24 @@ them after filling the placeholders.
 
 ## Self-hosted and bring-your-own routes
 
-The strict self-hosted Qwen route is the default production route for Writer,
-Reviewer, recall planner, and slow graph. The tested model is
-`Qwen3.6-35B-A3B`; the deployment alias is
-`tmcra-qwen3.6-35b-a3b-iq3s` on an exact loopback OpenAI-compatible endpoint.
+The self-hosted route is the default production route for Writer, Reviewer,
+recall planner, and slow graph. The tested model is `Qwen3.6-35B-A3B`; its
+reference deployment alias is `tmcra-qwen3.6-35b-a3b-iq3s` on a loopback
+OpenAI-compatible endpoint. The alias, GGUF path, file-size pin, and
+`llama-server` binary are configuration values. Runtime validation checks the
+configured identity and live interface without restricting the model family.
+
 Each role has a separate prompt adapter and the GPU scheduler serializes Writer,
-planner, and slow-graph lanes. The alias is a deployment identity. Operators
-supply and license the underlying weights.
+planner, and slow-graph lanes. Operators supply and license the underlying
+weights. When another model replaces Qwen, tune all four role prompts and rerun
+preflight, integration tests, and benchmark regression before rollout.
 
 DeepSeek V4 Flash/Pro remains available as an optional provider route. Selecting
 it requires explicit provider settings and an operator-owned key pool.
 
 Writer/reviewer also expose an explicitly validated OpenAI-compatible provider
-boundary. Arbitrary model substitution is not a claim of compatibility: a new
-route must preserve structured schemas, source attribution, deterministic
+boundary. Configuration freedom does not establish behavioral compatibility: a
+new route must preserve structured schemas, source attribution, deterministic
 validation, context length, timeout behavior, and failure semantics.
 
 For a different memory algorithm, integrate at the event adapter, recall

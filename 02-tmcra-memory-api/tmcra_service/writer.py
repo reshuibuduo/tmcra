@@ -832,8 +832,8 @@ class LeasedDeepSeekClient:
         self.usage_attribution = usage_attribution
         if self.provider not in {DEEPSEEK_PROVIDER, LOCAL_QWEN_PROVIDER}:
             raise ProductionWriterError(f"unsupported Writer provider: {self.provider}")
-        if self.provider == LOCAL_QWEN_PROVIDER and self.model != LOCAL_QWEN_MODEL:
-            raise ProductionWriterError("local Qwen Writer model identity is invalid")
+        if self.provider == LOCAL_QWEN_PROVIDER and not self.model:
+            raise ProductionWriterError("local Writer model alias is required")
         if self.provider == LOCAL_QWEN_PROVIDER and self.prompt_adapter not in {
             QWEN36_ADAPTER_ID,
             QWEN36_REVIEWER_ADAPTER_ID,

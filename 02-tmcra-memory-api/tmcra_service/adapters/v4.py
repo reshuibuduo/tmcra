@@ -87,6 +87,16 @@ _LOCAL_INFERENCE_CANCELLATION_PROOF_FILE = (
 )
 
 
+def _active_local_writer_model() -> str:
+    """Return the configured local model alias without pinning a model family."""
+
+    return str(
+        os.getenv("TMCRA_WRITER_MODEL")
+        or os.getenv("TMCRA_LOCAL_WRITER_MODEL")
+        or LOCAL_QWEN_MODEL
+    ).strip()
+
+
 def _raw_token_estimate(content: str) -> int:
     non_empty = [char for char in content if not char.isspace()]
     cjk = sum(
@@ -4122,8 +4132,7 @@ class V4StorageAdapter:
         return bool(
             str(os.getenv("TMCRA_WRITER_PROVIDER") or "").strip()
             == LOCAL_QWEN_PROVIDER
-            and str(os.getenv("TMCRA_WRITER_MODEL") or "").strip()
-            == LOCAL_QWEN_MODEL
+            and bool(_active_local_writer_model())
             and str(os.getenv("TMCRA_WRITER_PROMPT_ADAPTER") or "").strip()
             == LOCAL_QWEN_PROMPT_ADAPTER
             and str(os.getenv("TMCRA_LOCAL_WRITER_RECOVERY_CONCURRENCY") or "1")
@@ -5010,7 +5019,7 @@ class V4StorageAdapter:
             and record_job_id in {"", job_id}
             and str(record.get("stage") or "") == "batch_flash"
             and str(record.get("model") or "")
-            in {"deepseek-v4-flash", LOCAL_QWEN_MODEL}
+            in {"deepseek-v4-flash", _active_local_writer_model()}
             and str(record.get("raw_response_sha256") or "") == raw_hash
             and str(record.get("metadata_response_sha256") or "") == raw_hash
             and expected_hash == raw_hash
@@ -5094,7 +5103,7 @@ class V4StorageAdapter:
             and hashlib.sha256(request_json.encode("utf-8")).hexdigest()
             == request_sha256
             and str(proof.get("provider") or "") == LOCAL_QWEN_PROVIDER
-            and str(proof.get("model") or "") == LOCAL_QWEN_MODEL
+            and str(proof.get("model") or "") == _active_local_writer_model()
             and proof.get("inference_cancelled") is True
             and proof.get("completed_response_observed") is False
             and proof.get("target_request_in_provider_ledger") is False
@@ -5367,7 +5376,8 @@ class V4StorageAdapter:
                     continue
                 if (
                     replacement_count == 1
-                    and str(metadata.get("model") or "") == LOCAL_QWEN_MODEL
+                    and str(metadata.get("model") or "")
+                    == _active_local_writer_model()
                     and not str(metadata.get("response_schema_sha256") or "")
                 ):
                     recovery_mode = "schema_constrained_invalid_response"
@@ -5434,7 +5444,7 @@ class V4StorageAdapter:
                 {
                     "schema_version": "tmcra.service.cancelled-local-inference-recovery.1",
                     "reason": "audited_local_inference_cancelled",
-                    "model": LOCAL_QWEN_MODEL,
+                    "model": _active_local_writer_model(),
                     "prior_request_sha256": str(row["request_sha256"] or ""),
                     "cancellation_proof_file_sha256": proof_sha256,
                     "recovered_at": recovered_at,
@@ -5650,7 +5660,8 @@ class V4StorageAdapter:
                 ]
                 if (
                     not isinstance(metadata, Mapping)
-                    or str(metadata.get("model") or "") != LOCAL_QWEN_MODEL
+                    or str(metadata.get("model") or "")
+                    != _active_local_writer_model()
                     or str(metadata.get("response_schema_sha256") or "")
                     or not V4StorageAdapter._known_invalid_primary_response(
                         metadata, error=str(row["error"] or "")
@@ -6069,7 +6080,7 @@ class V4StorageAdapter:
             return ("provider_lease_unavailable_before_call", 0)
         if (
             metadata.get("physical_api_call") is not True
-            or str(metadata.get("model") or "") != LOCAL_QWEN_MODEL
+            or str(metadata.get("model") or "") != _active_local_writer_model()
             or str(metadata.get("stage") or "") != "batch_flash"
         ):
             return None
@@ -6216,7 +6227,7 @@ class V4StorageAdapter:
                         "schema_version": "tmcra.service.audited-writer-recovery.1",
                         "reason": reason,
                         "http_status": http_status,
-                        "model": LOCAL_QWEN_MODEL,
+                        "model": _active_local_writer_model(),
                         "prior_error_sha256": hashlib.sha256(
                             str(row[0] or "").encode("utf-8")
                         ).hexdigest(),

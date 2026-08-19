@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ENV_FILE="${TMCRA_SERVICE_ENV_FILE:-/etc/tmcra/service.env}"
+[[ -f "$ENV_FILE" && ! -L "$ENV_FILE" ]] || {
+  echo "TMCRA service environment is missing or unsafe: $ENV_FILE" >&2
+  exit 1
+}
+
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
+ROOT="${TMCRA_V4_ROOT:?TMCRA_V4_ROOT is required}"
+PYTHON="${TMCRA_SERVICE_PYTHON:?TMCRA_SERVICE_PYTHON is required}"
+CONTROL="$ROOT/deploy/tmcra-memory-api-control.sh"
+MAINTENANCE="$ROOT/deploy/tmcra-production-maintenance.sh"
+ACTION="${1:-status}"
+
+case "$ACTION" in
+  start|status|verify-running|wait-ready)
+    exec env TMCRA_SERVICE_ENV_FILE="$ENV_FILE" "$CONTROL" "$ACTION"
+    ;;
+  preflight)
+    exec "$PYTHON" "$ROOT/ops/run_tmcra_service_preflight.py" \
+      --env-file "$ENV_FILE"
+    ;;
+  restart)
+    exec env TMCRA_SERVICE_ENV_FILE="$ENV_FILE" \
+      "$MAINTENANCE" --reason "operator CLI restart" -- true
+    ;;
+  logs)
+    exec tail -n "${TMCRA_LOG_LINES:-100}" -f \
+      "${TMCRA_SERVICE_STATE_DIR:?TMCRA_SERVICE_STATE_DIR is required}/supervisor.log"
+    ;;
+  *)
+    echo "usage: tmcra {start|status|verify-running|wait-ready|preflight|restart|logs}" >&2
+    exit 2
+    ;;
+esac

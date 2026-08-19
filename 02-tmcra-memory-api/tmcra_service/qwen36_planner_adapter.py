@@ -13,9 +13,8 @@ import tmcra_v4_recall_planner as core
 from tmcra_v3_recall_planner import RecallPlannerError, RecallPlannerResponseError
 
 from .writer_provider import (
-    LOCAL_QWEN_BASE_URL,
-    LOCAL_QWEN_MODEL,
     LOCAL_QWEN_PLANNER_SLOT_ID,
+    validate_loopback_openai_compatible_url,
 )
 
 
@@ -76,11 +75,13 @@ class LocalQwenRecallRolePlanner:
         self.request_index = 0
         self.user_id = ""
         self.opener = opener or urllib.request.urlopen
-        if (
-            self.base_url != LOCAL_QWEN_BASE_URL
-            or self.model != LOCAL_QWEN_MODEL
-            or len(self.api_keys) != 1
-        ):
+        try:
+            validate_loopback_openai_compatible_url(
+                self.base_url, name="TMCRA_RECALL_PLANNER_BASE_URL"
+            )
+        except ValueError as exc:
+            raise RecallPlannerError("local planner route is invalid") from exc
+        if not self.model or len(self.api_keys) != 1:
             raise RecallPlannerError("local Qwen planner route is not production-approved")
 
     def _metadata(

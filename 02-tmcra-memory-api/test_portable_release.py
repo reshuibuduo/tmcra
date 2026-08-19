@@ -32,6 +32,8 @@ class PortableReleaseTests(unittest.TestCase):
             self.assertIn("tmcra_v3_reranker.py", names)
             self.assertIn("tmcra_v3_schema.py", names)
             self.assertIn("models/tmcra_v3_reranker.pt", names)
+            self.assertIn("deploy/install-tmcra.sh", names)
+            self.assertIn("deploy/tmcra", names)
             self.assertIn("deploy/tmcra-local-llm-control.sh", names)
             self.assertIn("deploy/tmcra-production-maintenance.sh", names)
             self.assertIn("deploy/writer.env.example", names)

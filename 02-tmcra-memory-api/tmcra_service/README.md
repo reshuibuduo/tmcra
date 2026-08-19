@@ -23,8 +23,9 @@ different SHA256. Release verification also runs the service test suite with
   work; an in-flight operation with an uncertain outcome is never replayed.
   A one-second local monitor replaces idle failed workers before they can be
   assigned to a customer operation.
-- Default ingestion uses DeepSeek Flash. Pro is invoked only when the Writer
-  creates a reconciliation job.
+- Default ingestion, reconciliation, recall planning, and slow-graph generation
+  use the operator-hosted Qwen3.6 route. DeepSeek Flash/Pro remains an optional
+  explicitly configured provider route.
 - Default recall uses `evidence_mode=auto`: low-risk evidence remains raw and
   high-risk shapes invoke the Pro compiler. Callers may still explicitly select
   `raw` or `compiled` as a cost/quality override.
@@ -269,6 +270,21 @@ ambiguous external side effects remain failed and require artifact audit.
 
 The deployable files are in `deploy/`. A third-party operator can deploy this
 release without a private TMCRA checkout:
+
+```bash
+git clone https://github.com/reshuibuduo/tmcra.git && cd tmcra
+sudo ./install.sh --public-url https://memory.example.com
+tmcra status
+```
+
+The installer downloads the pinned default model stack, builds CUDA
+`llama-server`, writes mode-restricted configuration, runs full preflight, and
+waits for readiness. Existing GGUF, `llama-server`, BGE-M3, and BGE reranker
+paths can be supplied as flags. A custom local model alias is accepted by all
+four generation roles; operators must tune the role prompts and run regression
+tests before promoting a replacement model.
+
+The equivalent manual sequence is:
 
 1. Create `/opt/tmcra` from this component, then install
    `requirements-tmcra-service.txt` in a dedicated Python environment.

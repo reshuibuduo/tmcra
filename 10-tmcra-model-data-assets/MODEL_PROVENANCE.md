@@ -10,6 +10,8 @@ fixtures listed in this component.
 
 | Use | Upstream artifact | Current public license signal | Redistribution status |
 |---|---|---|---|
+| Default local generation | `Qwen/Qwen3.6-35B-A3B` | Hugging Face model card metadata: Apache-2.0 | Not redistributed here |
+| Verified single-GPU GGUF | `unsloth/Qwen3.6-35B-A3B-GGUF`, file `Qwen3.6-35B-A3B-UD-IQ3_S.gguf` | Hugging Face model card metadata: Apache-2.0; file SHA-256 `66a3ca888ce13482b40c333db2432c0ebde3a7b13754fc29f0c6f5e89703ec66` | Installer download reference only |
 | Service embedding | `BAAI/bge-m3` | Hugging Face model card metadata: MIT | Not redistributed here |
 | Service reranker | `BAAI/bge-reranker-v2-m3` | Hugging Face model card metadata: Apache-2.0 | Not redistributed here |
 | Service runtime reranker | `02-tmcra-memory-api/models/tmcra_v3_reranker.pt` | Apache-2.0, declared by this repository | Included; see the asset README for checksum |
@@ -28,9 +30,11 @@ query/evidence union. The bundled TMCRA checkpoint then contributes TMCRA's
 own local learned ranking signal.
 
 Writer, reviewer, slow-graph, and recall-planner roles use separately configured
-provider or self-hosted routes. The tested local Qwen name in service config is
-a deployment alias; this repository does not redistribute its weights or claim
-an upstream license for an operator-selected artifact. The fixed GPT-5.4 model
+provider or self-hosted routes. The default installer pins the Qwen GGUF and
+both BGE revisions named below, while keeping every downloaded artifact outside
+Git. The local model name in service config is a configurable deployment alias.
+Operators can supply another licensed OpenAI-compatible model and must retune
+prompts and revalidate behavior. The fixed GPT-5.4 model
 belongs to the reference/evaluation answer route and is not required when an
 operator's own Agent consumes the Memory API evidence pack.
 
@@ -47,6 +51,8 @@ terms.
 
 ## Upstream URLs
 
+- https://huggingface.co/Qwen/Qwen3.6-35B-A3B
+- https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF
 - https://huggingface.co/BAAI/bge-m3
 - https://huggingface.co/BAAI/bge-reranker-v2-m3
 - https://huggingface.co/Qwen/Qwen3-ASR-0.6B

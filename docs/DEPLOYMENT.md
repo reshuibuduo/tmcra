@@ -50,7 +50,56 @@ For a Web Console deployment, the BFF verifies account identity and resolves a
 server-owned tenant/scope binding before it calls the API. The browser does not
 hold a production Memory API key.
 
-## Single-GPU install
+## Short-command single-GPU install
+
+Prerequisites are a CUDA-ready Linux host, Python 3, `git`, `curl`, `cmake`, a
+C++ compiler, and CUDA Toolkit `nvcc`. The reference hardware is one RTX 5090;
+the published profile recommends at least 32 GB VRAM.
+
+```bash
+sudo apt-get update && sudo apt-get install -y git curl cmake build-essential python3-venv
+git clone https://github.com/reshuibuduo/tmcra.git && cd tmcra
+sudo ./install.sh --public-url https://memory.example.com
+tmcra status
+```
+
+The installer performs these concrete operations:
+
+1. creates a Python environment and installs the Memory API dependencies;
+2. downloads pinned revisions of the verified Qwen GGUF, BGE-M3, and BGE
+   reranker when local paths are not supplied;
+3. builds pinned `llama.cpp` tag `b10276` with CUDA when `llama-server` is not
+   supplied;
+4. installs component 02 under `/opt/tmcra`, durable state under
+   `/opt/tmcra-data`, models under `/opt/tmcra-models`, and mode-0600
+   configuration under `/etc/tmcra`;
+5. generates the local lane key, runs full preflight, starts both processes,
+   and waits for API readiness.
+
+It never downloads customer data or provider credentials. Existing live
+configuration is preserved unless `--force-config` is explicit; forced updates
+create timestamped backups. Use `sudo ./install.sh --help` for custom roots,
+prepare-only mode, and existing model paths.
+
+### Reuse or replace the local model stack
+
+```bash
+sudo ./install.sh --public-url https://memory.example.com \
+  --model-path /models/your-model.gguf --model-alias your-model \
+  --llama-server /usr/local/bin/llama-server \
+  --embedding-model /models/bge-m3 \
+  --cross-model /models/bge-reranker-v2-m3
+```
+
+The self-hosted runtime accepts a configurable model path and alias. Writer,
+Reviewer, recall planner, slow graph, and Session Atlas use that configured
+alias rather than enforcing the Qwen name. The endpoint must be loopback and
+OpenAI-compatible. Qwen3.6-35B-A3B remains the tested production default.
+Other models may interpret schemas and role prompts differently, so tune the
+four prompt adapters and rerun preflight plus representative write, recall,
+cross-agent, knowledge-graph, and benchmark tests before production use.
+
+## Manual single-GPU install
 
 The deployable service is component 02. The exact model paths and environment
 settings are described in `deploy/tmcra-service.env.example`.

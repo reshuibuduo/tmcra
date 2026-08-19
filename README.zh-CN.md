@@ -19,6 +19,37 @@ Source ID、Actor、来源应用和时间坐标；SDK、REST 与 MCP 接入方�
 提供可部署的记忆服务、客户端、SDK、MCP、插件和评测工具；它不是依赖 TMCRA
 托管账号的服务。
 
+## 短命令部署
+
+准备一台已安装 NVIDIA 驱动和 CUDA Toolkit（含 `nvcc`）的 Linux 主机，然后执行：
+
+~~~bash
+sudo apt-get update && sudo apt-get install -y git curl cmake build-essential python3-venv
+git clone https://github.com/reshuibuduo/tmcra.git && cd tmcra
+sudo ./install.sh --public-url https://memory.example.com
+tmcra status
+~~~
+
+安装器会自动下载已固定版本的 Qwen3.6 UD-IQ3_S、BGE-M3 和 BGE reranker，编译已固定
+版本的 CUDA `llama-server`，创建私有配置与密钥，执行完整预检，启动 API，并等待
+`/readyz`。默认模型下载约 21 GB，Python 与 CUDA 缓存会额外占用磁盘。
+
+已有模型和运行时可直接复用，也可以替换本地生成模型：
+
+~~~bash
+sudo ./install.sh --public-url https://memory.example.com \
+  --model-path /models/your-model.gguf --model-alias your-model \
+  --llama-server /usr/local/bin/llama-server \
+  --embedding-model /models/bge-m3 \
+  --cross-model /models/bge-reranker-v2-m3
+~~~
+
+代码不再限定本地模型型号或固定别名，只要求模型别名非空、本机接口符合
+OpenAI-compatible 契约，并通过实际可用性校验。`Qwen3.6-35B-A3B` 是已经验证的默认
+配置。替换其他模型后，通常需要调整 Writer、Reviewer、Planner 和慢图谱四组 Prompt，
+再运行预检与回归评测。反向代理、模型来源、手动安装和回滚见
+[部署指南](docs/DEPLOYMENT.md)。
+
 ## 为什么需要 TMCRA
 
 普通聊天记录只是按时间排列的文本，难以精确召回，也容易混淆不同用户或项目。
@@ -194,6 +225,14 @@ Writer 握手，且不发起付费供应商调用。端口监听不等于服务 
 可部署服务位于 [02-tmcra-memory-api](02-tmcra-memory-api/)。完整服务契约、健康状态、
 租户模型和运维文档见
 [tmcra_service/README.md](02-tmcra-memory-api/tmcra_service/README.md)。
+
+短命令入口：
+
+~~~bash
+git clone https://github.com/reshuibuduo/tmcra.git && cd tmcra
+sudo ./install.sh --public-url https://memory.example.com
+tmcra status
+~~~
 
 代码使用 Apache-2.0 协议，可用于商业自部署，但部署方仍须遵守所选模型、云服务和
 供应商的许可及条款。发布包已清除已配置的凭证、私钥、客户数据库、用户记录和生产日志；
