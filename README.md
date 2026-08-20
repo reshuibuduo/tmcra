@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Current source release: **`0.3.0-rc1`** · [Changelog](CHANGELOG.md)
+Current source release: **`0.3.0-rc2`** · [Changelog](CHANGELOG.md)
 
 **Temporal Memory-Centric Retrieval Architecture** is a self-hosted memory
 platform for products and AI agents. It turns conversations and application

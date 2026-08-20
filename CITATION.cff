@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use TMCRA in your research, please cite it as follows."
 title: "TMCRA: Temporal Memory-Centric Retrieval Architecture"
-version: 0.3.0-rc1
+version: 0.3.0-rc2
 abstract: >-
   A full-stack personal memory system with a layered memory graph,
   evidence-backed recall, actor provenance, on-device voiceprint attribution,

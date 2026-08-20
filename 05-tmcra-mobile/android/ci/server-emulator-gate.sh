@@ -3,8 +3,8 @@ set -Eeuo pipefail
 
 CI_ROOT="${TMCRA_ANDROID_CI_ROOT:-/opt/tmcra-data/tmcra-android-ci}"
 SDK_ROOT="${ANDROID_SDK_ROOT:-$CI_ROOT/sdk}"
-APP_APK="${TMCRA_APP_APK:-$CI_ROOT/artifacts/TMCRA-server-ci-x86_64-0.3.0-rc1.apk}"
-TEST_APK="${TMCRA_TEST_APK:-$CI_ROOT/artifacts/TMCRA-server-ci-x86_64-0.3.0-rc1-androidTest.apk}"
+APP_APK="${TMCRA_APP_APK:-$CI_ROOT/artifacts/TMCRA-server-ci-x86_64-0.3.0-rc2.apk}"
+TEST_APK="${TMCRA_TEST_APK:-$CI_ROOT/artifacts/TMCRA-server-ci-x86_64-0.3.0-rc2-androidTest.apk}"
 FIXTURE_DIR="${TMCRA_FIXTURE_DIR:-$CI_ROOT/fixtures}"
 REPORT_ROOT="${TMCRA_REPORT_ROOT:-$CI_ROOT/reports}"
 AVD_NAME="${TMCRA_AVD_NAME:-tmcra-ci-atd-api30}"

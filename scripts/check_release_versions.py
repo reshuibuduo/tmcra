@@ -12,11 +12,11 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CANONICAL = "0.3.0-rc1"
-NPM = "0.3.0-rc.1"
-PYTHON = "0.3.0rc1"
+CANONICAL = "0.3.0-rc2"
+NPM = "0.3.0-rc.2"
+PYTHON = "0.3.0rc2"
 APPLE = "0.3.0"
-CLAUDE = "0.3.0-rc.1+claude.20260820"
+CLAUDE = "0.3.0-rc.2+claude.20260820"
 
 
 def nested_value(document: Any, keys: tuple[str, ...]) -> Any:
@@ -155,7 +155,7 @@ def main() -> int:
         ("06-tmcra-sdk-integrations/sdk/python/tmcra_client/__init__.py", f'__version__ = "{PYTHON}"', 1),
         ("08-tmcra-mcp-server/src/tmcra_mcp/__init__.py", f'__version__ = "{PYTHON}"', 1),
         ("06-tmcra-sdk-integrations/integrations/microsoft-agent-framework/src/TMCRA.AgentFramework/TMCRA.AgentFramework.csproj", f"<Version>{NPM}</Version>", 1),
-        ("05-tmcra-mobile/android/app/build.gradle", 'versionCode 3', 1),
+        ("05-tmcra-mobile/android/app/build.gradle", 'versionCode 4', 1),
         ("05-tmcra-mobile/android/app/build.gradle", f'versionName "{CANONICAL}"', 1),
         ("05-tmcra-mobile/android/app/src/main/java/com/tmcra/memory/mobile/net/TmcraApiClient.java", f'CLIENT_VERSION = "{CANONICAL}"', 1),
         ("05-tmcra-mobile/ios/App/App.xcodeproj/project.pbxproj", f"MARKETING_VERSION = {APPLE};", 2),

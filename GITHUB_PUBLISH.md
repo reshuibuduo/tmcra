@@ -53,21 +53,21 @@ must be empty to avoid an unrelated-history merge.
 
 Keep source in Git and publish distributable archives through GitHub Releases:
 
-- tmcra-oss-staging-20260818.tar.gz
-- SHA256SUMS.txt
+- `tmcra-0.3.0-rc2-source.tar.gz`
+- `tmcra-0.3.0-rc2-SHA256SUMS.txt`
 
 Create the release as a **draft**, attach both files, verify the uploaded
-archive checksum against SHA256SUMS.txt, then publish it after the tag, release
-notes, and assets have all been reviewed. Create a tag only after the GitHub
-`Release gate` workflow is green. Run the metadata checks locally before
-tagging:
+archive checksum against `tmcra-0.3.0-rc2-SHA256SUMS.txt`, then publish it after
+the tag, release notes, and assets have all been reviewed. Create a tag only
+after the GitHub `Release gate` workflow is green. Run the metadata checks
+locally before tagging:
 
 ```bash
 python scripts/check_release_versions.py
 python scripts/check_release_secrets.py
 ```
 
-The current candidate is `v0.3.0-rc1`. Promote it to a stable tag only after a
+The current candidate is `v0.3.0-rc2`. Promote it to a stable tag only after a
 clean-checkout deployment and artifact-hash review. Copy the release notes from
 `CHANGELOG.md`.
 

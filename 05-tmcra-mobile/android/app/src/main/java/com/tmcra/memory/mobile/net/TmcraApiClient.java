@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public final class TmcraApiClient {
     public static final String BASE_URL = "https://tmcra.com";
-    public static final String CLIENT_VERSION = "0.3.0-rc1";
+    public static final String CLIENT_VERSION = "0.3.0-rc2";
     private static final String CLIENT_HEADER = "com.tmcra.memory.mobile/" + CLIENT_VERSION;
     private static final int MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
     private static final Pattern SESSION_COOKIE = Pattern.compile(

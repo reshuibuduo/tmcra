@@ -19,7 +19,7 @@ npm pack --pack-destination artifacts
 
 ```bash
 openclaw plugins install \
-  npm-pack:/absolute/path/tmcra-openclaw-memory-0.3.0-rc.1.tgz --force
+  npm-pack:/absolute/path/tmcra-openclaw-memory-0.3.0-rc.2.tgz --force
 openclaw plugins enable tmcra-openclaw
 ```
 

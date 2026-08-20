@@ -6,7 +6,7 @@ Validation date: 2026-08-20
 
 The public `v0.3.0-rc1` source archive was deployed into a dedicated directory on a single NVIDIA RTX 5090 (32 GB). The full production model geometry and default API pools reached `ready`, and the application, provenance, knowledge-graph, personal-knowledge-base, and cross-agent SDK paths passed after applying the release-candidate fixes listed below.
 
-The immutable `v0.3.0-rc1` tag does not contain these fixes. Publish them as a new release candidate; do not move the existing tag.
+The immutable `v0.3.0-rc1` tag does not contain these fixes. They are included in `v0.3.0-rc2`; the existing tag remains unchanged.
 
 ## Isolation and runtime
 

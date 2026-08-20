@@ -1,12 +1,51 @@
 # Changelog / 变更记录
 
 All notable release changes are recorded here. Package ecosystems use their own
-valid prerelease spelling: `0.3.0-rc.1` for npm/NuGet and `0.3.0rc1` for Python.
-Both map to the repository release `0.3.0-rc1`.
+valid prerelease spelling: `0.3.0-rc.2` for npm/NuGet and `0.3.0rc2` for Python.
+Both map to the repository release `0.3.0-rc2`.
 
 这里记录公开版本的重要变化。各包生态使用自身合法的预发布格式：npm/NuGet
-使用 `0.3.0-rc.1`，Python 使用 `0.3.0rc1`，均对应仓库版本
-`0.3.0-rc1`。
+使用 `0.3.0-rc.2`，Python 使用 `0.3.0rc2`，均对应仓库版本
+`0.3.0-rc2`。
+
+## 0.3.0-rc2 — 2026-08-20
+
+### English
+
+- Validated the public deployment chain in an isolated single-RTX-5090 clean
+  room with the production defaults: Qwen3.6-35B-A3B at three 65,536-token
+  slots, four Writer workers, and two recall replicas.
+- Verified ingest, read-your-writes recall, evidence provenance, memory graph,
+  cross-Agent SDK sharing, and the local-Qwen personal knowledge base. The
+  tested knowledge base retained a source fingerprint and seven evidence links.
+- Pinned a Transformers-compatible Hugging Face Hub range and made model
+  downloads portable by fetching runtime-required BGE files, disabling Xet by
+  default, and checking the main BGE artifacts by SHA-256.
+- Added the required BGE reranker model manifest to the standalone service
+  archive and corrected the installed integrated-repository path.
+- Fixed custom-prefix and custom-virtualenv resolution in service and
+  maintenance controls, plus direct execution of the preflight script.
+- Fixed projection-progress serialization for the valid
+  `dedicated-local-slot` resource mode and added regression coverage.
+- Kept the immutable `v0.3.0-rc1` tag unchanged; these deployment fixes begin
+  with `v0.3.0-rc2`.
+
+### 中文
+
+- 在单张 RTX 5090 隔离区按公开生产默认配置完成部署验证：
+  Qwen3.6-35B-A3B 使用三个 65,536 Token 槽位，配置四个 Writer worker 与
+  两个召回副本。
+- 验证写入、读己之写召回、证据溯源、记忆图谱、跨 Agent SDK 共享，以及由
+  本地 Qwen 生成的个人知识库；测试知识库保留来源指纹和七条证据链接。
+- 固定与 Transformers 兼容的 Hugging Face Hub 版本范围；BGE 仅下载运行所需
+  文件，默认禁用 Xet，并对主要 BGE 模型文件执行 SHA-256 校验。
+- 将运行时要求的 BGE reranker 模型清单加入独立服务发布包，并修正安装后的
+  集成源码路径。
+- 修复自定义安装前缀、虚拟环境在服务控制和维护脚本中的解析顺序，同时支持
+  从任意工作目录直接执行预检脚本。
+- 修复投影进度接口对合法 `dedicated-local-slot` 资源模式的序列化，并补充
+  回归测试。
+- 保持不可变的 `v0.3.0-rc1` 标签不变；以上部署修复从 `v0.3.0-rc2` 起发布。
 
 ## 0.3.0-rc1 — 2026-08-20
 

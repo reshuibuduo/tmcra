@@ -76,7 +76,7 @@ class TMCRAToolset:
             consistency=consistency,
             slow_policy=slow_policy,
             idempotency_key=idempotency_key,
-            metadata={"integration": "mcp", "integration_version": "0.3.0-rc1"},
+            metadata={"integration": "mcp", "integration_version": "0.3.0-rc2"},
         )
 
 

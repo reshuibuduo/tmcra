@@ -46,7 +46,7 @@ class TMCRAHttpClient:
             base_url=settings.base_url,
             headers={
                 "Authorization": f"Bearer {settings.api_key}",
-                "User-Agent": "tmcra-mcp/0.3.0-rc1",
+                "User-Agent": "tmcra-mcp/0.3.0-rc2",
             },
             timeout=httpx.Timeout(settings.request_timeout_seconds),
             transport=transport,

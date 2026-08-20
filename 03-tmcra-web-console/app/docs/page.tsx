@@ -157,7 +157,7 @@ export default function ApiDocsPage() {
 
       <div className="docs-shell">
         <aside className="docs-sidebar" aria-label={t("Documentation navigation", "文档导航")}>
-          <div className="docs-version"><span>API</span><strong>v0.3.0-rc1</strong><i>{t("Release candidate", "候选发布版")}</i></div>
+          <div className="docs-version"><span>API</span><strong>v0.3.0-rc2</strong><i>{t("Release candidate", "候选发布版")}</i></div>
           <nav>
             <p>{t("Guides", "指南")}</p>
             {guideLinks.map(([id, en, zh]) => <a key={id} href={`#${id}`}>{t(en, zh)}</a>)}
@@ -172,7 +172,7 @@ export default function ApiDocsPage() {
 
         <article className="docs-content">
           <section className="docs-intro" id="overview">
-            <p className="docs-kicker">TMCRA MEMORY API / v0.3.0-rc1</p>
+            <p className="docs-kicker">TMCRA MEMORY API / v0.3.0-rc2</p>
             <h1>{t("Persistent memory for production AI agents.", "面向生产级 AI Agent 的持久记忆 API。")}</h1>
             <p className="docs-lead">{t(
               "Turn ordered conversation events into tenant-isolated, temporal, prompt-ready evidence. TMCRA owns memory; your application keeps control of the agent runtime and final answer model.",
