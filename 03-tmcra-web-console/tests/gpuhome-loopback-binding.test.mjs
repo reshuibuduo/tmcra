@@ -120,19 +120,19 @@ test("VM nginx serves desktop release metadata from shared downloads", () => {
   );
   assert.match(
     nginxConfiguration,
-    /alias \/srv\/tmcra-official\/shared\/downloads\/tmcra-memory-desktop-release\.json;/,
+    /alias \/opt\/tmcra-release\/shared\/downloads\/tmcra-memory-desktop-release\.json;/,
   );
   assert.match(
     nginxConfiguration,
-    /alias \/srv\/tmcra-official\/shared\/downloads\/TMCRA-Memory-Setup-latest\.exe\.sha256;/,
+    /alias \/opt\/tmcra-release\/shared\/downloads\/TMCRA-Memory-Setup-latest\.exe\.sha256;/,
   );
   assert.match(
     nginxConfiguration,
-    /alias \/srv\/tmcra-official\/shared\/downloads\/macos-current\/\$1;/,
+    /alias \/opt\/tmcra-release\/shared\/downloads\/macos-current\/\$1;/,
   );
   assert.match(
     nginxConfiguration,
-    /alias \/srv\/tmcra-official\/shared\/downloads\/macos-current\/desktop\/macos\/\$1\/\$2;/,
+    /alias \/opt\/tmcra-release\/shared\/downloads\/macos-current\/desktop\/macos\/\$1\/\$2;/,
   );
 });
 
@@ -141,10 +141,11 @@ test("VM API tunnel reads the current SSH endpoint from host configuration", () 
     new URL("../deploy/vm/tmcra-api-tunnel.service", import.meta.url),
     "utf8",
   );
-  assert.match(tunnelUnit, /Environment=TMCRA_API_SSH_PORT=30131/);
+  assert.match(tunnelUnit, /Environment=TMCRA_API_SSH_PORT=22/);
+  assert.match(tunnelUnit, /Environment=TMCRA_API_SSH_HOST=memory-api\.example\.invalid/);
   assert.match(
     tunnelUnit,
-    /EnvironmentFile=-\/srv\/tmcra-official\/shared\/api-tunnel\.env/,
+    /EnvironmentFile=-\/opt\/tmcra-release\/shared\/api-tunnel\.env/,
   );
   assert.match(tunnelUnit, /-p \$\{TMCRA_API_SSH_PORT\}/);
   assert.doesNotMatch(tunnelUnit, /-p 30334/);
@@ -153,7 +154,11 @@ test("VM API tunnel reads the current SSH endpoint from host configuration", () 
     new URL("../deploy/vm/api-tunnel.env.example", import.meta.url),
     "utf8",
   );
-  assert.match(tunnelEnvironment, /^TMCRA_API_SSH_PORT=30131$/mu);
+  assert.match(tunnelEnvironment, /^TMCRA_API_SSH_PORT=22$/mu);
+  assert.match(
+    tunnelEnvironment,
+    /^TMCRA_API_SSH_HOST=memory-api\.example\.invalid$/mu,
+  );
 });
 
 test("GPUHome release refuses runtime state bundled inside an archive", () => {

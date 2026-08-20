@@ -1,5 +1,5 @@
 name: tmcra-hermes
-version: 0.1.0
+version: 0.3.0rc1
 description: "TMCRA recall and completed-turn ingestion for Hermes Agent"
 kind: exclusive
 requires_env:

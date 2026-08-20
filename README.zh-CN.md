@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+当前源码候选版本：**`0.3.0-rc1`** · [更新记录](CHANGELOG.md)
+
 TMCRA（Temporal Memory-Centric Retrieval Architecture）是面向产品和 AI Agent
 的私有化长时记忆平台。它将对话和业务事件保存为带身份、来源和时间信息的原始证据；
 将近期信息快速变为可检索记忆；再以批处理方式形成可演化的长期语义图谱；最终返回

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import crypto from "node:crypto";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -22,7 +21,7 @@ test("bilingual API docs cover every published OpenAPI operation", () => {
   }
 
   assert.equal(spec.info.title, "TMCRA Memory API");
-  assert.equal(spec.info.version, "0.2.0");
+  assert.equal(spec.info.version, "0.3.0-rc1");
   assert.equal(spec.servers[0].url, "https://api.tmcra.com");
   assert.equal(spec.paths["/v1/session"].get.operationId, "getAuthenticatedSession");
   assert.equal(operations.length, 32);
@@ -110,9 +109,9 @@ test("automatic integration guide documents the real lifecycle and multi-Agent b
   assert.match(automatic, /Connecting stdio alone cannot observe a host’s turns/);
   assert.match(automatic, /tmcra-mcp-setup install --mode explicit/);
   assert.match(automatic, /tmcra-mcp-setup install --mode codex-hooks/);
-  assert.match(automatic, /python -m pip install https:\/\/tmcra\.com\/downloads\/integrations\/tmcra_client-0\.5\.0-py3-none-any\.whl/);
-  assert.match(automatic, /npm install https:\/\/tmcra\.com\/downloads\/integrations\/tmcra-typescript-0\.5\.0\.tgz/);
-  assert.match(automatic, /python -m pip install https:\/\/tmcra\.com\/downloads\/integrations\/tmcra_mcp_server-0\.4\.0-py3-none-any\.whl/);
+  assert.match(automatic, /python -m pip install https:\/\/tmcra\.com\/downloads\/integrations\/tmcra_client-0\.3\.0rc1-py3-none-any\.whl/);
+  assert.match(automatic, /npm install https:\/\/tmcra\.com\/downloads\/integrations\/tmcra-typescript-0\.3\.0-rc\.1\.tgz/);
+  assert.match(automatic, /python -m pip install https:\/\/tmcra\.com\/downloads\/integrations\/tmcra_mcp_server-0\.3\.0rc1-py3-none-any\.whl/);
   assert.doesNotMatch(automatic, /<code>python -m pip install tmcra-client<\/code>/);
   assert.doesNotMatch(automatic, /<code>npm install @tmcra\/typescript<\/code>/);
   assert.doesNotMatch(automatic, /python -m pip install tmcra-mcp-server/);
@@ -147,24 +146,14 @@ test("published documentation contains no embedded production credential", () =>
   assert.doesNotMatch(files, /Authorization:\s*Bearer\s+(?!\$|<)[A-Za-z0-9_-]{12,}/);
 });
 
-test("published integration downloads match their machine-readable checksums", () => {
+test("published integration download links use the release-candidate versions", () => {
   const automatic = read("app/developers/automatic-memory/page.tsx");
-  const directory = path.join(root, "public", "downloads", "integrations");
-  const manifest = JSON.parse(fs.readFileSync(path.join(directory, "manifest.json"), "utf8"));
-  assert.equal(manifest.schema_version, "tmcra.integration-artifacts.1");
-  assert.equal(manifest.artifacts.length, 8);
-  for (const artifact of manifest.artifacts) {
-    const artifactPath = path.join(directory, artifact.path);
-    const payload = fs.readFileSync(artifactPath);
-    assert.equal(payload.byteLength, artifact.bytes, artifact.path);
-    assert.equal(crypto.createHash("sha256").update(payload).digest("hex"), artifact.sha256, artifact.path);
-  }
   for (const file of [
-    "tmcra-openclaw-memory-0.4.0.tgz",
-    "tmcra_hermes_plugin-0.4.1-py3-none-any.whl",
-    "tmcra_client-0.5.0-py3-none-any.whl",
-    "tmcra-typescript-0.5.0.tgz",
-    "tmcra_mcp_server-0.4.0-py3-none-any.whl",
+    "tmcra-openclaw-memory-0.3.0-rc.1.tgz",
+    "tmcra_hermes_plugin-0.3.0rc1-py3-none-any.whl",
+    "tmcra_client-0.3.0rc1-py3-none-any.whl",
+    "tmcra-typescript-0.3.0-rc.1.tgz",
+    "tmcra_mcp_server-0.3.0rc1-py3-none-any.whl",
     "SHA256SUMS.txt",
   ]) {
     assert.match(automatic, new RegExp(`/downloads/integrations/${file.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}`));

@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>TMCRA.AgentFramework</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.3.0-rc.1</Version>
     <Description>Microsoft Agent Framework AIContextProvider for TMCRA memory.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

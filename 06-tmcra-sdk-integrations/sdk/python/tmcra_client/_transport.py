@@ -121,7 +121,7 @@ class SyncTransport:
         self.api_key = validate_api_key(api_key)
         self.retry = retry
         self._client = httpx.Client(timeout=timeout, transport=transport)
-        self._headers = {"accept": "application/json", "user-agent": "tmcra-client/0.1.0"}
+        self._headers = {"accept": "application/json", "user-agent": "tmcra-client/0.3.0-rc1"}
         if headers:
             self._headers.update(headers)
         if self.api_key:
@@ -238,7 +238,7 @@ class AsyncTransport:
         self.retry = retry
         self._owns_client = client is None
         self._client = client or httpx.AsyncClient(timeout=timeout, transport=transport)
-        self._headers = {"accept": "application/json", "user-agent": "tmcra-client/0.1.0"}
+        self._headers = {"accept": "application/json", "user-agent": "tmcra-client/0.3.0-rc1"}
         if headers:
             self._headers.update(headers)
         if self.api_key:

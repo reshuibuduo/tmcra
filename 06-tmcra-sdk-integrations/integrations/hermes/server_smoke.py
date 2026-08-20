@@ -54,6 +54,32 @@ def _get_job(base_url: str, api_key: str, job_id: str) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _wait_for_job(
+    base_url: str,
+    api_key: str,
+    job_id: str,
+    *,
+    timeout_seconds: float,
+    job_label: str,
+    poll_interval_seconds: float = 1.5,
+) -> dict[str, Any]:
+    """Poll one job with a deadline created for that specific operation."""
+    timeout = float(timeout_seconds)
+    if timeout <= 0:
+        raise ValueError("timeout_seconds must be positive")
+    poll_interval = max(0.0, float(poll_interval_seconds))
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        job = _get_job(base_url, api_key, job_id)
+        status = str(job.get("status", ""))
+        if status == "succeeded":
+            return job
+        if status in {"failed", "cancelled"}:
+            raise RuntimeError(f"{job_label} ended as {status}")
+        time.sleep(poll_interval)
+    raise RuntimeError(f"{job_label} timed out")
+
+
 def main() -> int:
     required = (
         "TMCRA_BASE_URL",
@@ -91,17 +117,13 @@ def main() -> int:
     if not job_id:
         raise RuntimeError("Hermes native ingest response has no job_id")
 
-    deadline = time.monotonic() + float(os.getenv("TMCRA_SMOKE_TIMEOUT_SECONDS", "1800"))
-    job: dict[str, Any] = {}
-    while time.monotonic() < deadline:
-        job = _get_job(os.environ["TMCRA_BASE_URL"], os.environ["TMCRA_API_KEY"], job_id)
-        if job.get("status") == "succeeded":
-            break
-        if job.get("status") in {"failed", "cancelled"}:
-            raise RuntimeError(f"Hermes native ingest job ended as {job.get('status')}")
-        time.sleep(1.5)
-    if job.get("status") != "succeeded":
-        raise RuntimeError("Hermes native ingest job timed out")
+    job = _wait_for_job(
+        os.environ["TMCRA_BASE_URL"],
+        os.environ["TMCRA_API_KEY"],
+        job_id,
+        timeout_seconds=float(os.getenv("TMCRA_SMOKE_TIMEOUT_SECONDS", "1800")),
+        job_label="Hermes native ingest job",
+    )
 
     context = provider.prefetch("What is my native verification code?")
     if marker not in context:

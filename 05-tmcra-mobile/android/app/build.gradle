@@ -83,7 +83,7 @@ modelSpecs.each { spec ->
                 URLConnection connection = new URL(assetUrl).openConnection()
                 connection.connectTimeout = 30_000
                 connection.readTimeout = 300_000
-                connection.setRequestProperty('User-Agent', 'TMCRA-Android-Build/0.2.0')
+                connection.setRequestProperty('User-Agent', 'TMCRA-Android-Build/0.3.0-rc1')
                 connection.inputStream.withCloseable { input ->
                     temporary.withOutputStream { output -> input.transferTo(output) }
                 }
@@ -128,8 +128,8 @@ android {
         applicationId "com.tmcra.memory.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "0.2.0"
+        versionCode 3
+        versionName "0.3.0-rc1"
         // The first hardware-validation build targets modern Android phones.
         // x86_64 is available only through -PtmcraTestAbi=x86_64 for the server emulator gate.
         // Release invocations keep the default arm64-v8a ABI.
@@ -207,4 +207,3 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
-

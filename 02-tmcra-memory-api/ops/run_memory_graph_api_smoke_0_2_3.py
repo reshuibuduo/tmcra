@@ -299,7 +299,7 @@ def _run(
     return {
         "schema_version": "tmcra.memory-graph-smoke.1",
         "status": "passed",
-        "service_version": "0.2.0",
+        "service_version": "0.3.0-rc1",
         "ingest_status": ingest_status,
         "overview_nodes": len(nodes),
         "overview_resolved_layers": overview.get("resolved_layers"),

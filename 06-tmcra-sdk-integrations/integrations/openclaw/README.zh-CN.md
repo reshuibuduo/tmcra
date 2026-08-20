@@ -1,6 +1,6 @@
 # TMCRA OpenClaw 记忆插件
 
-`@tmcra/openclaw-memory` 0.4.0 是基于 OpenClaw hook API 的已编译 ESM 插件。它会自动完成每轮记忆生命周期，不是只提供几个需要 Agent 自己决定是否调用的工具。
+`@tmcra/openclaw-memory` 0.3.0-rc.1 是基于 OpenClaw hook API 的已编译 ESM 插件。它会自动完成每轮记忆生命周期，并保留可由 Agent 显式调用的工具接口。
 
 ## 自动生命周期
 
@@ -17,7 +17,7 @@
 
 用户记录保留 `role=user`、`actor_role=user` 和 `target_agent_id`；Agent 回答保留 `role=assistant`、`actor_role=assistant` 和 `agent_id`。自动写入只进入项目共享 scope。插件会同时召回用户全局 scope 和项目共享 scope，但不会把普通对话写到全局 scope。
 
-0.4.0 没有开放 Agent 私有 scope 配置，因此私有召回默认且固定关闭。需要“仅当前 Agent 可召回”的宿主，应使用 Python 或 TypeScript SDK 的可选生命周期封装。
+0.3.0-rc.1 暂未开放 Agent 私有 scope 配置，因此私有召回默认且固定关闭。需要“仅当前 Agent 可召回”的宿主，应使用 Python 或 TypeScript SDK 的可选生命周期封装。
 
 ## 必须由操作者授予的权限
 

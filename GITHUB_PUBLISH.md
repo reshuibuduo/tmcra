@@ -58,8 +58,18 @@ Keep source in Git and publish distributable archives through GitHub Releases:
 
 Create the release as a **draft**, attach both files, verify the uploaded
 archive checksum against SHA256SUMS.txt, then publish it after the tag, release
-notes, and assets have all been reviewed. Use a SemVer tag selected by the
-maintainers, for example v0.1.0 for the first public release.
+notes, and assets have all been reviewed. Create a tag only after the GitHub
+`Release gate` workflow is green. Run the metadata checks locally before
+tagging:
+
+```bash
+python scripts/check_release_versions.py
+python scripts/check_release_secrets.py
+```
+
+The current candidate is `v0.3.0-rc1`. Promote it to a stable tag only after a
+clean-checkout deployment and artifact-hash review. Copy the release notes from
+`CHANGELOG.md`.
 
 The full archive is intentionally not committed to this repository. GitHub
 warns for ordinary Git files above 50 MiB and blocks them above 100 MiB; use a
@@ -79,3 +89,4 @@ Before creating the public repository:
 5. Never add environment files, provider credentials, private keys, customer
    data, production logs, generated databases, or the parent release archive
    to Git history.
+6. Require every job in `.github/workflows/release-gate.yml` to pass.

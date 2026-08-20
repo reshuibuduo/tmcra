@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tmcra-client"
-version = "0.6.0"
+version = "0.3.0rc1"
 description = "Typed synchronous and asynchronous Python client for the TMCRA Memory API"
 readme = "README.md"
 requires-python = ">=3.10"

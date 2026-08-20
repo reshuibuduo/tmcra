@@ -62,12 +62,12 @@ const openClawConfig = `{
   }
 }`;
 
-const hermesCommands = `python -m pip install https://tmcra.com/downloads/integrations/tmcra_hermes_plugin-0.4.1-py3-none-any.whl
+const hermesCommands = `python -m pip install https://tmcra.com/downloads/integrations/tmcra_hermes_plugin-0.3.0rc1-py3-none-any.whl
 tmcra-hermes install
 hermes memory setup
 tmcra-hermes status`;
 
-const mcpCommands = `python -m pip install https://tmcra.com/downloads/integrations/tmcra_mcp_server-0.4.0-py3-none-any.whl
+const mcpCommands = `python -m pip install https://tmcra.com/downloads/integrations/tmcra_mcp_server-0.3.0rc1-py3-none-any.whl
 
 # Generic MCP: explicit tools
 tmcra-mcp-setup install --mode explicit
@@ -302,7 +302,7 @@ export default function AutomaticMemoryPage() {
           </div>
           <div className="adapter-side">
             <CodePanel label="python · tmcra-client" code={pythonExample} />
-            <p className="adapter-command"><code>python -m pip install https://tmcra.com/downloads/integrations/tmcra_client-0.5.0-py3-none-any.whl</code></p>
+            <p className="adapter-command"><code>python -m pip install https://tmcra.com/downloads/integrations/tmcra_client-0.3.0rc1-py3-none-any.whl</code></p>
           </div>
         </div>
       </section>
@@ -325,7 +325,7 @@ export default function AutomaticMemoryPage() {
           </div>
           <div className="adapter-side">
             <CodePanel label="javascript / typescript · @tmcra/typescript" code={typescriptExample} />
-            <p className="adapter-command"><code>npm install https://tmcra.com/downloads/integrations/tmcra-typescript-0.5.0.tgz</code></p>
+            <p className="adapter-command"><code>npm install https://tmcra.com/downloads/integrations/tmcra-typescript-0.3.0-rc.1.tgz</code></p>
           </div>
         </div>
       </section>
@@ -364,11 +364,11 @@ export default function AutomaticMemoryPage() {
           <p>{t("These files are the same artifacts used for clean-install and package validation. Verify SHA-256 before installation.", "这些文件与干净环境安装和打包验收使用的是同一批制品；安装前请核对 SHA-256。")}</p>
         </header>
         <div className="automatic-download-grid">
-          <a href="/downloads/integrations/tmcra-openclaw-memory-0.4.0.tgz"><b>OpenClaw</b><span>0.4.0 / npm tgz</span></a>
-          <a href="/downloads/integrations/tmcra_hermes_plugin-0.4.1-py3-none-any.whl"><b>Hermes</b><span>0.4.1 / Python wheel</span></a>
-          <a href="/downloads/integrations/tmcra_client-0.5.0-py3-none-any.whl"><b>Python SDK</b><span>0.5.0 / wheel</span></a>
-          <a href="/downloads/integrations/tmcra-typescript-0.5.0.tgz"><b>JavaScript / TypeScript</b><span>0.5.0 / npm tgz</span></a>
-          <a href="/downloads/integrations/tmcra_mcp_server-0.4.0-py3-none-any.whl"><b>MCP Server</b><span>0.4.0 / Python wheel</span></a>
+          <a href="/downloads/integrations/tmcra-openclaw-memory-0.3.0-rc.1.tgz"><b>OpenClaw</b><span>0.3.0-rc.1 / npm tgz</span></a>
+          <a href="/downloads/integrations/tmcra_hermes_plugin-0.3.0rc1-py3-none-any.whl"><b>Hermes</b><span>0.3.0rc1 / Python wheel</span></a>
+          <a href="/downloads/integrations/tmcra_client-0.3.0rc1-py3-none-any.whl"><b>Python SDK</b><span>0.3.0rc1 / wheel</span></a>
+          <a href="/downloads/integrations/tmcra-typescript-0.3.0-rc.1.tgz"><b>JavaScript / TypeScript</b><span>0.3.0-rc.1 / npm tgz</span></a>
+          <a href="/downloads/integrations/tmcra_mcp_server-0.3.0rc1-py3-none-any.whl"><b>MCP Server</b><span>0.3.0rc1 / Python wheel</span></a>
           <a href="/downloads/integrations/SHA256SUMS.txt"><b>SHA-256</b><span>{t("Checksum manifest", "校验清单")}</span></a>
         </div>
         <p className="automatic-download-note">{t("Source distributions and the machine-readable manifest remain in the same directory for reproducible deployment.", "源码分发包和机器可读 manifest 也保存在同一目录，便于复现部署。")}</p>

@@ -47,9 +47,9 @@ publish_file "$stage/tmcra-memory-desktop-release.json" "$downloads/tmcra-memory
 publish_file "$stage/TMCRA-Memory-Mobile-latest.apk" "$downloads/TMCRA-Memory-Mobile-latest.apk"
 publish_file "$stage/TMCRA-Memory-Mobile-latest.apk.sha256" "$downloads/TMCRA-Memory-Mobile-latest.apk.sha256"
 publish_file "$stage/tmcra-memory-mobile-android-release.json" "$downloads/tmcra-memory-mobile-android-release.json"
-publish_file "$stage/mobile/android/TMCRA-Memory-Mobile-0.1.0.apk" "$downloads/mobile/android/TMCRA-Memory-Mobile-0.1.0.apk"
-publish_file "$stage/mobile/android/TMCRA-Memory-Mobile-0.1.0.aab" "$downloads/mobile/android/TMCRA-Memory-Mobile-0.1.0.aab"
-publish_file "$stage/mobile/ios/TMCRA-Memory-Mobile-iOS-Xcode-0.1.0.zip" "$downloads/mobile/ios/TMCRA-Memory-Mobile-iOS-Xcode-0.1.0.zip"
+publish_file "$stage/mobile/android/TMCRA-Memory-Mobile-0.3.0-rc1.apk" "$downloads/mobile/android/TMCRA-Memory-Mobile-0.3.0-rc1.apk"
+publish_file "$stage/mobile/android/TMCRA-Memory-Mobile-0.3.0-rc1.aab" "$downloads/mobile/android/TMCRA-Memory-Mobile-0.3.0-rc1.aab"
+publish_file "$stage/mobile/ios/TMCRA-Memory-Mobile-iOS-Xcode-0.3.0-rc1.zip" "$downloads/mobile/ios/TMCRA-Memory-Mobile-iOS-Xcode-0.3.0-rc1.zip"
 
 mac_link="$downloads/.macos-current.$$"
 ln -s "macos-releases/$mac_release_name" "$mac_link"

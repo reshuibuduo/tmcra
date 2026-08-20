@@ -7,7 +7,7 @@ import path from "node:path";
 import process from "node:process";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const OWNER_EMAIL = "security-owner@example.com";
+const OWNER_EMAIL = "seedy@sites.test";
 const tempRoot = await mkdtemp(path.join(tmpdir(), "tmcra-security-"));
 const port = await reservePort();
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -91,7 +91,7 @@ async function waitUntilReady(url, child) {
 async function runNodeSecurityTest(url) {
   const test = spawn(
     process.execPath,
-    ["--test", "tests/internal-security.test.mjs"],
+    ["--test", "tests/internal-security-sites.test.mjs"],
     {
       cwd: ROOT,
       env: {

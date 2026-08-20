@@ -2670,7 +2670,7 @@
   "info": {
     "description": "Tenant-isolated long-term memory ingestion and prompt-ready recall. TMCRA does not generate the final assistant answer.",
     "title": "TMCRA Memory API",
-    "version": "0.2.0"
+    "version": "0.3.0-rc1"
   },
   "openapi": "3.1.0",
   "paths": {

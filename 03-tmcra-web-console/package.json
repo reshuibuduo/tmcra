@@ -1,6 +1,6 @@
 {
-  "name": "site-creator-vinext-starter",
-  "version": "0.1.0",
+  "name": "@tmcra/web-console",
+  "version": "0.3.0-rc.1",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -18,8 +18,8 @@
     "@ai-sdk/openai-compatible": "^3.0.30",
     "@assistant-ui/react": "^0.15.14",
     "@assistant-ui/react-ai-sdk": "^1.4.5",
-    "@tmcra/typescript": "file:../../sdk/typescript",
-    "@tmcra/vercel-ai-sdk": "file:../../integrations/vercel-ai-sdk",
+    "@tmcra/typescript": "file:../06-tmcra-sdk-integrations/sdk/typescript",
+    "@tmcra/vercel-ai-sdk": "file:../06-tmcra-sdk-integrations/integrations/vercel-ai-sdk",
     "ai": "^7.0.65",
     "cytoscape": "^3.34.0",
     "cytoscape-elk": "^2.3.0",
@@ -33,6 +33,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.45.0",
     "@cloudflare/workers-types": "^5.20260715.1",
+    "@openai/sites-vite-plugin": "0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@tmcra/miniflare-loopback-api-plugin": "file:deploy/gpuhome/miniflare-loopback-api-plugin",
     "@types/node": "22.19.19",

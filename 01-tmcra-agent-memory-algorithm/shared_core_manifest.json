@@ -1,6 +1,6 @@
 {
   "schema_version": "tmcra.service.shared-core-manifest.1",
-  "service_version": "0.2.8",
+  "service_version": "0.3.0-rc1",
   "generated_on": "2026-08-17",
   "algorithm_files": [
     {
