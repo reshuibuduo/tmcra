@@ -28,8 +28,10 @@ QWEN_FILE="Qwen3.6-35B-A3B-UD-IQ3_S.gguf"
 QWEN_SHA256="66a3ca888ce13482b40c333db2432c0ebde3a7b13754fc29f0c6f5e89703ec66"
 BGE_REPO="BAAI/bge-m3"
 BGE_REVISION="5617a9f61b028005a4858fdac845db406aefb181"
+BGE_MODEL_SHA256="b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38"
 CROSS_REPO="BAAI/bge-reranker-v2-m3"
 CROSS_REVISION="953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
+CROSS_MODEL_SHA256="d9e3e081faff1eefb84019509b2f5558fd74c1a05a2c7db22f74174fcedb5286"
 LLAMA_CPP_REPO="https://github.com/ggml-org/llama.cpp.git"
 LLAMA_CPP_TAG="b10276"
 
@@ -163,6 +165,10 @@ if [[ -n "$CROSS_MODEL" ]]; then
     echo "cross-encoder directory is missing: $CROSS_MODEL" >&2
     exit 1
   }
+  [[ -f "$CROSS_MODEL/TMCRA_MODEL_MANIFEST.json" ]] || {
+    echo "cross-encoder manifest is missing: $CROSS_MODEL/TMCRA_MODEL_MANIFEST.json" >&2
+    exit 1
+  }
 fi
 
 if command -v nvidia-smi >/dev/null 2>&1; then
@@ -202,7 +208,7 @@ if [[ "$SKIP_PYTHON_INSTALL" -eq 0 ]]; then
   fi
   "$VENV/bin/python" -m pip install --upgrade pip
   "$VENV/bin/python" -m pip install -r "$SOURCE_ROOT/requirements-tmcra-service.txt"
-  "$VENV/bin/python" -m pip install --upgrade huggingface_hub
+  "$VENV/bin/python" -m pip install --upgrade "huggingface_hub>=0.34,<1.0"
 fi
 PYTHON="$VENV/bin/python"
 [[ -x "$PYTHON" ]] || {
@@ -221,7 +227,8 @@ download_model() {
   local destination=$3
   shift 3
   install -d -m 0755 "$destination"
-  "$HF" download "$repo" --revision "$revision" --local-dir "$destination" "$@"
+  HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" \
+    "$HF" download "$repo" --revision "$revision" --local-dir "$destination" "$@"
 }
 
 if [[ -z "$MODEL_PATH" ]]; then
@@ -242,15 +249,39 @@ MODEL_BYTES=$(stat -c '%s' -- "$MODEL_PATH")
 
 if [[ -z "$EMBEDDING_MODEL" ]]; then
   EMBEDDING_MODEL="$MODEL_ROOT/BAAI/bge-m3"
-  [[ -f "$EMBEDDING_MODEL/config.json" ]] || \
-    download_model "$BGE_REPO" "$BGE_REVISION" "$EMBEDDING_MODEL"
+  [[ -f "$EMBEDDING_MODEL/config.json" \
+    && -f "$EMBEDDING_MODEL/pytorch_model.bin" \
+    && -f "$EMBEDDING_MODEL/tokenizer.json" \
+    && -f "$EMBEDDING_MODEL/modules.json" ]] || \
+    download_model "$BGE_REPO" "$BGE_REVISION" "$EMBEDDING_MODEL" \
+      1_Pooling/config.json colbert_linear.pt config.json \
+      config_sentence_transformers.json modules.json pytorch_model.bin \
+      sentence_bert_config.json sentencepiece.bpe.model sparse_linear.pt \
+      special_tokens_map.json tokenizer.json tokenizer_config.json
+  [[ "$(sha256sum "$EMBEDDING_MODEL/pytorch_model.bin" | awk '{print $1}')" \
+    == "$BGE_MODEL_SHA256" ]] || {
+    echo "downloaded BGE-M3 artifact failed SHA-256 verification" >&2
+    exit 1
+  }
 fi
 EMBEDDING_MODEL="$(readlink -f -- "$EMBEDDING_MODEL")"
 
 if [[ -z "$CROSS_MODEL" ]]; then
   CROSS_MODEL="$MODEL_ROOT/BAAI/bge-reranker-v2-m3"
-  [[ -f "$CROSS_MODEL/config.json" ]] || \
-    download_model "$CROSS_REPO" "$CROSS_REVISION" "$CROSS_MODEL"
+  [[ -f "$CROSS_MODEL/config.json" \
+    && -f "$CROSS_MODEL/model.safetensors" \
+    && -f "$CROSS_MODEL/tokenizer.json" ]] || \
+    download_model "$CROSS_REPO" "$CROSS_REVISION" "$CROSS_MODEL" \
+      config.json model.safetensors sentencepiece.bpe.model \
+      special_tokens_map.json tokenizer.json tokenizer_config.json
+  [[ "$(sha256sum "$CROSS_MODEL/model.safetensors" | awk '{print $1}')" \
+    == "$CROSS_MODEL_SHA256" ]] || {
+    echo "downloaded BGE reranker artifact failed SHA-256 verification" >&2
+    exit 1
+  }
+  install -m 0644 -- \
+    "$SOURCE_ROOT/deploy/model-manifests/bge-reranker-v2-m3.TMCRA_MODEL_MANIFEST.json" \
+    "$CROSS_MODEL/TMCRA_MODEL_MANIFEST.json"
 fi
 CROSS_MODEL="$(readlink -f -- "$CROSS_MODEL")"
 
@@ -314,7 +345,7 @@ TMCRA_SERVICE_TLS_PROXY_MODE=trusted_proxy
 TMCRA_SERVICE_STATE_DIR=$DATA_DIR/service-state
 TMCRA_SERVICE_CONTROL_DB=$DATA_DIR/service-state/control.sqlite3
 TMCRA_V4_ROOT=$PREFIX
-TMCRA_INTEGRATED_REPO=$DATA_DIR/repository
+TMCRA_INTEGRATED_REPO=$PREFIX
 TMCRA_WRITER_ENV=$WRITER_ENV
 TMCRA_SERVICE_PYTHON=$PYTHON
 TMCRA_EMBEDDING_MODEL=$EMBEDDING_MODEL

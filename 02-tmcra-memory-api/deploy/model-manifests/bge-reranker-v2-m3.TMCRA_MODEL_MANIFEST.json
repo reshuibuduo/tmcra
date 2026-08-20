@@ -1,0 +1,9 @@
+{
+  "schema_version": "tmcra.model-manifest.1",
+  "repo_id": "BAAI/bge-reranker-v2-m3",
+  "revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+  "artifact": {
+    "path": "model.safetensors",
+    "sha256": "d9e3e081faff1eefb84019509b2f5558fd74c1a05a2c7db22f74174fcedb5286"
+  }
+}

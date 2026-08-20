@@ -8,6 +8,7 @@ from unittest.mock import patch
 import tmcra_v4_slow_graph as slow_graph
 from tmcra_service.planner_provider import recall_planner_route
 from tmcra_service.qwen36_planner_adapter import LocalQwenRecallRolePlanner
+from tmcra_service.api_models import ProjectionBuildProgressResponse
 from tmcra_service.session_graph import LocalSessionGraphAgent
 from tmcra_service.writer import LeasedDeepSeekClient
 from tmcra_service.writer_provider import (
@@ -22,6 +23,27 @@ CUSTOM_BASE_URL = "http://127.0.0.1:22435/v1"
 
 
 class ConfigurableLocalModelTests(unittest.TestCase):
+    def test_projection_progress_accepts_dedicated_local_slot(self) -> None:
+        progress = ProjectionBuildProgressResponse(
+            schema_version="tmcra.projection-build-progress.1",
+            scope_name="test-scope",
+            status="running",
+            stage="session_maps",
+            progress_percent=10,
+            completed_units=1,
+            total_units=10,
+            session_maps={},
+            session_atlas={},
+            visual_atlas={},
+            knowledge_base={},
+            detail="building",
+            updated_at=1.0,
+            agent_enabled=True,
+            resource_isolation="dedicated-local-slot",
+        )
+
+        self.assertEqual(progress.resource_isolation, "dedicated-local-slot")
+
     def test_provider_routes_accept_operator_selected_model_identities(self) -> None:
         environment = {
             "TMCRA_WRITER_PROVIDER": "deepseek",

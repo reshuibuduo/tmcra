@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 ROOT="${TMCRA_V4_ROOT:-/opt/tmcra}"
-PYTHON="${TMCRA_SERVICE_PYTHON:-/opt/tmcra_env_20260713/bin/python}"
 ENV_FILE="${TMCRA_SERVICE_ENV_FILE:-$ROOT/deploy/tmcra-service.env}"
 declare -r TMCRA_DRAIN_GATE_OVERRIDE_FROM_INVOKER="${TMCRA_DRAIN_GATE_EMERGENCY_OVERRIDE:-0}"
 
@@ -15,6 +14,8 @@ set -a
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 set +a
+ROOT="${TMCRA_V4_ROOT:-$ROOT}"
+PYTHON="${TMCRA_SERVICE_PYTHON:-/opt/tmcra_env_20260713/bin/python}"
 # A checked-in/persistent service env file must not silently bypass the
 # release gate. The emergency override is accepted only from the invoking
 # process environment.

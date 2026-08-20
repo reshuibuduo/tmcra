@@ -20,6 +20,7 @@ STATIC_FILES = (
     "deploy/tmcra-memory-api-control.sh",
     "deploy/tmcra-memory-api.service",
     "deploy/tmcra-production-maintenance.sh",
+    "deploy/model-manifests/bge-reranker-v2-m3.TMCRA_MODEL_MANIFEST.json",
     "deploy/tmcra-service.env.example",
     "deploy/writer.env.example",
     "requirements-tmcra-service.txt",
@@ -29,7 +30,6 @@ STATIC_FILES = (
     "ops/export_tmcra_openapi.py",
     "ops/run_tmcra_service_preflight.py",
     "ops/run_commercial_api_smoke.py",
-    "ops/run_launch_api_smoke.py",
 )
 
 EXCLUDED_TREE_PARTS = {

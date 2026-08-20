@@ -1222,6 +1222,7 @@ class ProjectionBuildProgressResponse(StrictModel):
     agent_enabled: bool
     resource_isolation: Literal[
         "adaptive-local-first",
+        "dedicated-local-slot",
         "dedicated-provider",
         "shared-local-reserve",
         "user-provider",

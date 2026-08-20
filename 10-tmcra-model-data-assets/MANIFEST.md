@@ -10,7 +10,7 @@ sources only.
 21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08  BAAI/bge-m3/tokenizer.json
 26159e7ad065073448460117eb24b7a4572f6f4e78eadff65dc0a11c052449fa  BAAI/bge-m3/config.json
 34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930  BAAI/bge-reranker-v2-m3/.gitattributes
-66228fe6119341bee22481f050fbd638b85cd17617aedbafe891dc074a77adcd  BAAI/bge-reranker-v2-m3/TMCRA_MODEL_MANIFEST.json
+181a37bfdac9d90d0b009b03aa307d0ff6cdb5cc149abeadeac560285cf472b6  ../02-tmcra-memory-api/deploy/model-manifests/bge-reranker-v2-m3.TMCRA_MODEL_MANIFEST.json
 69564b696052886ed0ac63fa393e928384e0f8caada38c1f4864a9bfbf379c15  BAAI/bge-reranker-v2-m3/tokenizer.json
 7363a8ebd782ede400e72bb3e88c19248478eb6f280a7376d398fc2f22707b9a  BAAI/bge-m3/.gitattributes
 7e4c1cc848840aeccdd763458c18dd525eb0f795c992e00ebe9c28554e7db2d4  BAAI/bge-reranker-v2-m3/tokenizer_config.json

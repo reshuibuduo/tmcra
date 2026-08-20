@@ -4,12 +4,24 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from tmcra_client import IngestRequest, MemoryMessage, RecallRequest, SyncClient
+try:
+    from tmcra_client import IngestRequest, MemoryMessage, RecallRequest, SyncClient
+except ModuleNotFoundError:
+    SDK_ROOT = (
+        Path(__file__).resolve().parents[2]
+        / "06-tmcra-sdk-integrations"
+        / "sdk"
+        / "python"
+    )
+    if SDK_ROOT.is_dir():
+        sys.path.insert(0, str(SDK_ROOT))
+    from tmcra_client import IngestRequest, MemoryMessage, RecallRequest, SyncClient
 
 
 def _parser() -> argparse.ArgumentParser:

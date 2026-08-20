@@ -4,9 +4,6 @@ umask 077
 
 ROOT="${TMCRA_V4_ROOT:-/opt/tmcra}"
 ENV_FILE="${TMCRA_SERVICE_ENV_FILE:-$ROOT/deploy/tmcra-service.env}"
-API_CONTROL="${TMCRA_MEMORY_API_CONTROL:-$ROOT/deploy/tmcra-memory-api-control.sh}"
-LOCAL_LLM_CONTROL="${TMCRA_LOCAL_LLM_CONTROL:-$ROOT/deploy/tmcra-local-llm-control.sh}"
-PYTHON="${TMCRA_SERVICE_PYTHON:-/opt/tmcra_env_20260713/bin/python}"
 
 usage() {
   echo "usage: $0 --reason <ticket-or-short-reason> -- <foreground-command> [args...]" >&2
@@ -28,10 +25,6 @@ shift
   echo "service environment file is missing or unsafe: $ENV_FILE" >&2
   exit 1
 }
-[[ -x "$API_CONTROL" && -x "$LOCAL_LLM_CONTROL" && -x "$PYTHON" ]] || {
-  echo "production maintenance controls are incomplete" >&2
-  exit 1
-}
 command -v flock >/dev/null 2>&1 || { echo "flock is required" >&2; exit 1; }
 command -v setsid >/dev/null 2>&1 || { echo "setsid is required" >&2; exit 1; }
 
@@ -39,6 +32,15 @@ set -a
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 set +a
+
+ROOT="${TMCRA_V4_ROOT:-$ROOT}"
+API_CONTROL="${TMCRA_MEMORY_API_CONTROL:-$ROOT/deploy/tmcra-memory-api-control.sh}"
+LOCAL_LLM_CONTROL="${TMCRA_LOCAL_LLM_CONTROL:-$ROOT/deploy/tmcra-local-llm-control.sh}"
+PYTHON="${TMCRA_SERVICE_PYTHON:-/opt/tmcra_env_20260713/bin/python}"
+[[ -x "$API_CONTROL" && -x "$LOCAL_LLM_CONTROL" && -x "$PYTHON" ]] || {
+  echo "production maintenance controls are incomplete" >&2
+  exit 1
+}
 
 STATE_DIR="${TMCRA_SERVICE_STATE_DIR:?TMCRA_SERVICE_STATE_DIR is required}"
 AUDIT_LOG="$STATE_DIR/maintenance-audit.jsonl"
