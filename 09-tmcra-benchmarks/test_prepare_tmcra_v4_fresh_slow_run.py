@@ -122,7 +122,14 @@ class FreshSlowRunTests(unittest.TestCase):
             self.assertEqual(report["physical_api_calls"], 0)
             self.assertEqual(
                 report["copies"][0]["output_db"],
-                str(output / "writer" / "worker_003" / "native_memory.sqlite3"),
+                str(
+                    (
+                        output
+                        / "writer"
+                        / "worker_003"
+                        / "native_memory.sqlite3"
+                    ).resolve()
+                ),
             )
             self.assertTrue((output / "FRESH_SLOW_COPY_COMPLETE.json").is_file())
             self.assertEqual(
@@ -143,7 +150,7 @@ class FreshSlowRunTests(unittest.TestCase):
             self.assertEqual(prepared["row_count"], 1)
             self.assertEqual(
                 prepared["workers"][0]["worker_dir"],
-                str(output / "writer" / "worker_003"),
+                str((output / "writer" / "worker_003").resolve()),
             )
             with closing(
                 sqlite3.connect(

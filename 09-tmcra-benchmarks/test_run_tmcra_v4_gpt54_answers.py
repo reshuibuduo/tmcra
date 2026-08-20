@@ -100,7 +100,7 @@ class V4OperationAnswerTests(unittest.TestCase):
                 "os.environ", environment, clear=False
             ), mock.patch.object(answers, "load_harness") as load_harness:
                 with self.assertRaisesRegex(
-                    RuntimeError, "before GPT-5.4 calls"
+                    RuntimeError, "before answer-model calls"
                 ):
                     answers.main()
             load_harness.assert_not_called()

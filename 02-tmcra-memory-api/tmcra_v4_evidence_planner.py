@@ -364,6 +364,42 @@ def normalize_planner_output(
     normalized_plan, warnings = _normalize_plan_ids(value, catalog)
     if "task_contract" not in normalized_plan or "typed_semantics" not in normalized_plan:
         raise ValueError("new planner output requires task_contract and typed_semantics")
+    task_contract = normalized_plan.get("task_contract")
+    if isinstance(task_contract, Mapping):
+        premises = task_contract.get("premises")
+        if (
+            task_contract.get("output_origin")
+            in {"memory_direct", "memory_derived", "memory_conditioned_generation"}
+            and isinstance(premises, list)
+        ):
+            copied_premises = [
+                dict(premise) if isinstance(premise, Mapping) else premise
+                for premise in premises
+            ]
+            required_memory = [
+                premise
+                for premise in copied_premises
+                if isinstance(premise, Mapping)
+                and premise.get("source") == "memory"
+                and premise.get("necessity") == "required"
+            ]
+            promotable_memory = [
+                premise
+                for premise in copied_premises
+                if isinstance(premise, dict)
+                and premise.get("source") == "memory"
+                and premise.get("necessity") == "optional"
+                and isinstance(premise.get("grounded_constraints"), list)
+                and any(_text(item) for item in premise["grounded_constraints"])
+            ]
+            if not required_memory and len(promotable_memory) == 1:
+                promotable_memory[0]["necessity"] = "required"
+                copied_contract = dict(task_contract)
+                copied_contract["premises"] = copied_premises
+                normalized_plan["task_contract"] = copied_contract
+                warnings.append(
+                    "task_contract.premises:promoted_unique_grounded_memory_premise"
+                )
     return validate_operation_plan(normalized_plan, catalog), warnings
 
 

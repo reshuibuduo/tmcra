@@ -68,12 +68,14 @@ class GraphAdapterCacheTests(unittest.TestCase):
     def test_cache_reuses_the_current_scope(self):
         adapter = object()
         harness = mock.Mock()
-        cache = {("scope-1", "/tmp/one.sqlite3"): adapter}
+        db_path = Path("/tmp/one.sqlite3")
+        cache = {("scope-1", str(db_path), "fingerprint-1"): adapter}
 
         result, reused = runtime._get_graph_adapter(
             harness=harness,
             scope_id="scope-1",
-            db_path=Path("/tmp/one.sqlite3"),
+            db_path=db_path,
+            graph_fingerprint="fingerprint-1",
             cache=cache,
         )
 
@@ -87,7 +89,9 @@ class GraphAdapterCacheTests(unittest.TestCase):
         new_adapter = object()
         harness = mock.Mock()
         harness.build_adapter.return_value = new_adapter
-        cache = {("scope-1", "/tmp/one.sqlite3"): old_adapter}
+        old_db_path = Path("/tmp/one.sqlite3")
+        new_db_path = Path("/tmp/two.sqlite3")
+        cache = {("scope-1", str(old_db_path), "fingerprint-1"): old_adapter}
         fake_torch = SimpleNamespace(
             cuda=SimpleNamespace(
                 is_available=mock.Mock(return_value=True),
@@ -99,16 +103,20 @@ class GraphAdapterCacheTests(unittest.TestCase):
             result, reused = runtime._get_graph_adapter(
                 harness=harness,
                 scope_id="scope-2",
-                db_path=Path("/tmp/two.sqlite3"),
+                db_path=new_db_path,
+                graph_fingerprint="fingerprint-2",
                 cache=cache,
             )
 
         self.assertIs(result, new_adapter)
         self.assertFalse(reused)
         harness.build_adapter.assert_called_once_with(
-            "scope-2", Path("/tmp/two.sqlite3")
+            "scope-2", new_db_path
         )
-        self.assertEqual(cache, {("scope-2", "/tmp/two.sqlite3"): new_adapter})
+        self.assertEqual(
+            cache,
+            {("scope-2", str(new_db_path), "fingerprint-2"): new_adapter},
+        )
         fake_torch.cuda.empty_cache.assert_called_once_with()
 
 

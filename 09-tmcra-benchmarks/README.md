@@ -1,19 +1,38 @@
-# TMCRA Benchmarks — reproduction and score provenance
+# TMCRA Benchmarks — reproducible evaluation and score provenance
 
-This component reproduces the TMCRA LongMemEval-S evaluation. It contains the
-orchestration scripts (`run_tmcra_v4_*.py`, `prepare_tmcra_v4_e2e_data.py`,
-`score_tmcra_v4_quality_gate.py`), the test suite, and pinned copies of the
-shared algorithm modules under `algorithm/`.
+[中文说明](README.zh-CN.md)
+
+This component publishes the evaluation-side implementation used by TMCRA V4:
+
+- end-to-end LongMemEval build, retrieval, evidence compilation, answer, judge,
+  audit, and staged quality-gate commands;
+- semantic-evidence planning and the zero-API regression gate;
+- repair, migration, recovery, cost, and slow-graph coverage tools;
+- pinned copies of the shared production algorithm under `algorithm/`; and
+- a release suite with 581 locally verified tests.
+
+The tested production profile uses `Qwen3.6-35B-A3B` for generation and
+planning, BGE-M3 for dense embeddings, and BGE reranker V2 M3 for cross-encoder
+reranking. Model aliases and endpoints are configuration: other local or
+OpenAI-compatible models are accepted without an exact-name allowlist. A model
+change can require prompt, context-window, or threshold tuning before scores are
+comparable.
 
 ## Scorecard provenance rules
 
 - The frozen official scorecard is **411/500 (82.2%)**, produced in one
   end-to-end 500-question evaluation run. Describe it as one frozen
   LongMemEval-S500 run; do not merge it with newer, separate measurements.
-- The frozen evaluation inputs and official judge output are published with
-  SHA-256 hashes. See `RELEASE_MANIFEST.json` for the pinned file set.
 - Newer mainline measurements (cleanroom, no-GNN) are reported separately and
   must not be mixed with the frozen official 500-question score.
+- `TMCRA_V4_SEMANTIC100_BENCHMARK_REPORT.md` records the published 100-question
+  comparison and its exact regression-case IDs.
+
+The upstream benchmark dataset and provider-generated judge responses are not
+vendored here. Obtain the dataset under its upstream terms, configure its local
+path, and preserve the generated plan/report hashes with your run artifacts.
+`RELEASE_MANIFEST.json` pins this component's source snapshot; it does not claim
+to contain third-party datasets or model weights.
 
 ## LoCoMo recorded scorecard
 
@@ -29,7 +48,14 @@ numbers into a single accuracy figure or compare them directly with LongMemEval.
 See [LOCOMO_BENCHMARK_REPORT.md](LOCOMO_BENCHMARK_REPORT.md) for the public
 result record and reporting rules.
 
-## Path parameterization
+## Requirements and paths
+
+Python 3.11 is the verified interpreter. Install the same runtime dependencies
+as the memory API from the monorepo root:
+
+```bash
+python -m pip install -r 02-tmcra-memory-api/requirements-tmcra-service.txt
+```
 
 Several orchestration scripts default to the original build host's absolute
 paths (for example `BASE = Path("/opt/tmcra/...")`). These are **defaults
@@ -40,12 +66,54 @@ example `TMCRA_DATA_DIR`, `TMCRA_REPO_DIR`, model paths) for your checkout.
 Do **not** edit the pinned files under `algorithm/` in place: their SHA-256
 hashes are recorded in `shared_core_manifest.json` (component 02) and the
 service fails closed on mismatch. If you must change a pinned module,
-regenerate the manifest and re-run the service verification suite.
+regenerate the service manifest and re-run both component suites.
 
-## Running
+## Reproduction flow
 
 ```bash
-pip install -r requirements-lock.txt   # see build instructions in component 02
+# From 09-tmcra-benchmarks
+export PYTHONPATH="$PWD/algorithm:$PWD/../02-tmcra-memory-api"
+
+# Inspect the complete build and evaluation contracts.
 python run_tmcra_v4_build.py --help
+python run_tmcra_v4_retrieve.py --help
+python run_tmcra_v4_compile_semantic_evidence.py --help
+python run_tmcra_v4_gpt54_answers.py --help
 python run_tmcra_v4_evaluate.py --help
+
+# Freeze cumulative 20/50/500 quality gates, then score completed run shards.
+python plan_tmcra_v4_quality_gates.py --help
+python score_tmcra_v4_quality_gate.py --help
+
+# Compare a candidate judge file with the frozen regression cases.
+python tmcra_v4_regression_gate.py --help
 ```
+
+Every command exposes its dataset, run-directory, model, endpoint, and output
+arguments through `--help`. Generated run directories carry completion markers,
+chain audits, ordered question IDs, source traces, evidence windows, cost
+reports, and evaluation reports so a score can be traced back to its source
+sessions and immutable evidence records.
+
+## Release verification
+
+Linux/macOS:
+
+```bash
+export PYTHONPATH="$PWD/algorithm:$PWD/../02-tmcra-memory-api"
+python -m unittest discover -s . -p 'test*.py'
+python generate_release_manifest.py --check
+```
+
+Windows PowerShell:
+
+```powershell
+$env:PYTHONPATH="$(Resolve-Path algorithm);$(Resolve-Path ../02-tmcra-memory-api)"
+python -m unittest discover -s . -p 'test*.py'
+python generate_release_manifest.py --check
+```
+
+Pre-extraction V3 and older service contract snapshots are preserved under
+`legacy_contract_tests/` for design provenance. They are intentionally named
+outside test discovery; component 02 owns the current memory-service release
+checks.

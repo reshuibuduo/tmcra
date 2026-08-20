@@ -1,0 +1,37 @@
+{
+  "schema_version": "tmcra.v4.regression-cases.1",
+  "corpora": {
+    "semantic100": {
+      "regressed_qids": [
+        "dd2973ad",
+        "9a707b81",
+        "184da446",
+        "94f70d80",
+        "45dc21b6",
+        "72e3ee87",
+        "ef66a6e5",
+        "f685340e",
+        "cf22b7bf",
+        "099778bb",
+        "a3045048",
+        "gpt4_2f56ae70",
+        "21436231",
+        "ed4ddc30",
+        "4b24c848",
+        "gpt4_483dd43c",
+        "a08a253f",
+        "6aeb4375_abs",
+        "a82c026e",
+        "87f22b4a",
+        "f685340e_abs"
+      ],
+      "improved_qids": [
+        "830ce83f",
+        "0edc2aef",
+        "afdc33df",
+        "gpt4_ab202e7f",
+        "6b7dfb22"
+      ]
+    }
+  }
+}

@@ -982,7 +982,12 @@ class V4RecallTests(unittest.TestCase):
         )
 
     def test_cli_keeps_v3_subcommands_and_arguments(self):
-        completed = subprocess.run([sys.executable, str(ROOT / "tmcra_v4_online_runtime.py"), "--help"], capture_output=True, text=True, check=True)
+        completed = subprocess.run(
+            [sys.executable, str(Path(runtime.__file__).resolve()), "--help"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
         self.assertIn("build-index", completed.stdout)
         self.assertIn("retrieve", completed.stdout)
 
