@@ -1,4 +1,4 @@
-# TMCRA
+# TMCRA — 面向 AI Agent 的全栈开源长期记忆基础设施
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 

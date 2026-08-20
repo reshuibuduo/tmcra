@@ -1,4 +1,4 @@
-# TMCRA
+# TMCRA — Full-Stack Open-Source Memory Infrastructure for AI Agents
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
