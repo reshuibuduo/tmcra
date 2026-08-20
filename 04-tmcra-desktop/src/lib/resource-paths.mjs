@@ -1,7 +1,12 @@
-import { basename, join } from "node:path";
+import { join } from "node:path";
 
 function safeResourceName(name) {
-  if (typeof name !== "string" || !name || basename(name) !== name) {
+  if (
+    typeof name !== "string"
+    || !/^[A-Za-z0-9_.-]+$/u.test(name)
+    || name === "."
+    || name === ".."
+  ) {
     throw new TypeError("TMCRA resource name must be a plain filename.");
   }
   return name;

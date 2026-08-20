@@ -189,4 +189,3 @@ jobs:
           dotnet pack
           06-tmcra-sdk-integrations/integrations/microsoft-agent-framework/src/TMCRA.AgentFramework/TMCRA.AgentFramework.csproj
           --configuration Release
-          --output artifacts/dotnet

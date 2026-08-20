@@ -37,4 +37,8 @@ test("development resources stay under their dedicated source directories", () =
     () => resolveProductScriptPath(context, "..\\escape.ps1"),
     /plain filename/u,
   );
+  assert.throws(
+    () => resolveProductScriptPath(context, "../escape.ps1"),
+    /plain filename/u,
+  );
 });
