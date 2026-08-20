@@ -11,12 +11,30 @@ This component publishes the evaluation-side implementation used by TMCRA V4:
 - pinned copies of the shared production algorithm under `algorithm/`; and
 - a release suite with 581 locally verified tests.
 
-The tested production profile uses `Qwen3.6-35B-A3B` for generation and
-planning, BGE-M3 for dense embeddings, and BGE reranker V2 M3 for cross-encoder
-reranking. Model aliases and endpoints are configuration: other local or
-OpenAI-compatible models are accepted without an exact-name allowlist. A model
-change can require prompt, context-window, or threshold tuning before scores are
-comparable.
+## Models used by the recorded benchmark
+
+The recorded benchmark memory chain used the **DeepSeek-V4 Preview API snapshot
+released on 2026-04-24**, before the 2026-08-13 DeepSeek update. The exact two
+generation/planning models were:
+
+| Frozen model | API model ID | Benchmark role |
+|---|---|---|
+| DeepSeek-V4-Flash Preview (284B total / 13B active) | `deepseek-v4-flash` | Primary Writer, recall-role planning, primary slow-graph work, and other high-volume generation stages. |
+| DeepSeek-V4-Pro Preview (1.6T total / 49B active) | `deepseek-v4-pro` | Writer review/reconciliation, subject attribution, evidence and semantic planning, and higher-assurance review stages. |
+
+Dense retrieval used local BGE-M3 and BGE reranker V2 M3. The current product
+default, locally downloaded `Qwen3.6-35B-A3B`, is a later self-hosted production
+profile and must not be retroactively attached to the recorded benchmark
+scores or to the later 2026-08-13 DeepSeek revision. The Semantic100 comparison
+additionally used GPT-5.4 for the answer and
+official judge layers in both compared runs; those evaluation roles are separate
+from the DeepSeek memory chain. See
+[BENCHMARK_MODEL_PROFILE.md](BENCHMARK_MODEL_PROFILE.md) for the full boundary.
+
+Model aliases and endpoints remain configurable for new reproductions. Other
+local or OpenAI-compatible models are accepted without an exact-name allowlist,
+but a changed model requires a new score record and may need prompt,
+context-window, or threshold tuning.
 
 ## Scorecard provenance rules
 

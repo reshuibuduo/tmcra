@@ -10,10 +10,26 @@
 - `algorithm/` 下与生产链路一致的固定算法副本；
 - 本地已验证的 581 项发布测试。
 
-已验证的默认生产配置使用 `Qwen3.6-35B-A3B` 执行生成与规划，BGE-M3
-负责向量嵌入，BGE reranker V2 M3 负责 Cross Encoder 重排。模型别名和端点均可配置，
-代码不会按精确型号拦截其他本地模型或 OpenAI-compatible 模型。替换模型后可能需要自行
-调整 Prompt、上下文窗口和质量阈值，调整后的成绩需单独记录。
+## 已记录 Benchmark 使用的模型
+
+已记录的 Benchmark 记忆链使用 **2026-04-24 发布的 DeepSeek-V4 Preview API
+快照**，运行时间早于 2026-08-13 DeepSeek 更新。准确型号为：
+
+| 冻结模型版本 | API 型号 ID | Benchmark 中的职责 |
+|---|---|---|
+| DeepSeek-V4-Flash Preview（总参数 284B / 激活 13B） | `deepseek-v4-flash` | 主 Writer、召回角色规划、主要慢速图谱任务及其他高吞吐生成阶段。 |
+| DeepSeek-V4-Pro Preview（总参数 1.6T / 激活 49B） | `deepseek-v4-pro` | Writer 审核与对账、主体归因、证据/语义规划及高可靠审核阶段。 |
+
+向量召回使用本地 BGE-M3，Cross Encoder 重排使用本地 BGE reranker V2 M3。当前产品默认
+下载到本机运行的 `Qwen3.6-35B-A3B` 属于后续自托管生产配置，不能倒填为已记录成绩的
+Benchmark 模型，也不能将成绩归到 2026-08-13 的新 DeepSeek 版本。Semantic100 对比还在
+两条对比路径中统一使用 GPT-5.4 负责回答和官方
+Judge；回答/评分层与 DeepSeek 记忆链属于不同角色。完整边界见
+[BENCHMARK_MODEL_PROFILE.md](BENCHMARK_MODEL_PROFILE.md)。
+
+新复现仍可配置其他模型别名和端点，代码不会按精确型号拦截本地模型或
+OpenAI-compatible 模型。替换模型后需要生成新的成绩记录，并可能需要自行调整 Prompt、
+上下文窗口和质量阈值。
 
 ## 成绩来源边界
 

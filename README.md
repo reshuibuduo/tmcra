@@ -8,10 +8,13 @@ events into durable, attributable evidence; makes recent facts searchable
 quickly; periodically consolidates longer-lived semantic relationships; and
 returns bounded recall evidence that an application or model can safely use.
 
-**Default production generation model: `Qwen3.6-35B-A3B` (35B total, about 3B
-active parameters per token), self-hosted on the operator's GPU.** It drives
-Writer, Reviewer, recall planning, and slow-graph generation. Retrieval uses
-local `BAAI/bge-m3`, `BAAI/bge-reranker-v2-m3`, and the bundled TMCRA reranker.
+**Local-download default model: `Qwen3.6-35B-A3B` (35B total, about 3B active
+parameters per token).** The installer downloads the pinned
+`Qwen3.6-35B-A3B-UD-IQ3_S.gguf` to the operator's own server and serves it on
+the operator's GPU through the local `llama-server`; it is the default for
+Writer, Reviewer, recall planning, and slow-graph generation. Retrieval also
+runs locally with `BAAI/bge-m3`, `BAAI/bge-reranker-v2-m3`, and the bundled
+TMCRA reranker.
 
 **100% source-traceable recall evidence in the supported production path.**
 Every returned evidence block binds back to its immutable Source ID, actor,
@@ -105,6 +108,14 @@ so an operator can distinguish a reproducible result from a marketing claim.
 | LoCoMo Mem0-style LLM Judge | **80.92%** | Auxiliary five-run mean over Categories 1–4 (`N = 1,540`); Category 5 is excluded, so this is not presented as full-set official accuracy. |
 | LoCoMo official Token F1 | **55.20** | Deterministic scorer over all 1,986 questions. |
 | LoCoMo evidence recall | **82.00%** | Evidence-retrieval coverage over all 1,986 questions. |
+
+The recorded TMCRA benchmark memory chain used the **2026-04-24 DeepSeek-V4
+Preview API snapshot**, with model IDs `deepseek-v4-flash` and
+`deepseek-v4-pro`. The run was frozen before the 2026-08-13 DeepSeek update and
+must not be attributed to that newer revision. This historical profile is
+separate from the current local Qwen3.6 production default. Exact roles and
+answer/judge-model boundaries are documented in the
+[benchmark model profile](09-tmcra-benchmarks/BENCHMARK_MODEL_PROFILE.md).
 
 The 411/500 score is from one frozen end-to-end 500-question run. Separately,
 the 100-question comparison completed every answer, but the semantic path

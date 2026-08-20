@@ -1,13 +1,14 @@
 {
   "component": "09-tmcra-benchmarks",
-  "file_count": 115,
+  "file_count": 116,
   "files": {
+    "BENCHMARK_MODEL_PROFILE.md": "b6bf78aebfe1c03dcca9d7097d780de63665f05d2a40f2daee07e4ffa8b5906b",
     "LICENSE": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac",
     "LOCOMO_BENCHMARK_REPORT.md": "df702c47951831814b92c1d1966f34a73d816a6161ec8a6885e01bcd987abcfa",
     "NOTICE": "3b8679cfcbcae2e46b482a6300a2889bf54e4db4fc4002211ab3de5922aa61f1",
-    "README.md": "82505993511d26d990983651d5e468e99796b5f80c62bcb388a9c3490d153c0b",
-    "README.zh-CN.md": "ccd9480ef71a05665665befde3268ce1bd405a71c64c3f49bb16718c9f00b196",
-    "TMCRA_V4_SEMANTIC100_BENCHMARK_REPORT.md": "ecc8f0ca1235e11f5b2bc04d0b3b15500512371449962e93dfff0e4e55ff561c",
+    "README.md": "0d9c2b31c16c9f97cc83e895cdded42afd6e998a7c3dfce933dec8fb1c6f6faa",
+    "README.zh-CN.md": "d87956a3473525e2b6eb82c655caf42b692cbaa815d9995803d90882314ac47a",
+    "TMCRA_V4_SEMANTIC100_BENCHMARK_REPORT.md": "5285c268b31336738f9d06cc63fad4bbdf0f85852bc9b422fb85271c58f2b386",
     "algorithm/prepare_tmcra_v4_e2e_data.py": "68bdd34631a0897730926b5f8f68b87ee7352900446baba62d1615c961a53c96",
     "algorithm/run_tmcra_v4_build.py": "1ebc54751fcfea91bbd8ea019cac45ca79cf60ce229bf7249d0427955093f93e",
     "algorithm/run_tmcra_v4_compile_evidence.py": "e869c9069bb0c8ad66e7f9bf469f17526269450cd0f58981ec9676d524234166",

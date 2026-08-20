@@ -6,6 +6,10 @@ Date: 2026-07-13
 
 - Frozen question set: 100 LongMemEval questions from `v4_writer100_frozen_20260713_011551/qids.txt`.
 - Candidate reservoir: the same frozen Source24 evidence used by the 77/100 baseline.
+- Memory-chain generation/planning profile: the 2026-04-24 DeepSeek-V4 Preview
+  API snapshot, before the 2026-08-13 update; `deepseek-v4-flash` for the
+  primary Writer/high-volume path and `deepseek-v4-pro` for review,
+  attribution, and evidence/semantic planning.
 - Answer model: GPT-5.4 for both runs.
 - Judge: official GPT-5.4 judge for both runs.
 - New variable: semantic Task Contract, Source Claim Ledger, Premise Bindings,

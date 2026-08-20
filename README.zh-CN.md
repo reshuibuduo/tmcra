@@ -7,9 +7,11 @@ TMCRA（Temporal Memory-Centric Retrieval Architecture）是面向产品和 AI A
 将近期信息快速变为可检索记忆；再以批处理方式形成可演化的长期语义图谱；最终返回
 有来源、可追溯、长度受控的召回证据。
 
-**默认生产生成模型：`Qwen3.6-35B-A3B`（总参数 35B、每个 token 约激活 3B），由部署方
-在自己的 GPU 上运行。** 它承担 Writer、Reviewer、召回规划与慢速图谱生成；检索链路
-使用本地 `BAAI/bge-m3`、`BAAI/bge-reranker-v2-m3` 和仓库内置 TMCRA reranker。
+**默认本地下载模型：`Qwen3.6-35B-A3B`（总参数 35B、每个 token 约激活 3B）。**
+安装器会将固定版本的 `Qwen3.6-35B-A3B-UD-IQ3_S.gguf` 下载到部署方自己的服务器，
+通过本机 GPU 上的 `llama-server` 提供服务；Writer、Reviewer、召回规划和慢速图谱默认
+使用该本地模型。检索链路同样在本地运行 `BAAI/bge-m3`、
+`BAAI/bge-reranker-v2-m3` 和仓库内置 TMCRA reranker。
 
 **受支持生产链路中的召回证据可 100% 追溯来源。** 每个返回证据块都绑定不可变的
 Source ID、Actor、来源应用和时间坐标；SDK、REST 与 MCP 接入方获得相同的归因边界，
@@ -82,6 +84,12 @@ TMCRA 同时公开分数、评测边界和失败分析，避免将不可复现�
 | LoCoMo Mem0 风格 LLM Judge | **80.92%** | Category 1–4 的辅助五次运行均值（`N = 1,540`）；不包含 Category 5，因此不作为全量官方准确率展示。 |
 | LoCoMo 官方 Token F1 | **55.20** | 确定性评分器，覆盖全部 1,986 道题。 |
 | LoCoMo 证据召回率 | **82.00%** | 证据检索覆盖，覆盖全部 1,986 道题。 |
+
+已记录的 TMCRA Benchmark 记忆链使用 **2026-04-24 发布的 DeepSeek-V4 Preview
+API 快照**，型号 ID 为 `deepseek-v4-flash` 与 `deepseek-v4-pro`。该评测在
+2026-08-13 DeepSeek 更新前已经冻结，不能归到 0813 新版本。这是历史评测配置，
+与当前默认的本地 Qwen3.6 生产配置分开记录。具体角色及回答模型、Judge 的边界见
+[Benchmark 模型说明](09-tmcra-benchmarks/BENCHMARK_MODEL_PROFILE.md)。
 
 411/500 来自一次冻结的端到端 500 题评测。另一个 100 题对比中所有题目均完成作答，
 但语义路径相比基线回退 16 分。该负结果被完整保留，而非隐藏：它表明剩余问题位于语义
