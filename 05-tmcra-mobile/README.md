@@ -38,7 +38,10 @@ Speaker attribution and semantic retrieval are separate:
 
 Model assets are checksum-pinned in `android/app/build.gradle`. Build-time path
 overrides are available through `TMCRA_ASR_MODEL_PATH`,
-`TMCRA_ASR_TOKENS_PATH`, and `TMCRA_SPEAKER_MODEL_PATH`.
+`TMCRA_ASR_TOKENS_PATH`, and `TMCRA_SPEAKER_MODEL_PATH`. The build also downloads
+the checksum-pinned sherpa-onnx 1.13.4 AAR from its official GitHub release;
+offline or mirrored builds can set `TMCRA_SHERPA_AAR_PATH` or
+`TMCRA_SHERPA_AAR_URL`.
 
 The 2025 ASR model is selected for internal phone evaluation because it is a
 small, genuine streaming CTC model. Its Hub card currently has no explicit
@@ -91,4 +94,3 @@ Phone-specific latency, sustained battery use, thermal throttling, Bluetooth
 capture quality, noisy-scene word error rate, and speaker false-accept/false-
 reject rates still require a real arm64 Android device. Those measurements are
 release gates, not inferred from desktop benchmarks.
-
