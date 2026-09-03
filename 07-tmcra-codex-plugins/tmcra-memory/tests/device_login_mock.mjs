@@ -12,6 +12,7 @@ const pluginRoot = resolve(testDir, "..");
 const scriptPath = join(pluginRoot, "scripts", "device_login.mjs");
 const installPath = join(pluginRoot, "scripts", "install.ps1");
 const rootInstallTemplatePath = join(pluginRoot, "packaging", "Install-TMCRA.ps1");
+const powershellCommand = process.env.TMCRA_TEST_POWERSHELL || "powershell.exe";
 const secretValues = [];
 const authorizations = [];
 const validTokens = new Set();
@@ -251,6 +252,19 @@ async function waitFor(predicate, message, timeoutMs = 5_000) {
   throw new Error(message);
 }
 
+async function waitForProcessReady(processPromise, predicate, message, timeoutMs = 5_000) {
+  const result = await Promise.race([
+    waitFor(predicate, message, timeoutMs).then(() => null),
+    processPromise,
+  ]);
+  if (predicate()) return;
+  if (result) {
+    throw new Error(
+      `${message}; installer exited ${result.code}: ${result.stderr || result.stdout || "no output"}`,
+    );
+  }
+}
+
 function approveAsMockUser(authorization) {
   authorization.status = "approved";
   authorization.approvedBy = "mock-console-user";
@@ -356,7 +370,7 @@ try {
   let rejectedNode = { stdout: "", stderr: "" };
   if (process.platform === "win32") {
     const installerPromise = run(
-      "powershell.exe",
+      powershellCommand,
       [
         "-NoProfile",
         "-NonInteractive",
@@ -378,7 +392,8 @@ try {
         timeoutMs: 30_000,
       },
     );
-    await waitFor(
+    await waitForProcessReady(
+      installerPromise,
       () => authorizations.length === 2,
       "installer authorization was not created",
       20_000,
@@ -408,7 +423,7 @@ try {
     await copyFile(process.execPath, desktopNodePath);
     const desktopAuthorizationIndex = authorizations.length;
     const desktopInstallerPromise = run(
-      "powershell.exe",
+      powershellCommand,
       [
         "-NoProfile",
         "-NonInteractive",
@@ -434,7 +449,8 @@ try {
         timeoutMs: 30_000,
       },
     );
-    await waitFor(
+    await waitForProcessReady(
+      desktopInstallerPromise,
       () => authorizations.length > desktopAuthorizationIndex,
       "desktop installer authorization was not created",
       20_000,

@@ -146,6 +146,8 @@ jobs:
           node-version: "24.19.0"
       - name: Run plugin contracts
         working-directory: 07-tmcra-codex-plugins/tmcra-memory
+        env:
+          TMCRA_TEST_POWERSHELL: ${{ runner.os == 'Windows' && 'pwsh' || '' }}
         run: node scripts/test_codex_e2e.mjs
       - name: Build self-contained release archive
         shell: pwsh

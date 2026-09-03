@@ -71,7 +71,6 @@ foreach ($entry in $releaseFiles) {
 }
 
 New-Item -ItemType Directory -Force -Path $downloadsRoot | Out-Null
-$stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) "tmcra-codex-$([guid]::NewGuid().ToString('N'))"
 $temporaryArchive = Join-Path $downloadsRoot ".tmcra-codex-$([guid]::NewGuid().ToString('N')).zip"
 $temporaryAlias = Join-Path $downloadsRoot ".tmcra-codex-alias-$([guid]::NewGuid().ToString('N')).zip"
 $temporaryManifest = Join-Path $downloadsRoot ".tmcra-codex-release-$([guid]::NewGuid().ToString('N')).json"
@@ -98,23 +97,62 @@ function Publish-Atomic([string]$Source, [string]$Destination) {
 }
 
 try {
-    New-Item -ItemType Directory -Force -Path $stagingRoot | Out-Null
-    foreach ($entry in $releaseFiles) {
-        $sourcePath = Join-Path $pluginRoot ($entry.Source.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
-        $archivePath = Join-Path $stagingRoot ($entry.Archive.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
-        New-Item -ItemType Directory -Force -Path ([System.IO.Path]::GetDirectoryName($archivePath)) | Out-Null
-        Copy-Item -LiteralPath $sourcePath -Destination $archivePath
-    }
-
     $runtimeFiles = @($releaseFiles | ForEach-Object { [string]$_.Archive })
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::CreateFromDirectory(
-        $stagingRoot,
+    Add-Type -AssemblyName System.IO.Compression
+    $archiveStream = [System.IO.File]::Open(
         $temporaryArchive,
-        [System.IO.Compression.CompressionLevel]::Optimal,
+        [System.IO.FileMode]::CreateNew,
+        [System.IO.FileAccess]::ReadWrite,
+        [System.IO.FileShare]::None
+    )
+    $createdArchive = [System.IO.Compression.ZipArchive]::new(
+        $archiveStream,
+        [System.IO.Compression.ZipArchiveMode]::Create,
         $false
     )
-    $archive = [System.IO.Compression.ZipFile]::OpenRead($temporaryArchive)
+    try {
+        foreach ($entry in $releaseFiles) {
+            $sourcePath = Join-Path $pluginRoot ($entry.Source.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
+            $zipEntry = $createdArchive.CreateEntry(
+                [string]$entry.Archive,
+                [System.IO.Compression.CompressionLevel]::Optimal
+            )
+            $zipEntry.LastWriteTime = [System.DateTimeOffset]::new(
+                2000,
+                1,
+                1,
+                0,
+                0,
+                0,
+                [System.TimeSpan]::Zero
+            )
+            $sourceStream = [System.IO.File]::OpenRead($sourcePath)
+            $entryStream = $zipEntry.Open()
+            try {
+                $sourceStream.CopyTo($entryStream)
+            }
+            finally {
+                $entryStream.Dispose()
+                $sourceStream.Dispose()
+            }
+        }
+    }
+    finally {
+        $createdArchive.Dispose()
+        $archiveStream.Dispose()
+    }
+
+    $inspectionStream = [System.IO.File]::Open(
+        $temporaryArchive,
+        [System.IO.FileMode]::Open,
+        [System.IO.FileAccess]::Read,
+        [System.IO.FileShare]::Read
+    )
+    $archive = [System.IO.Compression.ZipArchive]::new(
+        $inspectionStream,
+        [System.IO.Compression.ZipArchiveMode]::Read,
+        $false
+    )
     try {
         $archiveFiles = @(
             $archive.Entries |
@@ -124,6 +162,7 @@ try {
     }
     finally {
         $archive.Dispose()
+        $inspectionStream.Dispose()
     }
     $unexpected = @($archiveFiles | Where-Object { $_ -notin $runtimeFiles })
     $missing = @($runtimeFiles | Where-Object { $_ -notin $archiveFiles })
@@ -186,7 +225,6 @@ try {
     }
 }
 finally {
-    Remove-Item -LiteralPath $stagingRoot -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $temporaryArchive -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $temporaryAlias -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $temporaryManifest -Force -ErrorAction SilentlyContinue
