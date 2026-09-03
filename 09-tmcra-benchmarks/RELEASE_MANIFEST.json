@@ -1,6 +1,6 @@
 {
   "component": "09-tmcra-benchmarks",
-  "file_count": 116,
+  "file_count": 118,
   "files": {
     "BENCHMARK_MODEL_PROFILE.md": "b6bf78aebfe1c03dcca9d7097d780de63665f05d2a40f2daee07e4ffa8b5906b",
     "LICENSE": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac",
@@ -92,7 +92,7 @@
     "test_run_tmcra_v4_select_evidence.py": "3626bdd8f7b134ddea688c1247e2340f5860d26f7b6afa4c6888a9d5b85ceabc",
     "test_tmcra_service_api_models.py": "86c354b12158dfcdfa9cef0f6ca38e723d881c02575bf8c8b78694e0cd072807",
     "test_tmcra_service_app.py": "4c4c9fe85d0ebc72faf3f6d9efb4ccca87ccbaa2bf93a3ec8cea58ff7f2c38d6",
-    "test_tmcra_service_costing.py": "21b8725bb673c81fd392078e6a2e4dd8102e89a12c8e3b6c35c2272d7381d65b",
+    "test_tmcra_service_costing.py": "e1d04aabc1080ead29ff34c8934498b2404554a618c5b88775d4a4a3e660a868",
     "test_tmcra_service_evidence_view.py": "b4b495cc32b2b002937b77f0f04dc9f2a2be3753730914f1d43dae67ddf20e8d",
     "test_tmcra_service_health.py": "2b42fe4ffbb6ea8b717b28f3505320bb48209a09a79b78d986001efb44761082",
     "test_tmcra_service_native_harness.py": "23d9c6f0d4adb6deda13b7b3e888f5a888e16c322005dc398e29c6939e01997b",
@@ -100,6 +100,8 @@
     "test_tmcra_service_routing.py": "e8e64fc2336bef1105b7e4ae54ebf8dbf3379a195cb10c764ee2e16a75174f8a",
     "test_tmcra_service_settings.py": "5366597ae4dda72aa3a25f5333aebebafcbdc3f732748f798b123f2bf2bab0fd",
     "test_tmcra_service_subject_attribution.py": "304666d359aa1e10bb26ca760252d77935a0d47257ea500ed88db4d8788fa682",
+    "test_tmcra_service_user_provider_slow_graph.py": "1c5f65ebfacd0f7aff40ade4897f89865fbac68ab0b409f0f39028ba65f57495",
+    "test_tmcra_service_user_provider_tasks.py": "3b387068b9218f0a7b67b0393db0bb375385b5e2ec5057bab991cc62570cde6a",
     "test_tmcra_v4_batch_writer.py": "f4f4c09f22d089b9be86445f5f720aace5d723db39a9caec149f7f15aa6b5ad5",
     "test_tmcra_v4_cost_report.py": "e65417e470cad05f9f4980395aa1c92e9cc96b4dd045b4ff8d53737273051ceb",
     "test_tmcra_v4_evidence_operations.py": "ebf8b5e7f7b698eb28beb19465b135b018d10182407991a47ed259dc96b1de78",
