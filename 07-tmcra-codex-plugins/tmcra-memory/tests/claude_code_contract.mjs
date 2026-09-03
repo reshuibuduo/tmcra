@@ -24,11 +24,14 @@ const transcript = join(project, "transcript.jsonl");
 const server = new MockTmcraServer({ validTokens: [token] });
 const testEnvironmentKeys = [
   "TMCRA_API_KEY",
+  "TMCRA_ACCESS_TOKEN",
   "TMCRA_BASE_URL",
   "TMCRA_CLIENT_PLATFORM",
   "TMCRA_SCOPE_NAMESPACE",
   "CLAUDE_PLUGIN_ROOT",
   "CLAUDE_PLUGIN_DATA",
+  "CLAUDE_PLUGIN_OPTION_API_ENDPOINT",
+  "CLAUDE_PLUGIN_OPTION_API_TOKEN",
   "PLUGIN_DATA",
 ];
 const originalEnvironment = Object.fromEntries(
@@ -80,15 +83,21 @@ try {
   await server.start();
   const env = {
     ...process.env,
-    TMCRA_API_KEY: token,
-    TMCRA_BASE_URL: server.baseUrl,
     TMCRA_CLIENT_PLATFORM: "claude-code",
     TMCRA_SCOPE_NAMESPACE: "claude-contract",
     CLAUDE_PLUGIN_ROOT: pluginRoot,
     CLAUDE_PLUGIN_DATA: dataDir,
+    CLAUDE_PLUGIN_OPTION_API_ENDPOINT: server.baseUrl,
+    CLAUDE_PLUGIN_OPTION_API_TOKEN: token,
     PLUGIN_DATA: dataDir,
   };
+  delete env.TMCRA_API_KEY;
+  delete env.TMCRA_ACCESS_TOKEN;
+  delete env.TMCRA_BASE_URL;
   Object.assign(process.env, env);
+  delete process.env.TMCRA_API_KEY;
+  delete process.env.TMCRA_ACCESS_TOKEN;
+  delete process.env.TMCRA_BASE_URL;
   await mkdir(project, { recursive: true });
   await mkdir(dataDir, { recursive: true });
   await writeFile(transcript, "", "utf8");
@@ -135,6 +144,8 @@ try {
   assert(server.records.some((record) => record.metadata.checkpoint_reason === "stop_with_background_work"));
 
   const config = await loadConfig();
+  assert.equal(config.configSource, "claude_plugin_config");
+  assert.equal(config.baseUrl, server.baseUrl);
   const scopes = await resolveMemoryScopes({ cwd: project, config });
   const firstTurnId = pairingTurnId({ ...base, prompt: first });
   await waitFor(async () => {
@@ -204,6 +215,8 @@ try {
   assert.equal(claudeConfig.hooks, "./hooks/claude-hooks.json");
   assert.equal(claudeConfig.mcpServers, "./claude-mcp.json");
   assert.equal(claudeConfig.userConfig.api_token.sensitive, true);
+  assert.equal(claudeConfig.license, "Apache-2.0");
+  assert.match(claudeConfig.version, /^0\.3\.0-rc\.4\+claude\./u);
   assert.match(claudeHooks.hooks.UserPromptSubmit[0].hooks[0].args[0], /CLAUDE_PLUGIN_ROOT/u);
   assert.match(claudeHooks.hooks.UserPromptSubmit[0].hooks[0].args[0], /claude_run_hook\.mjs/u);
 
@@ -219,6 +232,7 @@ try {
       compactionLifecycle: true,
       ambiguousNoTurnIdFailsClosed: true,
       separatePluginContract: true,
+      sensitiveUserConfigInjection: true,
     },
     storedIngestCount: server.records.length,
   }, null, 2)}\n`);

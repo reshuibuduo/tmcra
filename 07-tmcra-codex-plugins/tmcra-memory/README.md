@@ -2,6 +2,8 @@
 
 TMCRA Memory adds automatic long-term memory to Codex through the public TMCRA API. It does not require access to the TMCRA server.
 
+This repository is the standalone distribution mirror of the plugin maintained in the [TMCRA monorepo](https://github.com/reshuibuduo/tmcra/tree/main/07-tmcra-codex-plugins/tmcra-memory). Download the versioned ZIP and its SHA-256 file from [GitHub Releases](https://github.com/reshuibuduo/tmcra-plugin-codex/releases).
+
 ## What it does
 
 - Initializes the global/project scope at `SessionStart` without recalling or injecting memory.
@@ -23,7 +25,7 @@ Codex Hooks do not expose a third-party custom side panel. The explicit inspecti
 
 ## Windows installation
 
-Extract the release package to a stable local directory, then run:
+Download the versioned release ZIP, verify the adjacent SHA-256 file, extract it to a stable local directory, then run:
 
 ```powershell
 .\Install-TMCRA.ps1
@@ -34,6 +36,8 @@ The installer registers the bundled marketplace, installs the plugin into the sa
 After installation, restart Codex Desktop and confirm **TMCRA Memory** appears as enabled in the Plugins page. Run `/hooks`, inspect and trust all nine TMCRA lifecycle hooks: `SessionStart`, `SubagentStart`, `UserPromptSubmit`, `PostToolUse`, `PreCompact`, `PostCompact`, `Stop`, `StopFailure`, and `SubagentStop`. Codex intentionally requires this review; the installer cannot silently grant Hook trust. `StopFailure` only checkpoints the user request when an answer fails; it never stores provider error text as assistant memory. Start a new task and complete one turn, then use the desktop application's **Verify real Codex execution** action or call the `tmcra_status` MCP tool. Ready is reported only after SessionStart, recall, and capture events from the current plugin version have all been observed.
 
 ## macOS and Linux installation
+
+Download and extract the same versioned release ZIP, then run:
 
 ```sh
 sh ./install.sh
@@ -112,3 +116,13 @@ Never place a TMCRA API key or access token in a prompt, project source file, br
 Hooks fail open: an unavailable memory service must not block Codex. Automatic Hook calls use a short request timeout independent from longer explicit MCP operations. Writes are asynchronous and idempotent. The access token is stored only in the protected local TMCRA configuration; it is never ingested as memory. The plugin does not store chain-of-thought or developer instructions. During a long turn it keeps bounded tool input/output excerpts for continuity, applies credential redaction before local persistence, and sends only thresholded or pre-compaction checkpoints rather than one API write per tool call. Passwords, access tokens, verification codes, and private keys are excluded from checkpoint content.
 
 Lifecycle Hooks and the bundled MCP server honor `HTTPS_PROXY`, `HTTP_PROXY`, and `ALL_PROXY`. On Windows, when those variables are absent, the runtime launcher also reads the enabled per-user system proxy so Codex works with proxy clients that use a fake-IP DNS range. Loopback TMCRA endpoints bypass the proxy.
+
+## Development verification
+
+```sh
+npm ci
+npm run verify
+npm run build:release
+```
+
+The deterministic suite starts isolated mock services and does not read normal Codex history or contact the public TMCRA API. It verifies Codex and Claude Code lifecycle contracts, device authorization, scope isolation, durable writes, credential redaction, MCP tools, history preview/import rules, repository bootstrap, and release packaging on Windows and Linux.

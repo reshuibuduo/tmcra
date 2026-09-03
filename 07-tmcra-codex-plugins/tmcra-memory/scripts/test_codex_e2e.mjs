@@ -60,7 +60,10 @@ if (mode === "mock" || mode === "all") {
   const deviceAuthorization = await run(join(pluginRoot, "tests", "device_login_mock.mjs"), {
     timeoutMs: 90_000,
   });
-  output.mock = { ...coreMock, deviceAuthorization };
+  const claudeCode = await run(join(pluginRoot, "tests", "claude_code_contract.mjs"), {
+    timeoutMs: 90_000,
+  });
+  output.mock = { ...coreMock, deviceAuthorization, claudeCode };
 }
 
 if (mode === "real" || mode === "all") {
