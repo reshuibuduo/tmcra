@@ -35,8 +35,8 @@ export default function CodexIntegrationPage() {
         </div>
         <aside className="branch-hero-aside">
           <span>{t("LIFECYCLE COVERAGE", "生命周期覆盖")}</span>
-          <strong>03</strong>
-          <p>SessionStart · UserPromptSubmit · Stop</p>
+          <strong>09</strong>
+          <p>SessionStart · SubagentStart · UserPromptSubmit · PostToolUse · PreCompact · PostCompact · Stop · StopFailure · SubagentStop</p>
         </aside>
       </section>
 
@@ -48,7 +48,7 @@ export default function CodexIntegrationPage() {
         <ol className="integration-flow codex-install-steps">
           <li><span>01</span><div><h3>{t("Install TMCRA Memory", "安装 TMCRA Memory")}</h3><p>{t("Download the Windows or macOS preview from the release page and verify its published SHA-256 before installation.", "从下载页获取 Windows 或 macOS 预览版，并在安装前核对页面公布的 SHA-256。")}</p><p><a href="/download">{t("Download the desktop app", "下载桌面应用")}</a></p></div></li>
           <li><span>02</span><div><h3>{t("Sign in and connect Codex in the app", "在应用内登录并连接 Codex")}</h3><p>{t("Open TMCRA Memory, sign in to your account, and choose Connect Codex. Review the authorization shown in the app and approve it to finish the connection. The scoped Token is written directly to protected local configuration; you do not copy it by hand.", "打开 TMCRA Memory，登录你的账户，再选择“连接 Codex”。确认应用中展示的授权信息后完成连接。受 Scope 限制的 Token 会直接写入本机受保护的配置，不需要手动复制。")}</p></div></li>
-          <li><span>03</span><div><h3>{t("Restart Codex and confirm three Hooks", "重启 Codex，并确认三项 Hook")}</h3><p>{t("Restart Codex and confirm TMCRA Memory is enabled in the Plugins page. Enter /hooks in a Codex task, review all three TMCRA lifecycle Hooks, and trust them once. Codex keeps this decision in your hands; neither the installer nor the app can silently approve Hooks.", "重启 Codex，并在插件页面确认 TMCRA Memory 已启用。在任一 Codex 任务中输入 /hooks，逐项审核三项 TMCRA 生命周期 Hook 后再确认信任。决定权始终在你手里，安装器和应用都不能静默替你批准 Hook。")}</p><pre><code>{`/hooks`}</code></pre></div></li>
+          <li><span>03</span><div><h3>{t("Restart Codex and confirm all nine Hooks", "重启 Codex，并确认全部九项 Hook")}</h3><p>{t("Restart Codex and confirm TMCRA Memory is enabled in the Plugins page. Enter /hooks in a Codex task, review all nine TMCRA lifecycle Hooks, and trust them once. Codex keeps this decision in your hands; the installer and app leave Hook approval to you.", "重启 Codex，并在插件页面确认 TMCRA Memory 已启用。在任一 Codex 任务中输入 /hooks，逐项审核全部九项 TMCRA 生命周期 Hook 后再确认信任。决定权始终在你手里，Hook 授权由你亲自完成。")}</p><pre><code>{`/hooks`}</code></pre></div></li>
           <li><span>04</span><div><h3>{t("Preview and import retained Codex history", "预览并导入保留的 Codex 历史")}</h3><p>{t("The History migration panel is visible before sign-in. Select one project for a read-only local preview; no history is uploaded during preview. After connecting your account, confirm the import separately. Reasoning, tool logs, developer instructions, passwords, keys, verification codes and credential-like messages are excluded.", "“历史迁移”面板在登录前也可见。先选择一个项目进行本机只读预览，预览不会上传任何历史；连接账户后还要单独确认导入。推理、工具日志、开发者指令、密码、密钥、验证码及疑似凭据消息都会被排除。")}</p></div></li>
           <li><span>05</span><div><h3>{t("View quota and the memory graph", "查看额度与记忆图谱")}</h3><p>{t("Use the app or personal console to inspect memory Scope and Session structure, view the memory graph, check server-reported usage and quota, or revoke one Codex connection without affecting the others.", "你可以在应用或个人控制台中查看 Scope、Session 和记忆图谱，核对服务端返回的用量与剩余额度，也可以单独吊销某一台 Codex，而不影响其他连接。")}</p></div></li>
         </ol>
@@ -70,7 +70,7 @@ export default function CodexIntegrationPage() {
         <ol className="integration-flow codex-install-steps">
           <li><span>01</span><div><h3>{t("Download and extract the package", "下载并解压接入包")}</h3><p>{t("Extract it to a stable local directory. Do not leave the integration inside a temporary download folder that the system may clean up.", "把接入包解压到稳定目录，不要把插件长期放在可能被系统清理的临时下载目录中。")}</p><p><a href={MANUAL_PACKAGE_PATH}>{t("Download the manual Codex package", "下载 Codex 手动接入包")}</a> · <a href={CHECKSUM_PATH}>{t("SHA-256 checksum", "SHA-256 校验文件")}</a> · <a href={RELEASE_MANIFEST_PATH}>{t("Release manifest", "发行清单")}</a></p></div></li>
           <li><span>02</span><div><h3>{t("Run the Windows PowerShell installer", "使用 Windows PowerShell 安装")}</h3><pre><code>{`.\\Install-TMCRA.ps1`}</code></pre><p>{t("The script registers the Codex plugin, checks the local setup, and starts TMCRA account authorization.", "脚本会注册 Codex 插件、检查本机配置，并发起 TMCRA 账户授权。")}</p></div></li>
-          <li><span>03</span><div><h3>{t("Run the macOS or Linux installer", "在 macOS 或 Linux 上安装")}</h3><pre><code>{`sh ./install.sh`}</code></pre><p>{t("After installation, follow the authorization prompt, then restart Codex and review the same three Hook requests.", "安装后按提示完成账户授权，再重启 Codex，并逐项审核同样的三项 Hook。")}</p></div></li>
+          <li><span>03</span><div><h3>{t("Run the macOS or Linux installer", "在 macOS 或 Linux 上安装")}</h3><pre><code>{`sh ./install.sh`}</code></pre><p>{t("After installation, follow the authorization prompt, then restart Codex and review the same nine Hook requests.", "安装后按提示完成账户授权，再重启 Codex，并逐项审核同样的九项 Hook。")}</p></div></li>
           <li><span>04</span><div><h3>{t("Keep the authorization boundary intact", "保留清晰的授权边界")}</h3><p>{t("Manual setup still does not require server login, SSH access, or copying an API Key. Sign in and approve the short code yourself; a Token limited by Scope is delivered to protected local configuration.", "手动接入同样不需要登录服务器、使用 SSH 或复制 API Key。你需要亲自登录并确认短码，受 Scope 限制的 Token 才会写入本机受保护的配置。")}</p></div></li>
         </ol>
       </section>

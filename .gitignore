@@ -11,3 +11,7 @@ __pycache__/
 *.db
 *.log
 tmcra_service_state/
+.tmcra-plugin-release-test/
+03-tmcra-web-console/public/downloads/tmcra-codex-*.zip
+03-tmcra-web-console/desktop/tmcra-memory/resources/tmcra-codex-*
+04-tmcra-desktop/resources/tmcra-codex-*

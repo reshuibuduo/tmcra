@@ -1,25 +1,25 @@
 {
-    "schemaVersion":  1,
-    "plugin":  {
-                   "name":  "tmcra-memory",
-                   "version":  "0.1.3"
-               },
-    "archive":  {
-                    "latest":  "tmcra-codex-latest.zip",
-                    "versioned":  "tmcra-codex-0.1.3.zip",
-                    "latestSha256":  "tmcra-codex-latest.zip.sha256",
-                    "versionedSha256":  "tmcra-codex-0.1.3.zip.sha256",
-                    "bytes":  38070,
-                    "sha256":  "db2e1ba40013850b0d582f6c08768f53ec01d6f245381e4f15dac047771d6458",
-                    "entryCount":  24
-                },
-    "install":  {
-                    "windows":  ".\\Install-TMCRA.ps1",
-                    "macosLinux":  "sh ./install.sh"
-                },
-    "requirements":  {
-                         "node":  "\u003e=18",
-                         "codexPluginCli":  true
-                     },
-    "generatedAtUtc":  "2026-07-17T07:22:10.8524229Z"
+  "schemaVersion": 1,
+  "plugin": {
+    "name": "tmcra-memory",
+    "version": "0.3.0-rc.3"
+  },
+  "archive": {
+    "latest": "tmcra-codex-latest.zip",
+    "versioned": "tmcra-codex-0.3.0-rc.3.zip",
+    "latestSha256": "tmcra-codex-latest.zip.sha256",
+    "versionedSha256": "tmcra-codex-0.3.0-rc.3.zip.sha256",
+    "bytes": 73599,
+    "sha256": "5bf3e2365a2b03023c9757734d4ab0365c9d57fb1a78566ee67eeaa0fadd084a",
+    "entryCount": 31
+  },
+  "install": {
+    "windows": ".\\Install-TMCRA.ps1",
+    "macosLinux": "sh ./install.sh"
+  },
+  "requirements": {
+    "node": ">=18",
+    "codexPluginCli": true
+  },
+  "generatedAtUtc": "2026-09-03T16:48:16.9107137Z"
 }

@@ -7,7 +7,7 @@ Windows user one installation and account flow for the TMCRA Codex integration:
 2. verify and unpack the bundled TMCRA plugin into a stable per-user folder;
 3. run the plugin installer without exposing a server credential;
 4. complete device authorization in an isolated application window;
-5. tell the user to restart Codex and review the three lifecycle Hooks.
+5. tell the user to restart Codex and review all nine lifecycle Hooks.
 
 The last step is intentionally not automated. Codex keeps Hook trust under the
 user's control, and the app only records that the user has read the reminder.

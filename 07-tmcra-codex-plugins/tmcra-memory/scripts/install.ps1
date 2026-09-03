@@ -44,15 +44,15 @@ function Find-CodexCli {
     return $path
 }
 
-function Repair-CodexRuntime([string]$CodexPath, [ref]$BackupPath) {
+function Repair-CodexRuntime([string]$CodexPath, [ref]$BackupPathReference) {
     Write-TmcraProgress 'configure_codex' 'running' 'Enabling lifecycle hooks and removing legacy TMCRA MCP registrations.'
     $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }
     $codexConfig = Join-Path $codexHome 'config.toml'
-    $backupPath = $null
+    $createdBackupPath = $null
     if (Test-Path -LiteralPath $codexConfig -PathType Leaf) {
         $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-        $backupPath = "$codexConfig.tmcra-backup-$stamp"
-        Copy-Item -LiteralPath $codexConfig -Destination $backupPath -ErrorAction Stop
+        $createdBackupPath = "$codexConfig.tmcra-backup-$stamp"
+        Copy-Item -LiteralPath $codexConfig -Destination $createdBackupPath -ErrorAction Stop
     }
 
     & $CodexPath features enable hooks *> $null
@@ -75,7 +75,7 @@ function Repair-CodexRuntime([string]$CodexPath, [ref]$BackupPath) {
     }
 
     Write-TmcraProgress 'configure_codex' 'completed' 'Codex hooks are enabled and exactly one TMCRA MCP registration is expected.'
-    $BackupPath.Value = $backupPath
+    $BackupPathReference.Value = $createdBackupPath
 }
 
 function Test-NodeRuntime([string]$Path) {

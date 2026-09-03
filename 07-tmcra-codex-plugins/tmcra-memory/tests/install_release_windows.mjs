@@ -17,8 +17,7 @@ const archivePath = resolve(
   process.env.TMCRA_TEST_RELEASE_ARCHIVE ||
     join(
       repoRoot,
-      "tmcra-commercial-site",
-      "TMCRA",
+      "03-tmcra-web-console",
       "public",
       "downloads",
       `tmcra-codex-${sourceManifest.version}.zip`,
@@ -103,7 +102,10 @@ if (process.platform !== "win32") {
 
 assert.ok(existsSync(archivePath), `release archive does not exist: ${archivePath}`);
 const releaseManifest = sourceManifest;
-assert.match(releaseManifest.version, /^\d+\.\d+\.\d+$/u);
+assert.match(
+  releaseManifest.version,
+  /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u,
+);
 
 const testRoot = join(repoRoot, ".tmcra", `release-install-${randomUUID()}`);
 const firstRoot = join(testRoot, "首次 安装 包");
@@ -298,6 +300,17 @@ try {
   await rename(firstRoot, movedRoot);
   await installFrom(movedRoot);
 
+  const packageRootEntries = await readdir(movedRoot);
+  assert.equal(
+    packageRootEntries.some((entry) => entry.startsWith("System.Management.Automation.PSReference")),
+    false,
+    "config backup must not be written into the package directory",
+  );
+  const configBackups = (await readdir(codexHome)).filter((entry) =>
+    entry.startsWith("config.toml.tmcra-backup-"),
+  );
+  assert.ok(configBackups.length >= 1, "installer must back up config.toml beside the source file");
+
   const list = await run(codexCli, ["plugin", "list", "--json"], {
     cwd: movedRoot,
     env: { CODEX_HOME: codexHome },
@@ -345,6 +358,7 @@ try {
         pluginVersion: releaseManifest.version,
         cleanInstall: true,
         repeatedInstall: true,
+        configBackupPath: true,
         legacyReadWriteAclRecovered: true,
         movedUnicodeSpaceDirectory: true,
         bundledNodeFallback: true,
