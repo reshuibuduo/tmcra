@@ -6,27 +6,15 @@ param(
 $ErrorActionPreference = "Stop"
 $pluginRoot = Split-Path -Parent $PSScriptRoot
 $repoRoot = Split-Path -Parent (Split-Path -Parent $pluginRoot)
-$downloadsRoot = [System.IO.Path]::GetFullPath(
-    (Join-Path $repoRoot "tmcra-commercial-site\TMCRA\public\downloads")
-)
+$defaultDownloadsRoot = Join-Path $repoRoot "03-tmcra-web-console\public\downloads"
 if (-not $OutputPath) {
-    $OutputPath = Join-Path $downloadsRoot "tmcra-codex-latest.zip"
+    $OutputPath = Join-Path $defaultDownloadsRoot "tmcra-codex-latest.zip"
 }
 
-$resolvedRepo = [System.IO.Path]::GetFullPath($repoRoot)
 $resolvedOutput = [System.IO.Path]::GetFullPath($OutputPath)
-$allowedOutputPrefix = $downloadsRoot.TrimEnd(
-    [System.IO.Path]::DirectorySeparatorChar,
-    [System.IO.Path]::AltDirectorySeparatorChar
-) + [System.IO.Path]::DirectorySeparatorChar
-if (-not $resolvedOutput.StartsWith($allowedOutputPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-    throw "OutputPath must stay inside the website public/downloads directory."
-}
-if ([System.IO.Path]::GetDirectoryName($resolvedOutput) -ne $downloadsRoot) {
-    throw "OutputPath must be a direct child of the website public/downloads directory."
-}
-if ([System.IO.Path]::GetExtension($resolvedOutput) -ne '.zip') {
-    throw "OutputPath must use the .zip extension."
+$downloadsRoot = [System.IO.Path]::GetDirectoryName($resolvedOutput)
+if ([System.IO.Path]::GetFileName($resolvedOutput) -ne "tmcra-codex-latest.zip") {
+    throw "OutputPath must end with tmcra-codex-latest.zip."
 }
 
 $pluginManifestPath = Join-Path $pluginRoot ".codex-plugin\plugin.json"
@@ -35,55 +23,55 @@ $pluginVersion = [string]$pluginManifest.version
 if ($pluginVersion -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$') {
     throw "Plugin version must be a release-orderable semantic version without build metadata."
 }
+
 $versionedOutput = Join-Path $downloadsRoot "tmcra-codex-$pluginVersion.zip"
 $releaseManifestPath = Join-Path $downloadsRoot "tmcra-codex-release.json"
-if ($resolvedOutput.Equals($versionedOutput, [System.StringComparison]::OrdinalIgnoreCase)) {
-    throw "OutputPath must be an alias such as tmcra-codex-latest.zip, not the versioned archive path."
-}
 $versionedSha256Path = "$versionedOutput.sha256"
 $aliasSha256Path = "$resolvedOutput.sha256"
 
-$runtimeFiles = @(
-    ".agents/plugins/marketplace.json",
-    "plugins/tmcra-memory/.codex-plugin/plugin.json",
-    "plugins/tmcra-memory/.mcp.json",
-    "plugins/tmcra-memory/README.md",
-    "plugins/tmcra-memory/hooks/hook_common.mjs",
-    "plugins/tmcra-memory/hooks/hooks.json",
-    "plugins/tmcra-memory/hooks/post_compact.mjs",
-    "plugins/tmcra-memory/hooks/post_tool_use.mjs",
-    "plugins/tmcra-memory/hooks/pre_compact.mjs",
-    "plugins/tmcra-memory/hooks/run_hook.mjs",
-    "plugins/tmcra-memory/hooks/session_start.mjs",
-    "plugins/tmcra-memory/hooks/stop.mjs",
-    "plugins/tmcra-memory/hooks/subagent_start.mjs",
-    "plugins/tmcra-memory/hooks/subagent_stop.mjs",
-    "plugins/tmcra-memory/hooks/user_prompt_submit.mjs",
-    "plugins/tmcra-memory/scripts/check_config.mjs",
-    "plugins/tmcra-memory/scripts/configure.mjs",
-    "plugins/tmcra-memory/scripts/device_login.mjs",
-    "plugins/tmcra-memory/scripts/drain_outbox.mjs",
-    "plugins/tmcra-memory/scripts/history_import.mjs",
-    "plugins/tmcra-memory/scripts/install.ps1",
-    "plugins/tmcra-memory/scripts/install.sh",
-    "plugins/tmcra-memory/scripts/mcp_server.mjs",
-    "plugins/tmcra-memory/scripts/project_bootstrap.mjs",
-    "plugins/tmcra-memory/scripts/project_init.mjs",
-    "plugins/tmcra-memory/scripts/tmcra_client.mjs",
-    "plugins/tmcra-memory/skills/manage-tmcra-memory/agents/openai.yaml",
-    "plugins/tmcra-memory/skills/manage-tmcra-memory/SKILL.md",
-    "INSTALL-TMCRA-CODEX.md",
-    "Install-TMCRA.ps1",
-    "install.sh"
+$releaseFiles = @(
+    [ordered]@{ Source = "packaging/.agents/plugins/marketplace.json"; Archive = ".agents/plugins/marketplace.json" },
+    [ordered]@{ Source = ".codex-plugin/plugin.json"; Archive = "plugins/tmcra-memory/.codex-plugin/plugin.json" },
+    [ordered]@{ Source = ".mcp.json"; Archive = "plugins/tmcra-memory/.mcp.json" },
+    [ordered]@{ Source = "README.md"; Archive = "plugins/tmcra-memory/README.md" },
+    [ordered]@{ Source = "hooks/hook_common.mjs"; Archive = "plugins/tmcra-memory/hooks/hook_common.mjs" },
+    [ordered]@{ Source = "hooks/hooks.json"; Archive = "plugins/tmcra-memory/hooks/hooks.json" },
+    [ordered]@{ Source = "hooks/post_compact.mjs"; Archive = "plugins/tmcra-memory/hooks/post_compact.mjs" },
+    [ordered]@{ Source = "hooks/post_tool_use.mjs"; Archive = "plugins/tmcra-memory/hooks/post_tool_use.mjs" },
+    [ordered]@{ Source = "hooks/pre_compact.mjs"; Archive = "plugins/tmcra-memory/hooks/pre_compact.mjs" },
+    [ordered]@{ Source = "hooks/run_hook.mjs"; Archive = "plugins/tmcra-memory/hooks/run_hook.mjs" },
+    [ordered]@{ Source = "hooks/session_start.mjs"; Archive = "plugins/tmcra-memory/hooks/session_start.mjs" },
+    [ordered]@{ Source = "hooks/stop.mjs"; Archive = "plugins/tmcra-memory/hooks/stop.mjs" },
+    [ordered]@{ Source = "hooks/subagent_start.mjs"; Archive = "plugins/tmcra-memory/hooks/subagent_start.mjs" },
+    [ordered]@{ Source = "hooks/subagent_stop.mjs"; Archive = "plugins/tmcra-memory/hooks/subagent_stop.mjs" },
+    [ordered]@{ Source = "hooks/user_prompt_submit.mjs"; Archive = "plugins/tmcra-memory/hooks/user_prompt_submit.mjs" },
+    [ordered]@{ Source = "scripts/check_config.mjs"; Archive = "plugins/tmcra-memory/scripts/check_config.mjs" },
+    [ordered]@{ Source = "scripts/configure.mjs"; Archive = "plugins/tmcra-memory/scripts/configure.mjs" },
+    [ordered]@{ Source = "scripts/device_login.mjs"; Archive = "plugins/tmcra-memory/scripts/device_login.mjs" },
+    [ordered]@{ Source = "scripts/drain_outbox.mjs"; Archive = "plugins/tmcra-memory/scripts/drain_outbox.mjs" },
+    [ordered]@{ Source = "scripts/history_import.mjs"; Archive = "plugins/tmcra-memory/scripts/history_import.mjs" },
+    [ordered]@{ Source = "scripts/install.ps1"; Archive = "plugins/tmcra-memory/scripts/install.ps1" },
+    [ordered]@{ Source = "scripts/install.sh"; Archive = "plugins/tmcra-memory/scripts/install.sh" },
+    [ordered]@{ Source = "scripts/mcp_server.mjs"; Archive = "plugins/tmcra-memory/scripts/mcp_server.mjs" },
+    [ordered]@{ Source = "scripts/project_bootstrap.mjs"; Archive = "plugins/tmcra-memory/scripts/project_bootstrap.mjs" },
+    [ordered]@{ Source = "scripts/project_init.mjs"; Archive = "plugins/tmcra-memory/scripts/project_init.mjs" },
+    [ordered]@{ Source = "scripts/tmcra_client.mjs"; Archive = "plugins/tmcra-memory/scripts/tmcra_client.mjs" },
+    [ordered]@{ Source = "skills/manage-tmcra-memory/agents/openai.yaml"; Archive = "plugins/tmcra-memory/skills/manage-tmcra-memory/agents/openai.yaml" },
+    [ordered]@{ Source = "skills/manage-tmcra-memory/SKILL.md"; Archive = "plugins/tmcra-memory/skills/manage-tmcra-memory/SKILL.md" },
+    [ordered]@{ Source = "packaging/INSTALL-TMCRA-CODEX.md"; Archive = "INSTALL-TMCRA-CODEX.md" },
+    [ordered]@{ Source = "packaging/Install-TMCRA.ps1"; Archive = "Install-TMCRA.ps1" },
+    [ordered]@{ Source = "packaging/install.sh"; Archive = "install.sh" }
 )
-foreach ($entry in $runtimeFiles) {
-    $sourcePath = Join-Path $resolvedRepo ($entry.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
+
+foreach ($entry in $releaseFiles) {
+    $sourcePath = Join-Path $pluginRoot ($entry.Source.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
     if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
-        throw "Release source is missing $entry"
+        throw "Release source is missing $($entry.Source)"
     }
 }
 
 New-Item -ItemType Directory -Force -Path $downloadsRoot | Out-Null
+$stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) "tmcra-codex-$([guid]::NewGuid().ToString('N'))"
 $temporaryArchive = Join-Path $downloadsRoot ".tmcra-codex-$([guid]::NewGuid().ToString('N')).zip"
 $temporaryAlias = Join-Path $downloadsRoot ".tmcra-codex-alias-$([guid]::NewGuid().ToString('N')).zip"
 $temporaryManifest = Join-Path $downloadsRoot ".tmcra-codex-release-$([guid]::NewGuid().ToString('N')).json"
@@ -110,17 +98,33 @@ function Publish-Atomic([string]$Source, [string]$Destination) {
 }
 
 try {
-    Push-Location $resolvedRepo
-    try {
-        & tar -a -cf $temporaryArchive @runtimeFiles
-        if ($LASTEXITCODE -ne 0) { throw "Could not create the TMCRA Codex release archive." }
-    }
-    finally {
-        Pop-Location
+    New-Item -ItemType Directory -Force -Path $stagingRoot | Out-Null
+    foreach ($entry in $releaseFiles) {
+        $sourcePath = Join-Path $pluginRoot ($entry.Source.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
+        $archivePath = Join-Path $stagingRoot ($entry.Archive.Replace("/", [System.IO.Path]::DirectorySeparatorChar))
+        New-Item -ItemType Directory -Force -Path ([System.IO.Path]::GetDirectoryName($archivePath)) | Out-Null
+        Copy-Item -LiteralPath $sourcePath -Destination $archivePath
     }
 
-    $archiveFiles = @(& tar -tf $temporaryArchive | Where-Object { -not $_.EndsWith("/") })
-    if ($LASTEXITCODE -ne 0) { throw "Could not inspect the TMCRA Codex release archive." }
+    $runtimeFiles = @($releaseFiles | ForEach-Object { [string]$_.Archive })
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [System.IO.Compression.ZipFile]::CreateFromDirectory(
+        $stagingRoot,
+        $temporaryArchive,
+        [System.IO.Compression.CompressionLevel]::Optimal,
+        $false
+    )
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($temporaryArchive)
+    try {
+        $archiveFiles = @(
+            $archive.Entries |
+                Where-Object { -not [string]::IsNullOrEmpty($_.Name) } |
+                ForEach-Object { $_.FullName.Replace("\", "/") }
+        )
+    }
+    finally {
+        $archive.Dispose()
+    }
     $unexpected = @($archiveFiles | Where-Object { $_ -notin $runtimeFiles })
     $missing = @($runtimeFiles | Where-Object { $_ -notin $archiveFiles })
     if ($unexpected.Count -gt 0) {
@@ -182,6 +186,7 @@ try {
     }
 }
 finally {
+    Remove-Item -LiteralPath $stagingRoot -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $temporaryArchive -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $temporaryAlias -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $temporaryManifest -Force -ErrorAction SilentlyContinue

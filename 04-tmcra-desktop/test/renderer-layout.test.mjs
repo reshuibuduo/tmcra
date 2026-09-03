@@ -42,3 +42,13 @@ test("desktop header uses the official TMCRA mark and keeps its text label", asy
   assert.doesNotMatch(html, /brand-mark[^>]*><i>/);
   assert.match(css, /\.brand-mark img\s*\{/);
 });
+
+test("Codex Hook guidance matches the nine-hook plugin contract", async () => {
+  const app = await readFile(resolve(root, "src", "renderer", "app.js"), "utf8");
+  const html = await readFile(resolve(root, "src", "renderer", "index.html"), "utf8");
+
+  assert.match(app, /all nine lifecycle Hooks/u);
+  assert.match(app, /全部九项生命周期 Hook/u);
+  assert.match(html, /全部九项生命周期 Hook/u);
+  assert.doesNotMatch(`${app}\n${html}`, /three[^\r\n]*Hooks|三项[^\r\n]*Hook|三个[^\r\n]*Hook/iu);
+});

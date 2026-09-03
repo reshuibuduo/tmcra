@@ -131,6 +131,35 @@ jobs:
         working-directory: ${{ matrix.directory }}
         run: npm run build --if-present
 
+  codex-plugin:
+    name: Codex plugin — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24.19.0"
+      - name: Run plugin contracts
+        working-directory: 07-tmcra-codex-plugins/tmcra-memory
+        run: node scripts/test_codex_e2e.mjs
+      - name: Build self-contained release archive
+        shell: pwsh
+        run: |
+          $output = Join-Path "${{ github.workspace }}" "03-tmcra-web-console/public/downloads/tmcra-codex-latest.zip"
+          & "${{ github.workspace }}/07-tmcra-codex-plugins/tmcra-memory/scripts/build_release.ps1" -OutputPath $output
+          if (-not (Test-Path -LiteralPath $output -PathType Leaf)) {
+            throw "TMCRA Codex release archive was not created."
+          }
+      - name: Verify desktop plugin resources
+        if: runner.os == 'Windows'
+        working-directory: 04-tmcra-desktop
+        run: npm run verify:resources
+
   web-console:
     name: Web console build and security contracts
     runs-on: ubuntu-latest

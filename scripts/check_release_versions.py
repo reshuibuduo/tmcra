@@ -81,6 +81,11 @@ def main() -> int:
     ]
     for path in package_jsons:
         check_json(errors, path, ("version",), NPM)
+    for path in [
+        "03-tmcra-web-console/desktop/tmcra-memory/package.json",
+        "04-tmcra-desktop/package.json",
+    ]:
+        check_json(errors, path, ("tmcra", "fallbackPluginVersion"), NPM)
     for path in package_locks:
         check_json(errors, path, ("version",), NPM)
         check_json(errors, path, ("packages", "", "version"), NPM)
@@ -139,6 +144,12 @@ def main() -> int:
         errors,
         "07-tmcra-codex-plugins/tmcra-memory/.codex-plugin/plugin.json",
         ("version",),
+        NPM,
+    )
+    check_json(
+        errors,
+        "03-tmcra-web-console/public/downloads/tmcra-codex-release.json",
+        ("plugin", "version"),
         NPM,
     )
     check_json(

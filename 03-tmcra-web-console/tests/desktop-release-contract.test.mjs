@@ -125,6 +125,9 @@ test("Codex integration page keeps the actor model and links to desktop download
   assert.match(page, /Download the Windows or macOS preview/u);
   assert.match(page, /href="\/download"/u);
   assert.match(page, /tmcra-codex-latest\.zip/u);
+  assert.match(page, /<strong>09<\/strong>/u);
+  assert.match(page, /SessionStart · SubagentStart · UserPromptSubmit · PostToolUse · PreCompact · PostCompact · Stop · StopFailure · SubagentStop/u);
+  assert.doesNotMatch(page, /three[^\r\n]*Hooks|三项[^\r\n]*Hook|三个[^\r\n]*Hook/iu);
   assert.match(page, /Both remain recallable/);
   assert.match(page, /用户记录承载要求与事实，Codex 记录承载已经完成的进度与结果/);
 });

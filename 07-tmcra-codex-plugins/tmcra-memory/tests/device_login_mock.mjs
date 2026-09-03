@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { createServer } from "node:http";
-import { copyFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +11,7 @@ const testDir = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(testDir, "..");
 const scriptPath = join(pluginRoot, "scripts", "device_login.mjs");
 const installPath = join(pluginRoot, "scripts", "install.ps1");
-const rootInstallPath = resolve(pluginRoot, "..", "..", "Install-TMCRA.ps1");
+const rootInstallTemplatePath = join(pluginRoot, "packaging", "Install-TMCRA.ps1");
 const secretValues = [];
 const authorizations = [];
 const validTokens = new Set();
@@ -394,6 +394,13 @@ try {
     assertions.windowsInstallerDefaultDeviceFlow = true;
     assertions.persistentInstallationId =
       authorizations[0].installationId === authorizations[1].installationId;
+
+    const desktopPackageRoot = join(tempRoot, "桌面 安装包");
+    const desktopPackagePluginRoot = join(desktopPackageRoot, "plugins", "tmcra-memory");
+    const rootInstallPath = join(desktopPackageRoot, "Install-TMCRA.ps1");
+    await mkdir(join(desktopPackageRoot, "plugins"), { recursive: true });
+    await copyFile(rootInstallTemplatePath, rootInstallPath);
+    await cp(pluginRoot, desktopPackagePluginRoot, { recursive: true });
 
     const desktopRuntimeDirectory = join(tempRoot, "桌面 应用 runtime");
     const desktopNodePath = join(desktopRuntimeDirectory, "TMCRA Desktop.exe");
