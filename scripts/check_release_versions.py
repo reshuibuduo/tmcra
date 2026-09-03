@@ -14,10 +14,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = "0.3.0-rc2"
 NPM = "0.3.0-rc.2"
-CODEX = "0.3.0-rc.4"
+CODEX = "0.3.0-rc.5"
 PYTHON = "0.3.0rc2"
 APPLE = "0.3.0"
-CLAUDE = "0.3.0-rc.4+claude.20260904"
+CLAUDE = "0.3.0-rc.5+claude.20260904"
 
 
 def nested_value(document: Any, keys: tuple[str, ...]) -> Any:
