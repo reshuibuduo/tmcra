@@ -260,7 +260,7 @@ test("approval requires SIWC plus personal space and never returns the control c
   assert.match(service, /scope_names:\s*\[\]/);
   assert.match(service, /scope_prefixes:\s*\[`\$\{access\.space\.scopeName\}-`\]/);
   assert.match(service, /subject:\s*access\.space\.id/);
-  assert.match(service, /"memory:read", "memory:write", "memory:feedback"/);
+  assert.match(service, /"memory:read",\s*"memory:write",\s*"memory:consolidate",\s*"memory:feedback"/);
   assert.match(service, /expires_in_seconds:\s*TOKEN_LIFETIME_SECONDS/);
   assert.match(service, /provisional_delivery_seconds:\s*PROVISIONAL_TOKEN_SECONDS/);
   assert.match(service, /issueTokenOnFirstPoll/);

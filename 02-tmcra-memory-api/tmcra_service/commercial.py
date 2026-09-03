@@ -636,6 +636,13 @@ class CommercialControl:
         clean_session = str(deleted_session_id or "").strip()
         now = time.time()
         with self.database.transaction() as connection:
+            # Provider-task rows contain bounded copies of model prompts and
+            # parsed outputs. Any content deletion invalidates those recovery
+            # artifacts for the scope, so purge them with the memory content.
+            connection.execute(
+                "DELETE FROM user_provider_tasks WHERE tenant_id=? AND scope_name=?",
+                (tenant_id, scope_name),
+            )
             removed_raw_tokens = 0
             removed_user_turns = 0
             if source_ids:
@@ -1948,6 +1955,10 @@ class CommercialControl:
         )
         redacted_hash = hashlib.sha256(redacted_payload.encode("utf-8")).hexdigest()
         with self.database.transaction() as connection:
+            connection.execute(
+                "DELETE FROM user_provider_tasks WHERE tenant_id=? AND scope_name=?",
+                (tenant_id, scope_name),
+            )
             connection.execute(
                 "DELETE FROM operation_stages WHERE tenant_id=? AND scope_name=? AND job_id<>?",
                 (tenant_id, scope_name, deletion_job_id),

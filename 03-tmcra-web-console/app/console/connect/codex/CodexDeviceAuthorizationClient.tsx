@@ -230,7 +230,7 @@ export default function CodexDeviceAuthorizationClient({
             <strong className="codex-user-code">{authorization.userCode}</strong>
             <dl>
               <div><dt>Scope</dt><dd>{t("Only this personal namespace and its child project Scopes", "仅限当前个人命名空间及其下属项目 Scope")}</dd></div>
-              <div><dt>{t("Permissions", "权限")}</dt><dd>memory:read · memory:write · memory:feedback</dd></div>
+              <div><dt>{t("Permissions", "权限")}</dt><dd>memory:read · memory:write · memory:consolidate · memory:feedback</dd></div>
               <div><dt>Token</dt><dd>{t(`Shown once to ${providerLabel} after approval`, `批准后仅向 ${providerLabel} 返回一次`)}</dd></div>
             </dl>
             {authorization.status === "pending" && (

@@ -45,6 +45,7 @@ from ..writer_context import (
     writer_unresolved_limits_from_env,
 )
 from ..usage_attribution import UNATTRIBUTED, UsageAttribution
+from ..user_provider_client import normalize_user_provider_execution
 from ..actor_provenance import (
     ActorProvenanceError,
     actor_metadata_json,
@@ -2288,8 +2289,16 @@ class V4StorageAdapter:
         stage_id: str | None = None,
         stage_attempt: int = 1,
         usage_attribution: UsageAttribution = UNATTRIBUTED,
+        provider_execution: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         self._require_compatible_writer()
+        try:
+            provider_execution = normalize_user_provider_execution(
+                provider_execution,
+                stage="writer",
+            )
+        except ValueError as exc:
+            raise V4AdapterError(str(exc)) from exc
         stage_id = stage_id or f"{job_id}:writer"
         if (
             stage_id != f"{job_id}:writer"
@@ -2493,6 +2502,7 @@ class V4StorageAdapter:
                             "stage_attempt": stage_attempt,
                             "recovery_mode": recovery_mode,
                             "usage_attribution": usage_attribution.as_dict(),
+                            "provider_execution": provider_execution,
                         },
                         sort_keys=True,
                     )
@@ -2515,6 +2525,7 @@ class V4StorageAdapter:
                             "max_tokens": 16384,
                             "recovery_mode": recovery_mode,
                             "usage_attribution": usage_attribution.as_dict(),
+                            "provider_execution": provider_execution,
                         },
                         operation_timeout=max(
                             self.settings.writer_pool_request_timeout_seconds,
@@ -2569,6 +2580,19 @@ class V4StorageAdapter:
                     recovery_mode,
                     "--stage-attempt",
                     str(stage_attempt),
+                    *(
+                        [
+                            "--provider-execution-json",
+                            json.dumps(
+                                provider_execution,
+                                ensure_ascii=True,
+                                separators=(",", ":"),
+                                sort_keys=True,
+                            ),
+                        ]
+                        if provider_execution is not None
+                        else []
+                    ),
                 ],
                 log_path=self._next_operation_log(operation, "writer"),
                 extra_env={
@@ -7017,7 +7041,44 @@ class V4StorageAdapter:
         ledger_job_id: str | None = None,
         ledger_stage_id: str | None = None,
         usage_attribution: UsageAttribution = UNATTRIBUTED,
+        provider_execution: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
+        try:
+            provider_execution = normalize_user_provider_execution(
+                provider_execution,
+                stage="organizer",
+            )
+        except ValueError as exc:
+            raise V4AdapterError(str(exc)) from exc
+        provider_environment: dict[str, str] = {}
+        if provider_execution is not None:
+            if not ledger_job_id or not ledger_stage_id:
+                raise V4AdapterError(
+                    "user-provider consolidation requires job and stage identity"
+                )
+            provider_environment = {
+                "TMCRA_USER_PROVIDER_EXECUTION_JSON": json.dumps(
+                    provider_execution,
+                    ensure_ascii=True,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ),
+                "TMCRA_SERVICE_TENANT_ID": tenant_id,
+                "TMCRA_SERVICE_SCOPE_NAME": scope_name,
+                "TMCRA_SERVICE_JOB_ID": ledger_job_id,
+                "TMCRA_SERVICE_STAGE_ID": ledger_stage_id,
+                "TMCRA_USAGE_ATTRIBUTION_JSON": json.dumps(
+                    usage_attribution.as_dict(),
+                    ensure_ascii=True,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ),
+            }
+        provider_run_kwargs = (
+            {"extra_env": provider_environment}
+            if provider_environment
+            else {}
+        )
         paths = self.scope_paths(tenant_id, scope_name)
         if not paths.database.is_file():
             raise V4AdapterError("cannot consolidate a scope without a memory database")
@@ -7063,6 +7124,7 @@ class V4StorageAdapter:
                         "--apply",
                     ],
                     log_path=self._next_operation_log(operation, "subject_attribution"),
+                    **provider_run_kwargs,
                 )
             except Exception as exc:
                 attribution_error = exc
@@ -7102,7 +7164,11 @@ class V4StorageAdapter:
 
         prefix = [
             str(self.python),
-            str(self.settings.v4_root / "tmcra_v4_slow_graph.py"),
+            *(
+                ["-m", "tmcra_service.user_provider_slow_graph"]
+                if provider_execution is not None
+                else [str(self.settings.v4_root / "tmcra_v4_slow_graph.py")]
+            ),
             str(paths.database),
             "--repo",
             str(self.settings.integrated_repo),
@@ -7111,19 +7177,26 @@ class V4StorageAdapter:
             self._run_with_writer_env(
                 [*prefix, "enqueue", paths.scope_id],
                 log_path=self._next_operation_log(operation, "slow_enqueue"),
+                **provider_run_kwargs,
             )
             self._run_with_writer_env(
                 [
                     *prefix,
                     "drain",
                     "--workers",
-                    str(self.settings.slow_graph_drain_concurrency),
+                    str(
+                        1
+                        if provider_execution is not None
+                        else self.settings.slow_graph_drain_concurrency
+                    ),
                 ],
                 log_path=self._next_operation_log(operation, "slow_drain"),
+                **provider_run_kwargs,
             )
             self._run_with_writer_env(
                 [*prefix, "audit", paths.scope_id, "--require-promotion-coverage"],
                 log_path=self._next_operation_log(operation, "slow_audit"),
+                **provider_run_kwargs,
             )
         finally:
             self._journal_provider_metadata(

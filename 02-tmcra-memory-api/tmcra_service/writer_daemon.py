@@ -16,7 +16,7 @@ from .writer import WRITER_RECOVERY_MODES, execute_writer
 from .usage_attribution import UsageAttribution
 
 
-PROTOCOL_VERSION = "tmcra.writer-daemon.4"
+PROTOCOL_VERSION = "tmcra.writer-daemon.5"
 REQUEST_STATUS_SCHEMA_VERSION = "tmcra.writer-request-status.1"
 RECOVERY_MODES = WRITER_RECOVERY_MODES
 
@@ -62,6 +62,19 @@ def request_identity(value: Mapping[str, Any]) -> tuple[str, str, dict[str, Any]
         or stage_attempt <= 0
     ):
         raise ValueError("writer daemon stage_attempt must be positive")
+    provider_execution_value = value.get("provider_execution")
+    if provider_execution_value is not None and not isinstance(
+        provider_execution_value, Mapping
+    ):
+        raise ValueError("writer daemon provider_execution must be an object")
+    provider_execution = (
+        None
+        if provider_execution_value is None
+        else {
+            str(key): str(item)
+            for key, item in provider_execution_value.items()
+        }
+    )
     contract = {
         "protocol": PROTOCOL_VERSION,
         "input_path": str(input_path),
@@ -82,6 +95,7 @@ def request_identity(value: Mapping[str, Any]) -> tuple[str, str, dict[str, Any]
             if isinstance(value.get("usage_attribution"), Mapping)
             else None
         ).as_dict(),
+        "provider_execution": provider_execution,
     }
     encoded = json.dumps(
         contract, ensure_ascii=True, separators=(",", ":"), sort_keys=True
@@ -279,6 +293,11 @@ def serve(repo: Path) -> int:
                     usage_attribution=UsageAttribution.from_mapping(
                         request.get("usage_attribution")
                         if isinstance(request.get("usage_attribution"), Mapping)
+                        else None
+                    ),
+                    provider_execution=(
+                        request.get("provider_execution")
+                        if isinstance(request.get("provider_execution"), Mapping)
                         else None
                     ),
                     v4_module=v4,

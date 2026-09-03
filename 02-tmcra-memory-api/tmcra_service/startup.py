@@ -93,7 +93,10 @@ class MemoryWriteAdmission:
         self.provider = provider
 
     def snapshot(
-        self, *, connection: sqlite3.Connection | None = None
+        self,
+        *,
+        connection: sqlite3.Connection | None = None,
+        provider_required: bool = True,
     ) -> WriteAdmissionSnapshot:
         retry_default = self.settings.write_admission_retry_seconds
         if self.settings.startup_preflight_mode == "off":
@@ -164,7 +167,7 @@ class MemoryWriteAdmission:
                 else "writer_pool_unavailable"
             )
             retry_after = retry_default
-        elif provider is None or not provider.accepting_paid_work:
+        elif provider_required and (provider is None or not provider.accepting_paid_work):
             reason = str(provider_view.get("reason") or "provider_unavailable")
             retry_after = float(
                 provider_view.get("retry_after_seconds") or retry_default
@@ -180,8 +183,16 @@ class MemoryWriteAdmission:
             provider=provider_view,
         )
 
-    def require(self, *, connection: sqlite3.Connection | None = None) -> None:
-        snapshot = self.snapshot(connection=connection)
+    def require(
+        self,
+        *,
+        connection: sqlite3.Connection | None = None,
+        provider_required: bool = True,
+    ) -> None:
+        snapshot = self.snapshot(
+            connection=connection,
+            provider_required=provider_required,
+        )
         if not snapshot.accepting_writes:
             raise WriteAdmissionRejected(
                 snapshot.reason or "write_admission_closed",
@@ -203,6 +214,7 @@ CRITICAL_CONTROL_TABLES = frozenset(
         "scope_source_event_commits",
         "scope_ingest_source_sets",
         "provider_calls",
+        "user_provider_tasks",
         "provider_call_reconciliations",
         "provider_circuits",
         "provider_prices",

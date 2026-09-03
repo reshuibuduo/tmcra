@@ -24,7 +24,7 @@ test("bilingual API docs cover every published OpenAPI operation", () => {
   assert.equal(spec.info.version, "0.3.0-rc2");
   assert.equal(spec.servers[0].url, "https://api.tmcra.com");
   assert.equal(spec.paths["/v1/session"].get.operationId, "getAuthenticatedSession");
-  assert.equal(operations.length, 32);
+  assert.equal(operations.length, 58);
   for (const [method, apiPath] of operations) {
     assert.match(content, new RegExp(`method: \\"${method}\\"[\\s\\S]{0,120}path: \\"${apiPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\"`));
   }

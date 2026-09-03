@@ -21,10 +21,16 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from ops import audit_tmcra_v4_subject_attribution as _benchmark
+from tmcra_service.usage_attribution import UsageAttribution
+from tmcra_service.user_provider_client import (
+    UserProviderBrokerClient,
+    normalize_user_provider_execution,
+)
 
 __all__ = [
     "AttributionError",
     "DeepSeekProAttributionClient",
+    "UserProviderAttributionClient",
     "document_route_reasons",
     "execute_job",
     "main",
@@ -50,6 +56,76 @@ document_route_reasons = _benchmark.document_route_reasons
 scan_database = _benchmark.scan_database
 validate_decisions = _benchmark.validate_decisions
 execute_job = _benchmark.execute_job
+
+
+def _required_environment(name: str) -> str:
+    value = str(os.getenv(name) or "").strip()
+    if not value:
+        raise AttributionError(f"{name} is required for user-provider execution")
+    return value
+
+
+class UserProviderAttributionClient:
+    """Route one attribution request through the authenticated local executor."""
+
+    def __init__(self) -> None:
+        try:
+            raw_execution = json.loads(
+                _required_environment("TMCRA_USER_PROVIDER_EXECUTION_JSON")
+            )
+            execution = normalize_user_provider_execution(
+                raw_execution,
+                stage="organizer",
+            )
+            if execution is None:
+                raise ValueError("organizer execution route is missing")
+            raw_attribution = str(
+                os.getenv("TMCRA_USAGE_ATTRIBUTION_JSON") or "{}"
+            ).strip()
+            usage_attribution = UsageAttribution.from_mapping(
+                json.loads(raw_attribution)
+            )
+            self.broker = UserProviderBrokerClient(
+                control_db=Path(_required_environment("TMCRA_SERVICE_CONTROL_DB")),
+                tenant_id=_required_environment("TMCRA_SERVICE_TENANT_ID"),
+                scope_name=_required_environment("TMCRA_SERVICE_SCOPE_NAME"),
+                auth_key_id=execution["auth_key_id"],
+                job_id=_required_environment("TMCRA_SERVICE_JOB_ID"),
+                stage_id=_required_environment("TMCRA_SERVICE_STAGE_ID"),
+                task_stage="organizer",
+                timeout=float(
+                    os.getenv("TMCRA_USER_PROVIDER_TIMEOUT_SECONDS", "900")
+                ),
+                max_tokens=int(
+                    os.getenv("TMCRA_SUBJECT_ATTRIBUTION_MAX_TOKENS", "16384")
+                ),
+                usage_attribution=usage_attribution,
+                record_ledger=False,
+            )
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise AttributionError(
+                "user-provider attribution environment is invalid"
+            ) from exc
+
+    def complete(self, payload: Mapping[str, Any]) -> tuple[str, Mapping[str, Any]]:
+        output, metadata = self.broker.complete_prompt(
+            system_prompt=SYSTEM_PROMPT,
+            payload=payload,
+            operation="subject_attribution_pro",
+        )
+        return json.dumps(
+            output,
+            ensure_ascii=False,
+            allow_nan=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ), metadata
+
+
+def _default_attribution_client() -> AttributionClient:
+    if str(os.getenv("TMCRA_USER_PROVIDER_EXECUTION_JSON") or "").strip():
+        return UserProviderAttributionClient()
+    return DeepSeekProAttributionClient()
 
 
 def _usage_totals(results: Sequence[Mapping[str, Any]]) -> dict[str, int]:
@@ -187,7 +263,7 @@ def run_subject_attribution(
     if apply and scanned:
         try:
             active_client = (
-                client if client is not None else DeepSeekProAttributionClient()
+                client if client is not None else _default_attribution_client()
             )
         except Exception as exc:
             active_client = None

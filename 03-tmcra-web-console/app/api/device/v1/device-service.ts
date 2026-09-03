@@ -29,7 +29,12 @@ const PKCE_CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const PKCE_VERIFIER_PATTERN = /^[A-Za-z0-9._~-]{43,128}$/;
 const USER_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{8}$/;
 const DEVICE_CODE_PATTERN = /^[A-Za-z0-9_-]{43}$/;
-const TOKEN_PERMISSIONS = ["memory:read", "memory:write", "memory:feedback"] as const;
+const TOKEN_PERMISSIONS = [
+  "memory:read",
+  "memory:write",
+  "memory:consolidate",
+  "memory:feedback",
+] as const;
 
 type DeviceProvider = "codex" | "deepseek_harness";
 

@@ -835,6 +835,96 @@ class ProviderCallReportView(StrictModel):
     idempotent_replay: bool
 
 
+class UserProviderTaskClaimRequest(StrictModel):
+    stage: Literal["writer", "organizer"]
+
+
+class UserProviderTaskLeaseView(StrictModel):
+    schema_version: Literal["tmcra.user-provider-task.1"]
+    task_id: str
+    stage: Literal["writer", "organizer"]
+    operation: str
+    request_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    request: dict[str, Any]
+    lease_token: str
+    lease_expires_at: float = Field(ge=0)
+
+
+class UserProviderTaskClaimView(StrictModel):
+    task: UserProviderTaskLeaseView | None = None
+    retry_after_seconds: float = Field(ge=0)
+
+
+class UserProviderTaskLeaseRequest(StrictModel):
+    lease_token: str = Field(min_length=32, max_length=256)
+
+
+class UserProviderUsage(StrictModel):
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+    total_tokens: int | None = Field(default=None, ge=0)
+    cache_hit_tokens: int | None = Field(default=None, ge=0)
+    cache_miss_tokens: int | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def valid_usage(self) -> "UserProviderUsage":
+        if self.input_tokens is None or self.output_tokens is None:
+            if any(
+                value is not None
+                for value in (
+                    self.input_tokens,
+                    self.output_tokens,
+                    self.total_tokens,
+                    self.cache_hit_tokens,
+                    self.cache_miss_tokens,
+                )
+            ):
+                raise ValueError(
+                    "input_tokens and output_tokens are required with provider usage"
+                )
+            return self
+        total = self.total_tokens
+        if total is not None and total < self.input_tokens + self.output_tokens:
+            raise ValueError("total_tokens is smaller than input plus output")
+        hit = self.cache_hit_tokens
+        miss = self.cache_miss_tokens
+        if hit is not None and hit > self.input_tokens:
+            raise ValueError("cache_hit_tokens cannot exceed input_tokens")
+        if miss is not None and miss > self.input_tokens:
+            raise ValueError("cache_miss_tokens cannot exceed input_tokens")
+        if hit is not None and miss is not None and hit + miss != self.input_tokens:
+            raise ValueError("cache hit and miss tokens must equal input_tokens")
+        return self
+
+
+class UserProviderTaskCompleteRequest(UserProviderTaskLeaseRequest):
+    provider: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
+    model: str = Field(min_length=1, max_length=160)
+    output: dict[str, Any]
+    usage: UserProviderUsage | None = None
+    provider_request_id: str | None = Field(default=None, max_length=200)
+
+
+class UserProviderTaskFailRequest(UserProviderTaskLeaseRequest):
+    provider: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
+    model: str = Field(min_length=1, max_length=160)
+    outcome: Literal["failed", "unknown"]
+    error_code: str = Field(
+        min_length=1,
+        max_length=160,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$",
+    )
+
+
+class UserProviderTaskStatusView(StrictModel):
+    task_id: str
+    state: Literal[
+        "queued", "leased", "running", "completed", "failed", "unknown"
+    ]
+    lease_expires_at: float | None = Field(default=None, ge=0)
+    idempotent_replay: bool = False
+
+
 class EntitlementUpdateRequest(StrictModel):
     ingest_raw_tokens: int | None = Field(ge=0)
     recall_requests: int | None = Field(ge=0)

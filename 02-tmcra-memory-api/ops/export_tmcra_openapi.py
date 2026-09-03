@@ -18,6 +18,15 @@ from tmcra_service.app import create_app
 from tmcra_service.settings import ServiceSettings
 
 
+def _public_service_version() -> str:
+    manifest_path = ROOT / "tmcra_service" / "shared_core_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    version = manifest.get("service_version")
+    if not isinstance(version, str) or not version.strip():
+        raise RuntimeError(f"missing service_version in {manifest_path}")
+    return version.strip()
+
+
 def _schema_settings(root: Path, *, server_url: str) -> ServiceSettings:
     required_files = {
         "writer_env": root / "writer.env",
@@ -55,6 +64,9 @@ def _schema_settings(root: Path, *, server_url: str) -> ServiceSettings:
 
 def normalized_openapi(app: FastAPI, *, server_url: str) -> dict[str, Any]:
     schema = dict(app.openapi())
+    info = dict(schema.get("info") or {})
+    info["version"] = _public_service_version()
+    schema["info"] = info
     schema["servers"] = [
         {"url": server_url.rstrip("/"), "description": "TMCRA Memory API"}
     ]

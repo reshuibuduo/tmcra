@@ -14,6 +14,7 @@ import {
 const PERSONAL_API_KEY_PERMISSIONS = [
   "memory:read",
   "memory:write",
+  "memory:consolidate",
   "memory:feedback",
 ] as const;
 const PERSONAL_API_KEY_PERMISSION_SET = new Set<string>(PERSONAL_API_KEY_PERMISSIONS);
@@ -147,7 +148,7 @@ function requestedPermissions(value: unknown): string[] {
       throw new ConsoleError(
         422,
         "invalid_api_key_permissions",
-        "Personal API keys only support memory:read, memory:write, and memory:feedback.",
+        "Personal API keys only support memory:read, memory:write, memory:consolidate, and memory:feedback.",
       );
     }
     return permission;

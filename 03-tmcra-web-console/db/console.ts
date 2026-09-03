@@ -149,6 +149,7 @@ const API_KEY_SCOPES = new Set([
   "agents:write",
   "memory:read",
   "memory:write",
+  "memory:consolidate",
 ]);
 
 const SCHEMA_STATEMENTS = [

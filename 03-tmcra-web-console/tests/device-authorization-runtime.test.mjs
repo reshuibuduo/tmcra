@@ -336,7 +336,7 @@ test("response loss replays one idempotent provisional Token and confirmation is
   const issued = await client.issue({
     label: "Codex / runtime",
     subject: "psp_runtime",
-    permissions: ["memory:read", "memory:write", "memory:feedback"],
+    permissions: ["memory:read", "memory:write", "memory:consolidate", "memory:feedback"],
     scope_names: [],
     scope_prefixes: ["personal-runtime-"],
     expires_in_seconds: 3600,
@@ -344,7 +344,7 @@ test("response loss replays one idempotent provisional Token and confirmation is
   const replayed = await client.issue({
     label: "Codex / runtime",
     subject: "psp_runtime",
-    permissions: ["memory:read", "memory:write", "memory:feedback"],
+    permissions: ["memory:read", "memory:write", "memory:consolidate", "memory:feedback"],
     scope_names: [],
     scope_prefixes: ["personal-runtime-"],
     expires_in_seconds: 3600,
@@ -370,7 +370,7 @@ test("response loss replays one idempotent provisional Token and confirmation is
          token_expires_at, created_at, updated_at, last_connected_at
        ) VALUES ('dvc_runtime', 'dva_runtime', 'usr_runtime', 'psp_runtime',
                  'Codex runtime', ?, ?, 'personal-runtime-',
-                 '["memory:read","memory:write","memory:feedback"]', 'active',
+                 '["memory:read","memory:write","memory:consolidate","memory:feedback"]', 'active',
                  ?, ?, ?, ?)`,
     ).run(
       issued.token_id,

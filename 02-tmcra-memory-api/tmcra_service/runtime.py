@@ -3814,6 +3814,13 @@ class ServiceWorker:
             if isinstance(payload.get("_usage_attribution"), Mapping)
             else None
         )
+        raw_provider_execution = payload.get("_provider_execution")
+        organizer_execution = (
+            raw_provider_execution
+            if isinstance(raw_provider_execution, Mapping)
+            and str(raw_provider_execution.get("organizer") or "").strip()
+            else None
+        )
         state = self._state(tenant_id, scope_name) or {}
         target_event_seq = int(
             payload.get("target_source_event_seq", state.get("source_event_seq", 0)) or 0
@@ -3856,6 +3863,7 @@ class ServiceWorker:
                         ledger_job_id=job.job_id,
                         ledger_stage_id=stage_id,
                         usage_attribution=usage_attribution,
+                        provider_execution=organizer_execution,
                     )
 
             slow = self._run_stage(
@@ -4602,6 +4610,13 @@ class ServiceWorker:
                                 stage_id=stage_id,
                                 stage_attempt=stage_attempt,
                                 usage_attribution=usage_attribution,
+                                provider_execution=(
+                                    payload.get("_provider_execution")
+                                    if isinstance(
+                                        payload.get("_provider_execution"), Mapping
+                                    )
+                                    else None
+                                ),
                             )
                         )
                 except Exception as writer_error:

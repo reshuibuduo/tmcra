@@ -784,6 +784,46 @@ class ControlDB:
                 CREATE INDEX IF NOT EXISTS provider_calls_stage_idx
                     ON provider_calls (stage_id, created_at);
 
+                CREATE TABLE IF NOT EXISTS user_provider_tasks (
+                    task_id TEXT PRIMARY KEY,
+                    tenant_id TEXT NOT NULL,
+                    scope_name TEXT NOT NULL,
+                    auth_key_id TEXT NOT NULL,
+                    job_id TEXT NOT NULL,
+                    stage_id TEXT NOT NULL,
+                    task_stage TEXT NOT NULL,
+                    operation TEXT NOT NULL,
+                    request_json TEXT NOT NULL,
+                    request_sha256 TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    lease_token_sha256 TEXT,
+                    lease_expires_at REAL,
+                    provider TEXT,
+                    model TEXT,
+                    output_json TEXT,
+                    response_sha256 TEXT,
+                    usage_json TEXT,
+                    provider_request_id TEXT,
+                    error_code TEXT,
+                    provider_started_at REAL,
+                    provider_finished_at REAL,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL,
+                    completed_at REAL,
+                    version INTEGER NOT NULL DEFAULT 0,
+                    CHECK (task_stage IN ('writer', 'organizer')),
+                    CHECK (state IN (
+                        'queued', 'leased', 'running', 'completed', 'failed', 'unknown'
+                    )),
+                    UNIQUE (job_id, stage_id, operation, request_sha256)
+                );
+                CREATE INDEX IF NOT EXISTS user_provider_tasks_claim_idx
+                    ON user_provider_tasks (
+                        tenant_id, auth_key_id, task_stage, state, created_at
+                    );
+                CREATE INDEX IF NOT EXISTS user_provider_tasks_job_idx
+                    ON user_provider_tasks (job_id, stage_id, created_at);
+
                 CREATE TABLE IF NOT EXISTS provider_call_reconciliations (
                     call_id TEXT PRIMARY KEY,
                     tenant_id TEXT NOT NULL,

@@ -9,7 +9,7 @@ import uuid
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any, AsyncIterator, Callable, Literal
+from typing import Any, AsyncIterator, Callable, Literal, Mapping
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, Response, status
 from fastapi.concurrency import run_in_threadpool
@@ -58,6 +58,12 @@ from .api_models import (
     ProjectionBuildProgressResponse,
     ProviderCallReportRequest,
     ProviderCallReportView,
+    UserProviderTaskClaimRequest,
+    UserProviderTaskClaimView,
+    UserProviderTaskCompleteRequest,
+    UserProviderTaskFailRequest,
+    UserProviderTaskLeaseRequest,
+    UserProviderTaskStatusView,
     RecallRequest,
     RecallResponse,
     RetentionPolicyRequest,
@@ -174,6 +180,13 @@ from .usage_attribution import (
     UsageAttribution,
     UsageAttributionError,
     resolve_request_attribution,
+)
+from .user_provider_tasks import (
+    TASK_SCHEMA_VERSION as USER_PROVIDER_TASK_SCHEMA_VERSION,
+    UserProviderLeaseLost,
+    UserProviderTaskError,
+    UserProviderTaskNotFound,
+    UserProviderTaskStore,
 )
 from .writer_provider import LOCAL_QWEN_PROVIDER, primary_writer_route
 
@@ -303,6 +316,7 @@ class ServiceComponents:
     api_access_log: ApiAccessJournal
     diagnostic_log: DiagnosticJournal
     audio_asr: AudioAsrProxy
+    user_provider_tasks: UserProviderTaskStore
 
 
 def build_components(settings: ServiceSettings) -> ServiceComponents:
@@ -312,6 +326,10 @@ def build_components(settings: ServiceSettings) -> ServiceComponents:
     control = MemoryControlPlane(database)
     control.backfill_catalog_from_jobs()
     jobs = JobStore(database)
+    user_provider_tasks = UserProviderTaskStore(
+        database,
+        lease_seconds=max(60.0, float(settings.provider_lease_seconds)),
+    )
     diagnostic_log = DiagnosticJournal(
         settings.diagnostic_log_path,
         enabled=settings.diagnostic_log_enabled,
@@ -443,6 +461,7 @@ def build_components(settings: ServiceSettings) -> ServiceComponents:
         api_access_log=api_access_log,
         diagnostic_log=diagnostic_log,
         audio_asr=audio_asr,
+        user_provider_tasks=user_provider_tasks,
     )
 
 
@@ -906,6 +925,22 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         return JSONResponse(
             status_code=403,
             content=error_content(request, code="forbidden", message=str(exc)),
+        )
+
+    @app.exception_handler(UserProviderTaskError)
+    async def user_provider_task_error(
+        request: Request, exc: UserProviderTaskError
+    ) -> JSONResponse:
+        status_code = (
+            404
+            if isinstance(exc, UserProviderTaskNotFound)
+            else 409
+            if isinstance(exc, UserProviderLeaseLost)
+            else 422
+        )
+        return JSONResponse(
+            status_code=status_code,
+            content=error_content(request, code=exc.code, message=str(exc)),
         )
 
     @app.exception_handler(QuotaExceeded)
@@ -1543,8 +1578,9 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         scope_name: str,
         body: IngestRequest,
         usage_attribution: UsageAttribution,
+        provider_execution: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
-        return {
+        payload = {
             "job_type": "ingest",
             "scope_name": scope_name,
             "session_id": body.session_id,
@@ -1553,6 +1589,31 @@ def create_app(settings: ServiceSettings) -> FastAPI:
             "slow_policy": body.slow_policy,
             "metadata": body.metadata,
             "_usage_attribution": usage_attribution.as_dict(),
+        }
+        if provider_execution is not None:
+            payload["_provider_execution"] = dict(provider_execution)
+        return payload
+
+    def requested_provider_execution(
+        value: str | None,
+        *,
+        stage: Literal["writer", "organizer"],
+        context: AuthContext,
+    ) -> dict[str, str] | None:
+        route = str(value or "").strip()
+        if not route:
+            return None
+        if route != "user-provider":
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_provider_execution",
+                    "message": f"unsupported {stage} provider execution route",
+                },
+            )
+        return {
+            stage: route,
+            "auth_key_id": context.key_id,
         }
 
     def request_usage_attribution(
@@ -2245,6 +2306,16 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         body: IngestRequest,
         request: Request,
         idempotency_key: str = Header(alias="Idempotency-Key", min_length=8, max_length=200),
+        writer_execution: str | None = Header(
+            default=None,
+            alias="X-TMCRA-Writer-Execution",
+            max_length=32,
+        ),
+        organizer_execution: str | None = Header(
+            default=None,
+            alias="X-TMCRA-Organizer-Execution",
+            max_length=32,
+        ),
         context: AuthContext = Depends(require_permission("memory:write")),
         _: dict[str, str] = Depends(usage_attribution_headers),
     ) -> dict[str, Any]:
@@ -2254,6 +2325,20 @@ def create_app(settings: ServiceSettings) -> FastAPI:
             components.control.quota_identity(context.tenant_id, context.subject)
         )
         usage_attribution = request_usage_attribution(request, context)
+        writer_provider_execution = requested_provider_execution(
+            writer_execution,
+            stage="writer",
+            context=context,
+        )
+        organizer_provider_execution = requested_provider_execution(
+            organizer_execution,
+            stage="organizer",
+            context=context,
+        )
+        provider_execution = {
+            **(writer_provider_execution or {}),
+            **(organizer_provider_execution or {}),
+        } or None
         raw_token_count = estimate_raw_tokens(
             item.model_dump(mode="json") for item in body.messages
         )
@@ -2262,7 +2347,10 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         def admit_new_ingest(
             connection: Any, new_keys: tuple[str, ...]
         ) -> None:
-            components.write_admission.require(connection=connection)
+            components.write_admission.require(
+                connection=connection,
+                provider_required=writer_provider_execution is None,
+            )
             components.control.admit_ingest_batch_in_transaction(
                 connection,
                 context.tenant_id,
@@ -2294,7 +2382,12 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         lease_id: str | None = None
         try:
             lease_id = acquire_gate(context.tenant_id)
-            payload = ingest_payload(scope_name, body, usage_attribution)
+            payload = ingest_payload(
+                scope_name,
+                body,
+                usage_attribution,
+                provider_execution,
+            )
             job = components.jobs.submit(
                 context.tenant_id,
                 idempotency_key,
@@ -2331,6 +2424,16 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         scope_name: str,
         body: BulkIngestRequest,
         request: Request,
+        writer_execution: str | None = Header(
+            default=None,
+            alias="X-TMCRA-Writer-Execution",
+            max_length=32,
+        ),
+        organizer_execution: str | None = Header(
+            default=None,
+            alias="X-TMCRA-Organizer-Execution",
+            max_length=32,
+        ),
         context: AuthContext = Depends(require_permission("memory:write")),
         _: dict[str, str] = Depends(usage_attribution_headers),
     ) -> dict[str, Any]:
@@ -2340,6 +2443,20 @@ def create_app(settings: ServiceSettings) -> FastAPI:
             components.control.quota_identity(context.tenant_id, context.subject)
         )
         usage_attribution = request_usage_attribution(request, context)
+        writer_provider_execution = requested_provider_execution(
+            writer_execution,
+            stage="writer",
+            context=context,
+        )
+        organizer_provider_execution = requested_provider_execution(
+            organizer_execution,
+            stage="organizer",
+            context=context,
+        )
+        provider_execution = {
+            **(writer_provider_execution or {}),
+            **(organizer_provider_execution or {}),
+        } or None
         raw_tokens = {
             item.idempotency_key: estimate_raw_tokens(
                 message.model_dump(mode="json") for message in item.messages
@@ -2352,7 +2469,10 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         def admit_new_ingests(
             connection: Any, new_keys: tuple[str, ...]
         ) -> None:
-            components.write_admission.require(connection=connection)
+            components.write_admission.require(
+                connection=connection,
+                provider_required=writer_provider_execution is None,
+            )
             components.control.admit_ingest_batch_in_transaction(
                 connection,
                 context.tenant_id,
@@ -2390,7 +2510,12 @@ def create_app(settings: ServiceSettings) -> FastAPI:
                 [
                     (
                         item.idempotency_key,
-                        ingest_payload(scope_name, item, usage_attribution),
+                        ingest_payload(
+                            scope_name,
+                            item,
+                            usage_attribution,
+                            provider_execution,
+                        ),
                     )
                     for item in body.items
                 ],
@@ -2432,25 +2557,51 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         scope_name: str,
         request: Request,
         idempotency_key: str = Header(alias="Idempotency-Key", min_length=8, max_length=200),
-        context: AuthContext = Depends(require_permission("memory:consolidate")),
+        organizer_execution: str | None = Header(
+            default=None,
+            alias="X-TMCRA-Organizer-Execution",
+            max_length=32,
+        ),
+        context: AuthContext = Depends(
+            require_any_permission("memory:write", "memory:consolidate")
+        ),
         _: dict[str, str] = Depends(usage_attribution_headers),
     ) -> dict[str, Any]:
         scope_name = _scope_name(scope_name)
         require_active_scope(context.tenant_id, scope_name)
         usage_attribution = request_usage_attribution(request, context)
+        provider_execution = requested_provider_execution(
+            organizer_execution,
+            stage="organizer",
+            context=context,
+        )
+        if provider_execution is None:
+            tenant_scopes = components.database.get_tenant_scopes(
+                context.tenant_id
+            )
+            if (
+                "memory:consolidate" not in context.scopes
+                or "memory:consolidate" not in tenant_scopes
+            ):
+                raise AuthorizationError(
+                    "memory:write may consolidate only through user-provider execution"
+                )
         lease_id = acquire_gate(context.tenant_id)
         try:
             previous = _find_idempotent_job(
                 components.database, context.tenant_id, idempotency_key
             )
+            payload: dict[str, Any] = {
+                "job_type": "consolidate",
+                "scope_name": scope_name,
+                "_usage_attribution": usage_attribution.as_dict(),
+            }
+            if provider_execution is not None:
+                payload["_provider_execution"] = provider_execution
             job = components.jobs.submit(
                 context.tenant_id,
                 idempotency_key,
-                {
-                    "job_type": "consolidate",
-                    "scope_name": scope_name,
-                    "_usage_attribution": usage_attribution.as_dict(),
-                },
+                payload,
                 scope_name=scope_name,
                 tenant_queue_limit=settings.tenant_queue_limit,
                 global_queue_limit=settings.global_queue_limit,
@@ -3857,6 +4008,197 @@ def create_app(settings: ServiceSettings) -> FastAPI:
             to_timestamp=to_timestamp,
             group_by=group_by,
         )
+
+    def require_user_provider_stage_permission(
+        context: AuthContext, stage: str
+    ) -> None:
+        permissions = (
+            frozenset({"memory:write"})
+            if stage == "writer"
+            else frozenset({"memory:write", "memory:consolidate"})
+        )
+        tenant_scopes = components.database.get_tenant_scopes(context.tenant_id)
+        if not permissions.intersection(context.scopes).intersection(tenant_scopes):
+            raise AuthorizationError(
+                f"missing permission: {' or '.join(sorted(permissions))}"
+            )
+
+    def require_owned_user_provider_task(
+        task_id: str, context: AuthContext
+    ) -> Any:
+        task = components.user_provider_tasks.get(task_id)
+        if (
+            task is None
+            or task.tenant_id != context.tenant_id
+            or task.auth_key_id != context.key_id
+        ):
+            raise UserProviderTaskNotFound(task_id)
+        if not context.allows_scope_name(task.scope_name):
+            raise AuthorizationError("access token is not valid for this scope")
+        require_user_provider_stage_permission(context, task.task_stage)
+        return task
+
+    @app.post(
+        "/v1/provider-tasks/claim",
+        response_model=UserProviderTaskClaimView,
+        tags=["memory"],
+        operation_id="claimUserProviderTask",
+        summary="Lease one local provider task",
+        description=(
+            "Authenticated device endpoint for locally executing a bounded Writer or "
+            "organizer model call. Model-provider credentials are never accepted."
+        ),
+    )
+    def claim_user_provider_task(
+        body: UserProviderTaskClaimRequest,
+        context: AuthContext = Depends(
+            require_any_permission("memory:write", "memory:consolidate")
+        ),
+    ) -> dict[str, Any]:
+        require_user_provider_stage_permission(context, body.stage)
+        claimed = components.user_provider_tasks.claim_next(
+            tenant_id=context.tenant_id,
+            auth_key_id=context.key_id,
+            task_stage=body.stage,
+            scope_allowed=context.allows_scope_name,
+        )
+        if claimed is None:
+            return {"task": None, "retry_after_seconds": 1.0}
+        task, lease_token = claimed
+        return {
+            "task": {
+                "schema_version": USER_PROVIDER_TASK_SCHEMA_VERSION,
+                "task_id": task.task_id,
+                "stage": task.task_stage,
+                "operation": task.operation,
+                "request_sha256": task.request_sha256,
+                "request": task.request,
+                "lease_token": lease_token,
+                "lease_expires_at": task.lease_expires_at,
+            },
+            "retry_after_seconds": 0.0,
+        }
+
+    @app.post(
+        "/v1/provider-tasks/{task_id}/started",
+        response_model=UserProviderTaskStatusView,
+        tags=["memory"],
+        operation_id="startUserProviderTask",
+    )
+    def start_user_provider_task(
+        task_id: str,
+        body: UserProviderTaskLeaseRequest,
+        context: AuthContext = Depends(
+            require_any_permission("memory:write", "memory:consolidate")
+        ),
+    ) -> dict[str, Any]:
+        require_owned_user_provider_task(task_id, context)
+        task, replay = components.user_provider_tasks.start(
+            task_id,
+            tenant_id=context.tenant_id,
+            auth_key_id=context.key_id,
+            lease_token=body.lease_token,
+        )
+        return {
+            "task_id": task.task_id,
+            "state": task.state,
+            "lease_expires_at": task.lease_expires_at,
+            "idempotent_replay": replay,
+        }
+
+    @app.post(
+        "/v1/provider-tasks/{task_id}/heartbeat",
+        response_model=UserProviderTaskStatusView,
+        tags=["memory"],
+        operation_id="heartbeatUserProviderTask",
+    )
+    def heartbeat_user_provider_task(
+        task_id: str,
+        body: UserProviderTaskLeaseRequest,
+        context: AuthContext = Depends(
+            require_any_permission("memory:write", "memory:consolidate")
+        ),
+    ) -> dict[str, Any]:
+        require_owned_user_provider_task(task_id, context)
+        task = components.user_provider_tasks.heartbeat(
+            task_id,
+            tenant_id=context.tenant_id,
+            auth_key_id=context.key_id,
+            lease_token=body.lease_token,
+        )
+        return {
+            "task_id": task.task_id,
+            "state": task.state,
+            "lease_expires_at": task.lease_expires_at,
+            "idempotent_replay": False,
+        }
+
+    @app.post(
+        "/v1/provider-tasks/{task_id}/complete",
+        response_model=UserProviderTaskStatusView,
+        tags=["memory"],
+        operation_id="completeUserProviderTask",
+    )
+    def complete_user_provider_task(
+        task_id: str,
+        body: UserProviderTaskCompleteRequest,
+        context: AuthContext = Depends(
+            require_any_permission("memory:write", "memory:consolidate")
+        ),
+    ) -> dict[str, Any]:
+        require_owned_user_provider_task(task_id, context)
+        task, replay = components.user_provider_tasks.complete(
+            task_id,
+            tenant_id=context.tenant_id,
+            auth_key_id=context.key_id,
+            lease_token=body.lease_token,
+            provider=body.provider,
+            model=body.model,
+            output=body.output,
+            usage=(
+                None
+                if body.usage is None
+                else body.usage.model_dump(exclude_none=True)
+            ),
+            provider_request_id=body.provider_request_id,
+        )
+        return {
+            "task_id": task.task_id,
+            "state": task.state,
+            "lease_expires_at": task.lease_expires_at,
+            "idempotent_replay": replay,
+        }
+
+    @app.post(
+        "/v1/provider-tasks/{task_id}/fail",
+        response_model=UserProviderTaskStatusView,
+        tags=["memory"],
+        operation_id="failUserProviderTask",
+    )
+    def fail_user_provider_task(
+        task_id: str,
+        body: UserProviderTaskFailRequest,
+        context: AuthContext = Depends(
+            require_any_permission("memory:write", "memory:consolidate")
+        ),
+    ) -> dict[str, Any]:
+        require_owned_user_provider_task(task_id, context)
+        task, replay = components.user_provider_tasks.fail(
+            task_id,
+            tenant_id=context.tenant_id,
+            auth_key_id=context.key_id,
+            lease_token=body.lease_token,
+            provider=body.provider,
+            model=body.model,
+            outcome=body.outcome,
+            error_code=body.error_code,
+        )
+        return {
+            "task_id": task.task_id,
+            "state": task.state,
+            "lease_expires_at": task.lease_expires_at,
+            "idempotent_replay": replay,
+        }
 
     @app.post(
         "/v1/scopes/{scope_name}/provider-calls",

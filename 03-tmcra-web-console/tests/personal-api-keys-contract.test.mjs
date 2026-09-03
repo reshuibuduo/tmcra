@@ -75,7 +75,7 @@ test("personal API key issuance is least-privilege, direct, and one-time-secret"
   assert.match(service, /subject:\s*access\.space\.id/u);
   assert.match(service, /scope_names:\s*\[\]/u);
   assert.match(service, /scope_prefixes:\s*\[`\$\{access\.space\.scopeName\}-`\]/u);
-  for (const permission of ["memory:read", "memory:write", "memory:feedback"]) {
+  for (const permission of ["memory:read", "memory:write", "memory:consolidate", "memory:feedback"]) {
     assert.match(service, new RegExp(`"${permission}"`, "u"));
   }
   assert.doesNotMatch(service, /provisional_delivery_seconds/u);

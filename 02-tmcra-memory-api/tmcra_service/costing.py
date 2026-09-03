@@ -20,6 +20,7 @@ from .writer_provider import (
 
 LOCAL_EXTERNAL_PRICE_VERSION = "tmcra-local-external-api-cost-v1"
 LOCAL_EXTERNAL_PRICING_SOURCE = "self-hosted local inference; external API cost only"
+LOCAL_OPENAI_COMPATIBLE_PROVIDER = "local-openai-compatible"
 
 
 class ProviderMetadataError(ValueError):
@@ -33,7 +34,7 @@ def physical_call_metadata(value: Any) -> list[dict[str, Any]]:
     def visit(item: Any) -> None:
         if not isinstance(item, Mapping):
             return
-        for key in ("calls", "prior_calls"):
+        for key in ("calls", "prior_calls", "tier_calls"):
             children = item.get(key)
             if isinstance(children, Sequence) and not isinstance(children, (str, bytes)):
                 for child in children:
@@ -119,7 +120,7 @@ def _terminal_status(metadata: Mapping[str, Any]) -> str:
 def _cost_micro_cny(
     provider: str, model: str, usage: Mapping[str, int]
 ) -> int | None:
-    if provider == LOCAL_QWEN_PROVIDER and usage:
+    if provider in {LOCAL_QWEN_PROVIDER, LOCAL_OPENAI_COMPATIBLE_PROVIDER} and usage:
         return 0
     rates = DEEPSEEK_V4_PRICES_MICRO_CNY.get(model)
     if rates is None or not usage:
@@ -148,11 +149,16 @@ def journal_deepseek_calls(
     calls = physical_call_metadata(metadata)
     registered = 0
     for call in calls:
-        provider = str(call.get("provider") or DEEPSEEK_PROVIDER).strip().lower()
+        provider = str(
+            call.get("provider")
+            or call.get("api_provider")
+            or DEEPSEEK_PROVIDER
+        ).strip().lower()
         model = str(call.get("model") or default_model).strip()
         if provider not in {
             DEEPSEEK_PROVIDER,
             LOCAL_QWEN_PROVIDER,
+            LOCAL_OPENAI_COMPATIBLE_PROVIDER,
             OPENAI_COMPATIBLE_PROVIDER,
         }:
             raise ProviderMetadataError(f"unsupported provider metadata: {provider}")
@@ -164,7 +170,7 @@ def journal_deepseek_calls(
             rates = DEEPSEEK_V4_PRICES_MICRO_CNY.get(model)
             price_version = DEEPSEEK_V4_PRICE_VERSION
             pricing_source = DEEPSEEK_PRICING_SOURCE
-        elif provider == LOCAL_QWEN_PROVIDER:
+        elif provider in {LOCAL_QWEN_PROVIDER, LOCAL_OPENAI_COMPATIBLE_PROVIDER}:
             rates = (0, 0, 0)
             price_version = LOCAL_EXTERNAL_PRICE_VERSION
             pricing_source = LOCAL_EXTERNAL_PRICING_SOURCE

@@ -17,6 +17,7 @@ from tmcra_service.commercial import CommercialContractError, CommercialControl
 from tmcra_service.control_db import ControlDB
 from tmcra_service.jobs import JobStore
 from tmcra_service.settings import ServiceSettings
+from tmcra_service.user_provider_tasks import UserProviderTaskStore
 
 
 def _settings(root: Path) -> ServiceSettings:
@@ -488,6 +489,26 @@ class ContentDeletionControlTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             database = ControlDB(Path(directory) / "control.sqlite3")
             commercial = CommercialControl(database)
+            provider_tasks = UserProviderTaskStore(database)
+            provider_task = provider_tasks.create(
+                tenant_id="tenant-a",
+                scope_name="scope-a",
+                auth_key_id="key-a",
+                job_id="job-provider-cleanup-0001",
+                stage_id="job-provider-cleanup-0001:writer:attempt:1",
+                task_stage="writer",
+                operation="batch_flash",
+                request={
+                    "schema_version": "tmcra.openai-compatible-request.1",
+                    "messages": [
+                        {"role": "system", "content": "Return JSON."},
+                        {"role": "user", "content": "deleted evidence"},
+                    ],
+                    "temperature": 0,
+                    "max_tokens": 128,
+                    "response_format": {"type": "json_object"},
+                },
+            )
             database.record_committed_source_records(
                 "tenant-a",
                 "scope-a",
@@ -579,6 +600,7 @@ class ContentDeletionControlTests(unittest.TestCase):
             self.assertEqual(sessions, {"session-b"})
             self.assertEqual(view_count, 0)
             self.assertEqual(catalog_count, 1)
+            self.assertIsNone(provider_tasks.get(provider_task.task_id))
 
     def test_reindexing_deletion_can_reclaim_index_after_source_cleanup(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

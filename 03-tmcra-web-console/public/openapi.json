@@ -30,6 +30,145 @@
         "title": "AuthenticatedSessionView",
         "type": "object"
       },
+      "BillingProfileView": {
+        "additionalProperties": false,
+        "properties": {
+          "consumer_principal": {
+            "title": "Consumer Principal",
+            "type": "string"
+          },
+          "membership": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Membership"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/QuotaView"
+          },
+          "quota_principal": {
+            "title": "Quota Principal",
+            "type": "string"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "consumer_principal",
+          "quota_principal",
+          "quota"
+        ],
+        "title": "BillingProfileView",
+        "type": "object"
+      },
+      "BillingQuotaGroupView": {
+        "additionalProperties": false,
+        "properties": {
+          "billing_interval": {
+            "enum": [
+              "monthly",
+              "yearly",
+              "custom"
+            ],
+            "title": "Billing Interval",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "ends_at": {
+            "title": "Ends At",
+            "type": "number"
+          },
+          "group_id": {
+            "title": "Group Id",
+            "type": "string"
+          },
+          "max_members": {
+            "minimum": 1.0,
+            "title": "Max Members",
+            "type": "integer"
+          },
+          "period_id": {
+            "title": "Period Id",
+            "type": "string"
+          },
+          "period_status": {
+            "enum": [
+              "scheduled",
+              "active",
+              "expired",
+              "cancelled"
+            ],
+            "title": "Period Status",
+            "type": "string"
+          },
+          "price_minor_units": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Minor Units"
+          },
+          "starts_at": {
+            "title": "Starts At",
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "suspended",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "group_id",
+          "display_name",
+          "status",
+          "period_id",
+          "period_status",
+          "billing_interval",
+          "starts_at",
+          "ends_at",
+          "max_members",
+          "currency"
+        ],
+        "title": "BillingQuotaGroupView",
+        "type": "object"
+      },
       "BulkIngestItem": {
         "additionalProperties": false,
         "properties": {
@@ -160,6 +299,298 @@
           "visible_after_job_id"
         ],
         "title": "ConsistencyContract",
+        "type": "object"
+      },
+      "ContentDeletionJobView": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "consistency_contract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConsistencyContract"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "number"
+          },
+          "deletion_id": {
+            "title": "Deletion Id",
+            "type": "string"
+          },
+          "deletion_status_url": {
+            "title": "Deletion Status Url",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "heartbeat_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heartbeat At"
+          },
+          "idempotent_replay": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotent Replay"
+          },
+          "idempotent_retry": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotent Retry"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "job_type": {
+            "title": "Job Type",
+            "type": "string"
+          },
+          "lease_expires_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lease Expires At"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "resume_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Mode"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "status_url": {
+            "title": "Status Url",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "number"
+          }
+        },
+        "required": [
+          "job_id",
+          "tenant_id",
+          "scope_name",
+          "job_type",
+          "status",
+          "attempts",
+          "created_at",
+          "updated_at",
+          "status_url",
+          "deletion_id",
+          "deletion_status_url"
+        ],
+        "title": "ContentDeletionJobView",
+        "type": "object"
+      },
+      "ContentDeletionView": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "number"
+          },
+          "deletion_id": {
+            "title": "Deletion Id",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "job_status_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Status Url"
+          },
+          "mode": {
+            "enum": [
+              "memory_ids",
+              "session"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "requested",
+              "purging",
+              "reindexing",
+              "completed",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "target_count": {
+            "minimum": 1.0,
+            "title": "Target Count",
+            "type": "integer"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "number"
+          }
+        },
+        "required": [
+          "deletion_id",
+          "tenant_id",
+          "scope_name",
+          "mode",
+          "target_count",
+          "state",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ContentDeletionView",
         "type": "object"
       },
       "EntitlementUpdateRequest": {
@@ -389,6 +820,35 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "description": "Stable anonymous liveness response exposed at ``/healthz``.",
+        "properties": {
+          "service": {
+            "description": "Stable service identifier.",
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "const": "ok",
+            "description": "The service process is running.",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "description": "Running TMCRA service version.",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version"
+        ],
+        "title": "HealthResponse",
         "type": "object"
       },
       "IngestRequest": {
@@ -769,6 +1229,25 @@
           "status_url"
         ],
         "title": "JobView",
+        "type": "object"
+      },
+      "MemoryDeleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "memory_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Memory Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "memory_ids"
+        ],
+        "title": "MemoryDeleteRequest",
         "type": "object"
       },
       "MemoryGraphCountsView": {
@@ -1374,6 +1853,16 @@
             "title": "Missing Memory Ids",
             "type": "array"
           },
+          "narrative": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NarrativeGraphSummaryView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "nodes": {
             "items": {
               "$ref": "#/components/schemas/MemoryGraphNodeView"
@@ -1452,11 +1941,19 @@
             "title": "Snapshot State",
             "type": "string"
           },
+          "threads": {
+            "items": {
+              "$ref": "#/components/schemas/NarrativeGraphThreadView"
+            },
+            "title": "Threads",
+            "type": "array"
+          },
           "view": {
             "enum": [
               "overview",
               "neighbors",
-              "recall_trace"
+              "recall_trace",
+              "narrative"
             ],
             "title": "View",
             "type": "string"
@@ -1579,6 +2076,16 @@
             "title": "Missing Memory Ids",
             "type": "array"
           },
+          "narrative": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NarrativeGraphSummaryView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "nodes": {
             "items": {
               "$ref": "#/components/schemas/MemoryGraphNodeView"
@@ -1666,11 +2173,19 @@
             "title": "Snapshot State",
             "type": "string"
           },
+          "threads": {
+            "items": {
+              "$ref": "#/components/schemas/NarrativeGraphThreadView"
+            },
+            "title": "Threads",
+            "type": "array"
+          },
           "view": {
             "enum": [
               "overview",
               "neighbors",
-              "recall_trace"
+              "recall_trace",
+              "narrative"
             ],
             "title": "View",
             "type": "string"
@@ -1737,6 +2252,467 @@
           "timestamp"
         ],
         "title": "MemoryMessage",
+        "type": "object"
+      },
+      "MessageDeleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "message_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Message Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "message_ids"
+        ],
+        "title": "MessageDeleteRequest",
+        "type": "object"
+      },
+      "NarrativeGraphSummaryView": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_count": {
+            "title": "Evidence Count",
+            "type": "integer"
+          },
+          "focus": {
+            "title": "Focus",
+            "type": "string"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "key_moment_count": {
+            "title": "Key Moment Count",
+            "type": "integer"
+          },
+          "projection_strategy": {
+            "title": "Projection Strategy",
+            "type": "string"
+          },
+          "semantic_source": {
+            "title": "Semantic Source",
+            "type": "string"
+          },
+          "source_node_count": {
+            "title": "Source Node Count",
+            "type": "integer"
+          },
+          "source_schema_version": {
+            "title": "Source Schema Version",
+            "type": "string"
+          },
+          "source_truncated": {
+            "title": "Source Truncated",
+            "type": "boolean"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "thread_count": {
+            "title": "Thread Count",
+            "type": "integer"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "headline",
+          "summary",
+          "thread_count",
+          "key_moment_count",
+          "evidence_count",
+          "focus",
+          "source_schema_version",
+          "source_node_count",
+          "source_truncated",
+          "projection_strategy",
+          "semantic_source"
+        ],
+        "title": "NarrativeGraphSummaryView",
+        "type": "object"
+      },
+      "NarrativeGraphThreadView": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_count": {
+            "title": "Evidence Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "decision",
+              "milestone",
+              "goal",
+              "issue",
+              "preference",
+              "relationship",
+              "fact"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "memory_count": {
+            "title": "Memory Count",
+            "type": "integer"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Node Ids",
+            "type": "array"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "kind",
+          "status",
+          "node_ids",
+          "memory_count",
+          "evidence_count"
+        ],
+        "title": "NarrativeGraphThreadView",
+        "type": "object"
+      },
+      "PersonalKnowledgeBaseResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_enabled": {
+            "default": false,
+            "title": "Agent Enabled",
+            "type": "boolean"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "domains": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Domains",
+            "type": "array"
+          },
+          "evidence_catalog": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Evidence Catalog",
+            "type": "object"
+          },
+          "full_projection": {
+            "const": true,
+            "default": true,
+            "title": "Full Projection",
+            "type": "boolean"
+          },
+          "generated_by": {
+            "title": "Generated By",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "pages": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Pages",
+            "type": "array"
+          },
+          "projection_state": {
+            "enum": [
+              "fallback",
+              "ready"
+            ],
+            "title": "Projection State",
+            "type": "string"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "refresh": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh"
+          },
+          "schema_version": {
+            "const": "tmcra.personal-knowledge.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "source_fingerprint": {
+            "title": "Source Fingerprint",
+            "type": "string"
+          },
+          "source_snapshot_id": {
+            "title": "Source Snapshot Id",
+            "type": "string"
+          },
+          "stale": {
+            "default": false,
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "truncated": {
+            "const": false,
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "view": {
+            "const": "personal_knowledge_base",
+            "default": "personal_knowledge_base",
+            "title": "View",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "scope_name",
+          "snapshot_id",
+          "source_snapshot_id",
+          "source_fingerprint",
+          "projection_state",
+          "generated_by",
+          "domains",
+          "pages",
+          "evidence_catalog",
+          "counts"
+        ],
+        "title": "PersonalKnowledgeBaseResponse",
+        "type": "object"
+      },
+      "ProjectionBuildProgressResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_enabled": {
+            "title": "Agent Enabled",
+            "type": "boolean"
+          },
+          "can_retry": {
+            "default": false,
+            "title": "Can Retry",
+            "type": "boolean"
+          },
+          "completed_units": {
+            "title": "Completed Units",
+            "type": "integer"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "knowledge_base": {
+            "additionalProperties": true,
+            "title": "Knowledge Base",
+            "type": "object"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "progress_percent": {
+            "title": "Progress Percent",
+            "type": "integer"
+          },
+          "resource_isolation": {
+            "enum": [
+              "adaptive-local-first",
+              "dedicated-local-slot",
+              "dedicated-provider",
+              "shared-local-reserve",
+              "user-provider",
+              "unknown",
+              "disabled"
+            ],
+            "title": "Resource Isolation",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "tmcra.projection-build-progress.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "session_atlas": {
+            "additionalProperties": true,
+            "title": "Session Atlas",
+            "type": "object"
+          },
+          "session_maps": {
+            "additionalProperties": true,
+            "title": "Session Maps",
+            "type": "object"
+          },
+          "stage": {
+            "enum": [
+              "session_maps",
+              "session_atlas",
+              "visual_atlas",
+              "knowledge_base",
+              "ready"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_units": {
+            "title": "Total Units",
+            "type": "integer"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "number"
+          },
+          "visual_atlas": {
+            "additionalProperties": true,
+            "title": "Visual Atlas",
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema_version",
+          "scope_name",
+          "status",
+          "stage",
+          "progress_percent",
+          "completed_units",
+          "total_units",
+          "session_maps",
+          "session_atlas",
+          "visual_atlas",
+          "knowledge_base",
+          "detail",
+          "updated_at",
+          "agent_enabled",
+          "resource_isolation"
+        ],
+        "title": "ProjectionBuildProgressResponse",
         "type": "object"
       },
       "PromptEvidenceView": {
@@ -1840,6 +2816,300 @@
         "title": "PromptEvidenceView",
         "type": "object"
       },
+      "ProviderCallReportRequest": {
+        "additionalProperties": false,
+        "description": "Server-to-server receipt for an end-user answer-model call.\n\nThe payload deliberately contains accounting metadata only. Prompts,\nattachments, recalled evidence, and model responses are never accepted by\nthis endpoint.",
+        "properties": {
+          "cache_hit_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Hit Tokens"
+          },
+          "call_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{7,199}$",
+            "title": "Call Id",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "model": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "operation": {
+            "default": "chat_answer",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+            "title": "Operation",
+            "type": "string"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          },
+          "provider": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+            "title": "Provider",
+            "type": "string"
+          },
+          "request_sha256": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Sha256"
+          },
+          "response_sha256": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Sha256"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "failed",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Tokens"
+          }
+        },
+        "required": [
+          "call_id",
+          "provider",
+          "model",
+          "status"
+        ],
+        "title": "ProviderCallReportRequest",
+        "type": "object"
+      },
+      "ProviderCallReportView": {
+        "additionalProperties": false,
+        "properties": {
+          "cache_hit_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Hit Tokens"
+          },
+          "cache_miss_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Miss Tokens"
+          },
+          "call_id": {
+            "title": "Call Id",
+            "type": "string"
+          },
+          "cost_micro_cny": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Micro Cny"
+          },
+          "idempotent_replay": {
+            "title": "Idempotent Replay",
+            "type": "boolean"
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "operation": {
+            "title": "Operation",
+            "type": "string"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          },
+          "price_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Version"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "failed",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Tokens"
+          },
+          "usage_state": {
+            "enum": [
+              "missing",
+              "complete"
+            ],
+            "title": "Usage State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "call_id",
+          "scope_name",
+          "provider",
+          "model",
+          "operation",
+          "status",
+          "usage_state",
+          "idempotent_replay"
+        ],
+        "title": "ProviderCallReportView",
+        "type": "object"
+      },
       "QuotaMetricView": {
         "additionalProperties": false,
         "properties": {
@@ -1879,14 +3149,43 @@
       "QuotaView": {
         "additionalProperties": false,
         "properties": {
+          "billing_group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BillingQuotaGroupView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "ingest_raw_tokens": {
             "$ref": "#/components/schemas/QuotaMetricView"
           },
+          "member_usage": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Member Usage",
+            "type": "object"
+          },
           "plan": {
-            "const": "pilot",
-            "default": "pilot",
             "title": "Plan",
             "type": "string"
+          },
+          "plan_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Version"
           },
           "principal": {
             "title": "Principal",
@@ -1903,10 +3202,84 @@
         "required": [
           "tenant_id",
           "principal",
+          "plan",
           "ingest_raw_tokens",
           "recall_requests"
         ],
         "title": "QuotaView",
+        "type": "object"
+      },
+      "ReadinessResponse": {
+        "additionalProperties": false,
+        "description": "Anonymous readiness response shared by 200 and 503 responses.",
+        "properties": {
+          "checks": {
+            "additionalProperties": true,
+            "description": "Named readiness checks and their current status.",
+            "title": "Checks",
+            "type": "object"
+          },
+          "monitor_generation": {
+            "description": "Monotonic monitor snapshot generation.",
+            "minimum": 0.0,
+            "title": "Monitor Generation",
+            "type": "integer"
+          },
+          "recall_pool": {
+            "additionalProperties": true,
+            "description": "Current recall-pool capacity and loading status.",
+            "title": "Recall Pool",
+            "type": "object"
+          },
+          "service": {
+            "description": "Stable service identifier.",
+            "title": "Service",
+            "type": "string"
+          },
+          "snapshot_age_seconds": {
+            "description": "Age of the readiness snapshot in seconds.",
+            "minimum": 0.0,
+            "title": "Snapshot Age Seconds",
+            "type": "number"
+          },
+          "snapshot_stale": {
+            "description": "Whether the monitor snapshot is older than its freshness threshold.",
+            "title": "Snapshot Stale",
+            "type": "boolean"
+          },
+          "status": {
+            "description": "Whether the service is ready to accept production traffic.",
+            "enum": [
+              "ready",
+              "not_ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "description": "Running TMCRA service version.",
+            "title": "Version",
+            "type": "string"
+          },
+          "write_admission": {
+            "additionalProperties": true,
+            "description": "Informational write-admission state; it does not gate recall readiness.",
+            "title": "Write Admission",
+            "type": "object"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version",
+          "checks",
+          "snapshot_stale",
+          "snapshot_age_seconds",
+          "monitor_generation",
+          "recall_pool",
+          "write_admission"
+        ],
+        "title": "ReadinessResponse",
         "type": "object"
       },
       "RecallRequest": {
@@ -2036,7 +3409,691 @@
           "prompt_evidence"
         ],
         "title": "RecallResponse",
-        "type": "object"
+        "type": "object",
+        "x-tmcra-receipt-contract": {
+          "client_projections": {
+            "mcp": "adds schema_version and receipt_type to the validated receipt envelope",
+            "python": "snake_case fields; flat watermark values map to WatermarkView",
+            "typescript": "camelCase fields; turnIdempotencyKey maps to idempotency_key"
+          },
+          "derived_receipts": {
+            "ingest": "IngestReceipt",
+            "lifecycle": "LifecycleTurnReceipt",
+            "recall": "RecallReceipt"
+          },
+          "protocol": {
+            "degraded_recall": "caller may continue only when explicitly configured; never claim injection",
+            "inject_source": "RecallResponse.prompt_evidence.content",
+            "order": [
+              "recall",
+              "inject",
+              "ingest",
+              "job_terminal"
+            ],
+            "strict_recall": "stop before answer/write when recall is unavailable or invalid",
+            "submitted_is_terminal": false,
+            "terminal_statuses": [
+              "succeeded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "runtime_response_fields": {
+            "ingest": [
+              "JobView"
+            ],
+            "job_terminal": [
+              "JobView.status",
+              "JobView.result",
+              "JobView.error"
+            ],
+            "recall": [
+              "query_id",
+              "scope_name",
+              "index_job_id",
+              "evidence_route",
+              "evidence",
+              "prompt_evidence"
+            ]
+          },
+          "schema_version": "tmcra.receipts.v1",
+          "schemas": {
+            "IngestReceipt": {
+              "additionalProperties": false,
+              "description": "Client-side receipt for submitted and optionally terminal ingest.",
+              "properties": {
+                "error": {
+                  "additionalProperties": true,
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "final": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "final_status": {
+                  "enum": [
+                    "succeeded",
+                    "failed",
+                    "cancelled"
+                  ],
+                  "type": "null"
+                },
+                "idempotency_key": {
+                  "type": "string"
+                },
+                "job_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "message_ids": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "observed_status": {
+                  "type": "string"
+                },
+                "scope_name": {
+                  "type": "string"
+                },
+                "status_url": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "submitted": {
+                  "const": true,
+                  "default": true
+                },
+                "submitted_status": {
+                  "const": "submitted",
+                  "default": "submitted"
+                },
+                "watermarks": {
+                  "additionalProperties": false,
+                  "description": "Searchability watermarks shared by lifecycle receipt implementations.",
+                  "properties": {
+                    "available": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "indexed_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "promoted_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "source_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "source_raw_token_estimate": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "source_event_seq",
+                    "promoted_event_seq",
+                    "indexed_event_seq",
+                    "source_raw_token_estimate",
+                    "available"
+                  ],
+                  "title": "WatermarkView",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "scope_name",
+                "message_ids",
+                "idempotency_key",
+                "job_id",
+                "submitted_status",
+                "observed_status",
+                "final_status",
+                "submitted",
+                "final",
+                "status_url",
+                "watermarks",
+                "error"
+              ],
+              "title": "IngestReceipt",
+              "type": "object"
+            },
+            "LifecycleTurnReceipt": {
+              "additionalProperties": false,
+              "description": "Unified recall -> inject -> ingest receipt used by client adapters.",
+              "properties": {
+                "evidence_hashes": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "final": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "final_status": {
+                  "enum": [
+                    "succeeded",
+                    "failed",
+                    "cancelled"
+                  ],
+                  "type": "null"
+                },
+                "idempotency_key": {
+                  "type": "string"
+                },
+                "ingest_receipt": {
+                  "additionalProperties": false,
+                  "description": "Client-side receipt for submitted and optionally terminal ingest.",
+                  "properties": {
+                    "error": {
+                      "additionalProperties": true,
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "final": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "final_status": {
+                      "enum": [
+                        "succeeded",
+                        "failed",
+                        "cancelled"
+                      ],
+                      "type": "null"
+                    },
+                    "idempotency_key": {
+                      "type": "string"
+                    },
+                    "job_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "message_ids": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "observed_status": {
+                      "type": "string"
+                    },
+                    "scope_name": {
+                      "type": "string"
+                    },
+                    "status_url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "submitted": {
+                      "const": true,
+                      "default": true
+                    },
+                    "submitted_status": {
+                      "const": "submitted",
+                      "default": "submitted"
+                    },
+                    "watermarks": {
+                      "additionalProperties": false,
+                      "description": "Searchability watermarks shared by lifecycle receipt implementations.",
+                      "properties": {
+                        "available": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "indexed_event_seq": {
+                          "minimum": 0,
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "promoted_event_seq": {
+                          "minimum": 0,
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "source_event_seq": {
+                          "minimum": 0,
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "source_raw_token_estimate": {
+                          "minimum": 0,
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "source_event_seq",
+                        "promoted_event_seq",
+                        "indexed_event_seq",
+                        "source_raw_token_estimate",
+                        "available"
+                      ],
+                      "title": "WatermarkView",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "scope_name",
+                    "message_ids",
+                    "idempotency_key",
+                    "job_id",
+                    "submitted_status",
+                    "observed_status",
+                    "final_status",
+                    "submitted",
+                    "final",
+                    "status_url",
+                    "watermarks",
+                    "error"
+                  ],
+                  "title": "IngestReceipt",
+                  "type": "object"
+                },
+                "job_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "message_ids": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "query_ids": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "recall_receipts": {
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "Client-side receipt derived from one successful RecallResponse.",
+                    "properties": {
+                      "evidence_hash": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "final": {
+                        "const": true,
+                        "default": true
+                      },
+                      "final_status": {
+                        "const": "completed",
+                        "default": "completed"
+                      },
+                      "index_job_id": {
+                        "type": "string"
+                      },
+                      "query_id": {
+                        "type": "string"
+                      },
+                      "scope_name": {
+                        "type": "string"
+                      },
+                      "status_url": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "submitted": {
+                        "const": true,
+                        "default": true
+                      },
+                      "submitted_status": {
+                        "const": "completed",
+                        "default": "completed"
+                      },
+                      "watermarks": {
+                        "additionalProperties": false,
+                        "description": "Searchability watermarks shared by lifecycle receipt implementations.",
+                        "properties": {
+                          "available": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "indexed_event_seq": {
+                            "minimum": 0,
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "promoted_event_seq": {
+                            "minimum": 0,
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "source_event_seq": {
+                            "minimum": 0,
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "source_raw_token_estimate": {
+                            "minimum": 0,
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "source_event_seq",
+                          "promoted_event_seq",
+                          "indexed_event_seq",
+                          "source_raw_token_estimate",
+                          "available"
+                        ],
+                        "title": "WatermarkView",
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "query_id",
+                      "scope_name",
+                      "index_job_id",
+                      "evidence_hash",
+                      "submitted_status",
+                      "final_status",
+                      "submitted",
+                      "final",
+                      "status_url",
+                      "watermarks"
+                    ],
+                    "title": "RecallReceipt",
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "session_id": {
+                  "type": "string"
+                },
+                "status_url": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "submitted": {
+                  "const": true,
+                  "default": true
+                },
+                "submitted_status": {
+                  "const": "submitted",
+                  "default": "submitted"
+                },
+                "watermarks": {
+                  "additionalProperties": false,
+                  "description": "Searchability watermarks shared by lifecycle receipt implementations.",
+                  "properties": {
+                    "available": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "indexed_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "promoted_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "source_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "source_raw_token_estimate": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "source_event_seq",
+                    "promoted_event_seq",
+                    "indexed_event_seq",
+                    "source_raw_token_estimate",
+                    "available"
+                  ],
+                  "title": "WatermarkView",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "session_id",
+                "idempotency_key",
+                "recall_receipts",
+                "ingest_receipt",
+                "message_ids",
+                "query_ids",
+                "evidence_hashes",
+                "submitted_status",
+                "final_status",
+                "job_id",
+                "status_url",
+                "submitted",
+                "final",
+                "watermarks"
+              ],
+              "title": "LifecycleTurnReceipt",
+              "type": "object"
+            },
+            "RecallReceipt": {
+              "additionalProperties": false,
+              "description": "Client-side receipt derived from one successful RecallResponse.",
+              "properties": {
+                "evidence_hash": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "final": {
+                  "const": true,
+                  "default": true
+                },
+                "final_status": {
+                  "const": "completed",
+                  "default": "completed"
+                },
+                "index_job_id": {
+                  "type": "string"
+                },
+                "query_id": {
+                  "type": "string"
+                },
+                "scope_name": {
+                  "type": "string"
+                },
+                "status_url": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "submitted": {
+                  "const": true,
+                  "default": true
+                },
+                "submitted_status": {
+                  "const": "completed",
+                  "default": "completed"
+                },
+                "watermarks": {
+                  "additionalProperties": false,
+                  "description": "Searchability watermarks shared by lifecycle receipt implementations.",
+                  "properties": {
+                    "available": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "indexed_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "promoted_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "source_event_seq": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "source_raw_token_estimate": {
+                      "minimum": 0,
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "source_event_seq",
+                    "promoted_event_seq",
+                    "indexed_event_seq",
+                    "source_raw_token_estimate",
+                    "available"
+                  ],
+                  "title": "WatermarkView",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "query_id",
+                "scope_name",
+                "index_job_id",
+                "evidence_hash",
+                "submitted_status",
+                "final_status",
+                "submitted",
+                "final",
+                "status_url",
+                "watermarks"
+              ],
+              "title": "RecallReceipt",
+              "type": "object"
+            },
+            "WatermarkView": {
+              "additionalProperties": false,
+              "description": "Searchability watermarks shared by lifecycle receipt implementations.",
+              "properties": {
+                "available": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "indexed_event_seq": {
+                  "minimum": 0,
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "promoted_event_seq": {
+                  "minimum": 0,
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "source_event_seq": {
+                  "minimum": 0,
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "source_raw_token_estimate": {
+                  "minimum": 0,
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "source_event_seq",
+                "promoted_event_seq",
+                "indexed_event_seq",
+                "source_raw_token_estimate",
+                "available"
+              ],
+              "title": "WatermarkView",
+              "type": "object"
+            }
+          }
+        }
       },
       "RetentionPolicyRequest": {
         "additionalProperties": false,
@@ -2150,6 +4207,16 @@
             "title": "Recall Request Count",
             "type": "integer"
           },
+          "recovery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScopeRecoveryView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "scope_name": {
             "title": "Scope Name",
             "type": "string"
@@ -2169,6 +4236,124 @@
           "message_count"
         ],
         "title": "ScopeCatalogView",
+        "type": "object"
+      },
+      "ScopeRecoveryView": {
+        "additionalProperties": false,
+        "properties": {
+          "automatic": {
+            "title": "Automatic",
+            "type": "boolean"
+          },
+          "completed_items": {
+            "minimum": 0.0,
+            "title": "Completed Items",
+            "type": "integer"
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
+          "pending_items": {
+            "minimum": 0.0,
+            "title": "Pending Items",
+            "type": "integer"
+          },
+          "phase": {
+            "enum": [
+              "ready",
+              "waiting",
+              "auditing",
+              "repairing",
+              "consolidating",
+              "indexing",
+              "verifying",
+              "manual_review"
+            ],
+            "title": "Phase",
+            "type": "string"
+          },
+          "progress_percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Progress Percent",
+            "type": "integer"
+          },
+          "reads_available": {
+            "title": "Reads Available",
+            "type": "boolean"
+          },
+          "recovery_attempts": {
+            "minimum": 0.0,
+            "title": "Recovery Attempts",
+            "type": "integer"
+          },
+          "requires_support": {
+            "title": "Requires Support",
+            "type": "boolean"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "enum": [
+              "ready",
+              "recovering",
+              "attention_required"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "total_items": {
+            "minimum": 0.0,
+            "title": "Total Items",
+            "type": "integer"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "writes_available": {
+            "title": "Writes Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "state",
+          "phase",
+          "progress_percent",
+          "completed_items",
+          "total_items",
+          "pending_items",
+          "recovery_attempts",
+          "automatic",
+          "reads_available",
+          "writes_available",
+          "requires_support"
+        ],
+        "title": "ScopeRecoveryView",
         "type": "object"
       },
       "ScopeSessionView": {
@@ -2208,6 +4393,16 @@
       "ScopeSummaryView": {
         "additionalProperties": false,
         "properties": {
+          "recovery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScopeRecoveryView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "scope": {
             "$ref": "#/components/schemas/ScopeCatalogView"
           },
@@ -2403,6 +4598,126 @@
         "title": "ScopeTokenView",
         "type": "object"
       },
+      "SessionAtlasResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_enabled": {
+            "default": false,
+            "title": "Agent Enabled",
+            "type": "boolean"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "edges": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "generated_by": {
+            "title": "Generated By",
+            "type": "string"
+          },
+          "message_count": {
+            "title": "Message Count",
+            "type": "integer"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "nodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "projection_state": {
+            "enum": [
+              "fallback",
+              "ready"
+            ],
+            "title": "Projection State",
+            "type": "string"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "refresh": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh"
+          },
+          "schema_version": {
+            "const": "tmcra.session-atlas.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "session_count": {
+            "title": "Session Count",
+            "type": "integer"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "view": {
+            "const": "session_atlas",
+            "default": "session_atlas",
+            "title": "View",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "scope_name",
+          "snapshot_id",
+          "projection_state",
+          "generated_by",
+          "session_count",
+          "message_count",
+          "nodes",
+          "edges",
+          "counts"
+        ],
+        "title": "SessionAtlasResponse",
+        "type": "object"
+      },
       "SessionCredentialView": {
         "additionalProperties": false,
         "properties": {
@@ -2465,6 +4780,261 @@
         "title": "SessionCredentialView",
         "type": "object"
       },
+      "SessionGraphRefreshResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "const": true,
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "projection_key": {
+            "title": "Projection Key",
+            "type": "string"
+          },
+          "source_fingerprint": {
+            "title": "Source Fingerprint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projection_key",
+          "source_fingerprint"
+        ],
+        "title": "SessionGraphRefreshResponse",
+        "type": "object"
+      },
+      "SessionMapResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "edges": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "evidence_binding": {
+            "additionalProperties": true,
+            "title": "Evidence Binding",
+            "type": "object"
+          },
+          "generated_by": {
+            "title": "Generated By",
+            "type": "string"
+          },
+          "message_count": {
+            "title": "Message Count",
+            "type": "integer"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "native_thread_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Thread Id"
+          },
+          "nodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "parent_session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Session Id"
+          },
+          "projection_state": {
+            "enum": [
+              "fallback",
+              "ready"
+            ],
+            "title": "Projection State",
+            "type": "string"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "provisional": {
+            "default": false,
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "refresh": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh"
+          },
+          "schema_version": {
+            "const": "tmcra.session-map.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "semantic_record_count": {
+            "title": "Semantic Record Count",
+            "type": "integer"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "snapshot_state": {
+            "default": "committed",
+            "enum": [
+              "committed",
+              "building"
+            ],
+            "title": "Snapshot State",
+            "type": "string"
+          },
+          "source_app": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source App"
+          },
+          "source_record_count": {
+            "title": "Source Record Count",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "threads": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Threads",
+            "type": "array"
+          },
+          "time_range": {
+            "additionalProperties": true,
+            "title": "Time Range",
+            "type": "object"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "view": {
+            "const": "session_map",
+            "default": "session_map",
+            "title": "View",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "scope_name",
+          "session_id",
+          "snapshot_id",
+          "projection_state",
+          "generated_by",
+          "title",
+          "summary",
+          "status",
+          "message_count",
+          "source_record_count",
+          "semantic_record_count",
+          "nodes",
+          "edges",
+          "threads",
+          "counts",
+          "time_range",
+          "evidence_binding"
+        ],
+        "title": "SessionMapResponse",
+        "type": "object"
+      },
       "SessionScopeRestrictionsView": {
         "additionalProperties": false,
         "properties": {
@@ -2523,6 +5093,801 @@
         "title": "SessionServiceView",
         "type": "object"
       },
+      "UsageAttributionCoverageView": {
+        "additionalProperties": false,
+        "properties": {
+          "ingest_raw_tokens": {
+            "minimum": 0.0,
+            "title": "Ingest Raw Tokens",
+            "type": "integer"
+          },
+          "known_cost_micro_cny": {
+            "minimum": 0.0,
+            "title": "Known Cost Micro Cny",
+            "type": "integer"
+          },
+          "provider_call_count": {
+            "minimum": 0.0,
+            "title": "Provider Call Count",
+            "type": "integer"
+          },
+          "recall_requests": {
+            "minimum": 0.0,
+            "title": "Recall Requests",
+            "type": "integer"
+          },
+          "usage_event_count": {
+            "minimum": 0.0,
+            "title": "Usage Event Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provider_call_count",
+          "usage_event_count",
+          "ingest_raw_tokens",
+          "recall_requests",
+          "known_cost_micro_cny"
+        ],
+        "title": "UsageAttributionCoverageView",
+        "type": "object"
+      },
+      "UsageCallTotalsView": {
+        "additionalProperties": false,
+        "properties": {
+          "cache_hit_tokens": {
+            "minimum": 0.0,
+            "title": "Cache Hit Tokens",
+            "type": "integer"
+          },
+          "cache_miss_tokens": {
+            "minimum": 0.0,
+            "title": "Cache Miss Tokens",
+            "type": "integer"
+          },
+          "completed_call_count": {
+            "minimum": 0.0,
+            "title": "Completed Call Count",
+            "type": "integer"
+          },
+          "failed_call_count": {
+            "minimum": 0.0,
+            "title": "Failed Call Count",
+            "type": "integer"
+          },
+          "in_flight_call_count": {
+            "minimum": 0.0,
+            "title": "In Flight Call Count",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "minimum": 0.0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "known_cost_micro_cny": {
+            "minimum": 0.0,
+            "title": "Known Cost Micro Cny",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "minimum": 0.0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "registered_call_count": {
+            "minimum": 0.0,
+            "title": "Registered Call Count",
+            "type": "integer"
+          },
+          "unknown_call_count": {
+            "minimum": 0.0,
+            "title": "Unknown Call Count",
+            "type": "integer"
+          },
+          "unpriced_completed_call_count": {
+            "minimum": 0.0,
+            "title": "Unpriced Completed Call Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "registered_call_count",
+          "completed_call_count",
+          "failed_call_count",
+          "unknown_call_count",
+          "in_flight_call_count",
+          "unpriced_completed_call_count",
+          "input_tokens",
+          "cache_hit_tokens",
+          "cache_miss_tokens",
+          "output_tokens",
+          "known_cost_micro_cny"
+        ],
+        "title": "UsageCallTotalsView",
+        "type": "object"
+      },
+      "UsageCostBucketView": {
+        "additionalProperties": false,
+        "properties": {
+          "cache_hit_tokens": {
+            "minimum": 0.0,
+            "title": "Cache Hit Tokens",
+            "type": "integer"
+          },
+          "cache_miss_tokens": {
+            "minimum": 0.0,
+            "title": "Cache Miss Tokens",
+            "type": "integer"
+          },
+          "completed_call_count": {
+            "minimum": 0.0,
+            "title": "Completed Call Count",
+            "type": "integer"
+          },
+          "failed_call_count": {
+            "minimum": 0.0,
+            "title": "Failed Call Count",
+            "type": "integer"
+          },
+          "in_flight_call_count": {
+            "minimum": 0.0,
+            "title": "In Flight Call Count",
+            "type": "integer"
+          },
+          "ingest_raw_tokens": {
+            "minimum": 0.0,
+            "title": "Ingest Raw Tokens",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "minimum": 0.0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "known_cost_cny": {
+            "minimum": 0.0,
+            "title": "Known Cost Cny",
+            "type": "number"
+          },
+          "known_cost_micro_cny": {
+            "minimum": 0.0,
+            "title": "Known Cost Micro Cny",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "minimum": 0.0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "recall_requests": {
+            "minimum": 0.0,
+            "title": "Recall Requests",
+            "type": "integer"
+          },
+          "registered_call_count": {
+            "minimum": 0.0,
+            "title": "Registered Call Count",
+            "type": "integer"
+          },
+          "unknown_call_count": {
+            "minimum": 0.0,
+            "title": "Unknown Call Count",
+            "type": "integer"
+          },
+          "unpriced_completed_call_count": {
+            "minimum": 0.0,
+            "title": "Unpriced Completed Call Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "registered_call_count",
+          "completed_call_count",
+          "failed_call_count",
+          "unknown_call_count",
+          "in_flight_call_count",
+          "unpriced_completed_call_count",
+          "input_tokens",
+          "cache_hit_tokens",
+          "cache_miss_tokens",
+          "output_tokens",
+          "known_cost_micro_cny",
+          "key",
+          "ingest_raw_tokens",
+          "recall_requests",
+          "known_cost_cny"
+        ],
+        "title": "UsageCostBucketView",
+        "type": "object"
+      },
+      "UsageCostsView": {
+        "additionalProperties": false,
+        "properties": {
+          "attribution_coverage": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UsageAttributionCoverageView"
+            },
+            "title": "Attribution Coverage",
+            "type": "object"
+          },
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/UsageCostBucketView"
+            },
+            "title": "Buckets",
+            "type": "array"
+          },
+          "by_stage": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UsageStageView"
+            },
+            "title": "By Stage",
+            "type": "object"
+          },
+          "calls": {
+            "$ref": "#/components/schemas/UsageCallTotalsView"
+          },
+          "complete_for_registered_calls": {
+            "title": "Complete For Registered Calls",
+            "type": "boolean"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "from_timestamp": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Timestamp"
+          },
+          "group_by": {
+            "anyOf": [
+              {
+                "enum": [
+                  "day",
+                  "scope",
+                  "stage",
+                  "operation",
+                  "provider",
+                  "model",
+                  "platform",
+                  "integration",
+                  "agent",
+                  "attribution_source"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group By"
+          },
+          "known_cost_cny": {
+            "minimum": 0.0,
+            "title": "Known Cost Cny",
+            "type": "number"
+          },
+          "known_model_api_cny_per_million_ingested_raw_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Model Api Cny Per Million Ingested Raw Tokens"
+          },
+          "ledger_coverage": {
+            "title": "Ledger Coverage",
+            "type": "string"
+          },
+          "quota_event_scope_coverage": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Quota Event Scope Coverage",
+            "type": "object"
+          },
+          "quota_events": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Quota Events",
+            "type": "object"
+          },
+          "scope_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Name"
+          },
+          "scope_prefix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Prefix"
+          },
+          "source": {
+            "$ref": "#/components/schemas/UsageSourceView"
+          },
+          "source_ledger_coverage": {
+            "title": "Source Ledger Coverage",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "to_timestamp": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Timestamp"
+          },
+          "uncertain_cost_call_count": {
+            "minimum": 0.0,
+            "title": "Uncertain Cost Call Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "currency",
+          "ledger_coverage",
+          "source_ledger_coverage",
+          "complete_for_registered_calls",
+          "source",
+          "calls",
+          "known_cost_cny",
+          "uncertain_cost_call_count",
+          "by_stage",
+          "quota_events",
+          "quota_event_scope_coverage",
+          "attribution_coverage",
+          "buckets"
+        ],
+        "title": "UsageCostsView",
+        "type": "object"
+      },
+      "UsageSourceView": {
+        "additionalProperties": false,
+        "properties": {
+          "ingested_raw_token_estimate": {
+            "minimum": 0.0,
+            "title": "Ingested Raw Token Estimate",
+            "type": "integer"
+          },
+          "ingested_user_turns": {
+            "minimum": 0.0,
+            "title": "Ingested User Turns",
+            "type": "integer"
+          },
+          "scope_count": {
+            "minimum": 0.0,
+            "title": "Scope Count",
+            "type": "integer"
+          },
+          "source_event_count": {
+            "minimum": 0.0,
+            "title": "Source Event Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scope_count",
+          "ingested_raw_token_estimate",
+          "ingested_user_turns",
+          "source_event_count"
+        ],
+        "title": "UsageSourceView",
+        "type": "object"
+      },
+      "UsageStageView": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_call_count": {
+            "minimum": 0.0,
+            "title": "Completed Call Count",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "minimum": 0.0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "known_cost_micro_cny": {
+            "minimum": 0.0,
+            "title": "Known Cost Micro Cny",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "minimum": 0.0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "registered_call_count": {
+            "minimum": 0.0,
+            "title": "Registered Call Count",
+            "type": "integer"
+          },
+          "unknown_or_unpriced_call_count": {
+            "minimum": 0.0,
+            "title": "Unknown Or Unpriced Call Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "registered_call_count",
+          "completed_call_count",
+          "unknown_or_unpriced_call_count",
+          "input_tokens",
+          "output_tokens",
+          "known_cost_micro_cny"
+        ],
+        "title": "UsageStageView",
+        "type": "object"
+      },
+      "UserProviderTaskClaimRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "stage": {
+            "enum": [
+              "writer",
+              "organizer"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage"
+        ],
+        "title": "UserProviderTaskClaimRequest",
+        "type": "object"
+      },
+      "UserProviderTaskClaimView": {
+        "additionalProperties": false,
+        "properties": {
+          "retry_after_seconds": {
+            "minimum": 0.0,
+            "title": "Retry After Seconds",
+            "type": "number"
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserProviderTaskLeaseView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "retry_after_seconds"
+        ],
+        "title": "UserProviderTaskClaimView",
+        "type": "object"
+      },
+      "UserProviderTaskCompleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "lease_token": {
+            "maxLength": 256,
+            "minLength": 32,
+            "title": "Lease Token",
+            "type": "string"
+          },
+          "model": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "output": {
+            "additionalProperties": true,
+            "title": "Output",
+            "type": "object"
+          },
+          "provider": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_request_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Request Id"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserProviderUsage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "lease_token",
+          "provider",
+          "model",
+          "output"
+        ],
+        "title": "UserProviderTaskCompleteRequest",
+        "type": "object"
+      },
+      "UserProviderTaskFailRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "error_code": {
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$",
+            "title": "Error Code",
+            "type": "string"
+          },
+          "lease_token": {
+            "maxLength": 256,
+            "minLength": 32,
+            "title": "Lease Token",
+            "type": "string"
+          },
+          "model": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "failed",
+              "unknown"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "provider": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lease_token",
+          "provider",
+          "model",
+          "outcome",
+          "error_code"
+        ],
+        "title": "UserProviderTaskFailRequest",
+        "type": "object"
+      },
+      "UserProviderTaskLeaseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "lease_token": {
+            "maxLength": 256,
+            "minLength": 32,
+            "title": "Lease Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lease_token"
+        ],
+        "title": "UserProviderTaskLeaseRequest",
+        "type": "object"
+      },
+      "UserProviderTaskLeaseView": {
+        "additionalProperties": false,
+        "properties": {
+          "lease_expires_at": {
+            "minimum": 0.0,
+            "title": "Lease Expires At",
+            "type": "number"
+          },
+          "lease_token": {
+            "title": "Lease Token",
+            "type": "string"
+          },
+          "operation": {
+            "title": "Operation",
+            "type": "string"
+          },
+          "request": {
+            "additionalProperties": true,
+            "title": "Request",
+            "type": "object"
+          },
+          "request_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Request Sha256",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "tmcra.user-provider-task.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "writer",
+              "organizer"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "stage",
+          "operation",
+          "request_sha256",
+          "request",
+          "lease_token",
+          "lease_expires_at"
+        ],
+        "title": "UserProviderTaskLeaseView",
+        "type": "object"
+      },
+      "UserProviderTaskStatusView": {
+        "additionalProperties": false,
+        "properties": {
+          "idempotent_replay": {
+            "default": false,
+            "title": "Idempotent Replay",
+            "type": "boolean"
+          },
+          "lease_expires_at": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lease Expires At"
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "leased",
+              "running",
+              "completed",
+              "failed",
+              "unknown"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "state"
+        ],
+        "title": "UserProviderTaskStatusView",
+        "type": "object"
+      },
+      "UserProviderUsage": {
+        "additionalProperties": false,
+        "properties": {
+          "cache_hit_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Hit Tokens"
+          },
+          "cache_miss_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Miss Tokens"
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          },
+          "total_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Tokens"
+          }
+        },
+        "title": "UserProviderUsage",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2561,6 +5926,157 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VisualAtlasResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "addressability": {
+            "additionalProperties": true,
+            "title": "Addressability",
+            "type": "object"
+          },
+          "agent_enabled": {
+            "default": false,
+            "title": "Agent Enabled",
+            "type": "boolean"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "edges": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "full_projection": {
+            "const": true,
+            "default": true,
+            "title": "Full Projection",
+            "type": "boolean"
+          },
+          "generated_by": {
+            "title": "Generated By",
+            "type": "string"
+          },
+          "identity_manifest": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Identity Manifest",
+            "type": "object"
+          },
+          "levels": {
+            "items": {
+              "enum": [
+                "domain",
+                "session",
+                "episode",
+                "evidence"
+              ],
+              "type": "string"
+            },
+            "title": "Levels",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "nodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "projection_state": {
+            "enum": [
+              "fallback",
+              "ready"
+            ],
+            "title": "Projection State",
+            "type": "string"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "refresh": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh"
+          },
+          "schema_version": {
+            "const": "tmcra.visual-atlas.1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scope_name": {
+            "title": "Scope Name",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "truncated": {
+            "const": false,
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "view": {
+            "const": "visual_atlas",
+            "default": "visual_atlas",
+            "title": "View",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "scope_name",
+          "snapshot_id",
+          "projection_state",
+          "generated_by",
+          "levels",
+          "nodes",
+          "edges",
+          "identity_manifest",
+          "addressability",
+          "counts"
+        ],
+        "title": "VisualAtlasResponse",
         "type": "object"
       },
       "WebhookCreateRequest": {
@@ -2674,6 +6190,60 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/healthz": {
+      "get": {
+        "description": "Returns 200 when the HTTP service is running. This endpoint is anonymous and does not validate provider, database, or worker readiness.",
+        "operationId": "healthz",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check service liveness",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "description": "Returns the current readiness snapshot without authentication. A 200 response means the service is ready; a 503 response means one or more readiness checks are not healthy.",
+        "operationId": "readyz",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "The service is running but is not ready to accept production traffic."
+          }
+        },
+        "summary": "Check service readiness",
+        "tags": [
+          "health"
+        ]
+      }
+    },
     "/v1/access-tokens": {
       "get": {
         "operationId": "listScopedAccessTokens",
@@ -2949,6 +6519,237 @@
         ]
       }
     },
+    "/v1/audio/transcriptions": {
+      "post": {
+        "operationId": "transcribeAudio",
+        "parameters": [
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          },
+          {
+            "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+            "in": "header",
+            "name": "X-TMCRA-Client-Platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+              "title": "X-Tmcra-Client-Platform"
+            }
+          },
+          {
+            "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+            "in": "header",
+            "name": "X-TMCRA-Integration-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+              "title": "X-Tmcra-Integration-Id"
+            }
+          },
+          {
+            "description": "Optional invoking Agent identifier for operational allocation.",
+            "in": "header",
+            "name": "X-TMCRA-Agent-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional invoking Agent identifier for operational allocation.",
+              "title": "X-Tmcra-Agent-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Transcribe Audio",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/v1/billing/profile": {
+      "get": {
+        "operationId": "getBillingProfile",
+        "parameters": [
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingProfileView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Billing Profile",
+        "tags": [
+          "usage"
+        ]
+      }
+    },
     "/v1/jobs/{job_id}": {
       "get": {
         "operationId": "getMemoryJob",
@@ -3161,6 +6962,383 @@
         ]
       }
     },
+    "/v1/provider-tasks/claim": {
+      "post": {
+        "description": "Authenticated device endpoint for locally executing a bounded Writer or organizer model call. Model-provider credentials are never accepted.",
+        "operationId": "claimUserProviderTask",
+        "parameters": [
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProviderTaskClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProviderTaskClaimView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Lease one local provider task",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/provider-tasks/{task_id}/complete": {
+      "post": {
+        "operationId": "completeUserProviderTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProviderTaskCompleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProviderTaskStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Complete User Provider Task",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/provider-tasks/{task_id}/fail": {
+      "post": {
+        "operationId": "failUserProviderTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProviderTaskFailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProviderTaskStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Fail User Provider Task",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/provider-tasks/{task_id}/heartbeat": {
+      "post": {
+        "operationId": "heartbeatUserProviderTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProviderTaskLeaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProviderTaskStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Heartbeat User Provider Task",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/provider-tasks/{task_id}/started": {
+      "post": {
+        "operationId": "startUserProviderTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProviderTaskLeaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProviderTaskStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Start User Provider Task",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
     "/v1/scopes": {
       "get": {
         "operationId": "listMemoryScopes",
@@ -3365,6 +7543,23 @@
             }
           },
           {
+            "in": "header",
+            "name": "X-TMCRA-Organizer-Execution",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tmcra-Organizer-Execution"
+            }
+          },
+          {
             "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
             "in": "header",
             "name": "X-TMCRA-On-Behalf-Of-Subject",
@@ -3382,6 +7577,63 @@
               ],
               "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
               "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          },
+          {
+            "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+            "in": "header",
+            "name": "X-TMCRA-Client-Platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+              "title": "X-Tmcra-Client-Platform"
+            }
+          },
+          {
+            "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+            "in": "header",
+            "name": "X-TMCRA-Integration-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+              "title": "X-Tmcra-Integration-Id"
+            }
+          },
+          {
+            "description": "Optional invoking Agent identifier for operational allocation.",
+            "in": "header",
+            "name": "X-TMCRA-Agent-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional invoking Agent identifier for operational allocation.",
+              "title": "X-Tmcra-Agent-Id"
             }
           }
         ],
@@ -3415,6 +7667,82 @@
         "summary": "Consolidate",
         "tags": [
           "memory"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/deletions/{deletion_id}": {
+      "get": {
+        "operationId": "getContentDeletion",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "deletion_id",
+            "required": true,
+            "schema": {
+              "title": "Deletion Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentDeletionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Get Content Deletion",
+        "tags": [
+          "governance"
         ]
       }
     },
@@ -3667,6 +7995,40 @@
             }
           },
           {
+            "in": "header",
+            "name": "X-TMCRA-Writer-Execution",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tmcra-Writer-Execution"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-TMCRA-Organizer-Execution",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tmcra-Organizer-Execution"
+            }
+          },
+          {
             "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
             "in": "header",
             "name": "X-TMCRA-On-Behalf-Of-Subject",
@@ -3684,6 +8046,63 @@
               ],
               "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
               "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          },
+          {
+            "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+            "in": "header",
+            "name": "X-TMCRA-Client-Platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+              "title": "X-Tmcra-Client-Platform"
+            }
+          },
+          {
+            "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+            "in": "header",
+            "name": "X-TMCRA-Integration-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+              "title": "X-Tmcra-Integration-Id"
+            }
+          },
+          {
+            "description": "Optional invoking Agent identifier for operational allocation.",
+            "in": "header",
+            "name": "X-TMCRA-Agent-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional invoking Agent identifier for operational allocation.",
+              "title": "X-Tmcra-Agent-Id"
             }
           }
         ],
@@ -3784,6 +8203,40 @@
             }
           },
           {
+            "in": "header",
+            "name": "X-TMCRA-Writer-Execution",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tmcra-Writer-Execution"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-TMCRA-Organizer-Execution",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tmcra-Organizer-Execution"
+            }
+          },
+          {
             "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
             "in": "header",
             "name": "X-TMCRA-On-Behalf-Of-Subject",
@@ -3801,6 +8254,63 @@
               ],
               "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
               "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          },
+          {
+            "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+            "in": "header",
+            "name": "X-TMCRA-Client-Platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+              "title": "X-Tmcra-Client-Platform"
+            }
+          },
+          {
+            "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+            "in": "header",
+            "name": "X-TMCRA-Integration-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+              "title": "X-Tmcra-Integration-Id"
+            }
+          },
+          {
+            "description": "Optional invoking Agent identifier for operational allocation.",
+            "in": "header",
+            "name": "X-TMCRA-Agent-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional invoking Agent identifier for operational allocation.",
+              "title": "X-Tmcra-Agent-Id"
             }
           }
         ],
@@ -3864,6 +8374,238 @@
         "summary": "Bulk Ingest",
         "tags": [
           "memory"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/knowledge-base": {
+      "get": {
+        "operationId": "getPersonalKnowledgeBase",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalKnowledgeBaseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Personal Knowledge Base",
+        "tags": [
+          "knowledge-base"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/knowledge-base/refresh": {
+      "post": {
+        "operationId": "refreshPersonalKnowledgeBase",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionGraphRefreshResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Refresh Personal Knowledge Base",
+        "tags": [
+          "knowledge-base"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/memories": {
+      "delete": {
+        "operationId": "deleteMemories",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 8,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-TMCRA-Confirm-Memory-Count",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "X-Tmcra-Confirm-Memory-Count",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentDeletionJobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Delete Memories",
+        "tags": [
+          "governance"
         ]
       }
     },
@@ -3986,6 +8728,113 @@
           }
         ],
         "summary": "Memory Graph",
+        "tags": [
+          "memory-graph"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/memory-graph/narrative": {
+      "get": {
+        "operationId": "getNarrativeMemoryGraph",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 36,
+              "maximum": 60,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "focus",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "maxLength": 32,
+              "title": "Focus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryGraphResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Narrative Memory Graph",
         "tags": [
           "memory-graph"
         ]
@@ -4224,6 +9073,292 @@
         ]
       }
     },
+    "/v1/scopes/{scope_name}/memory-graph/sessions": {
+      "get": {
+        "operationId": "getSessionMemoryAtlas",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionAtlasResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Session Memory Atlas",
+        "tags": [
+          "memory-graph"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/memory-graph/sessions/refresh": {
+      "post": {
+        "operationId": "refreshSessionMemoryAtlas",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionGraphRefreshResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Refresh Session Memory Atlas",
+        "tags": [
+          "memory-graph"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/memory-graph/sessions/{session_id}": {
+      "get": {
+        "operationId": "getSessionMemoryMap",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMapResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Session Memory Map",
+        "tags": [
+          "memory-graph"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/memory-graph/sessions/{session_id}/refresh": {
+      "post": {
+        "operationId": "refreshSessionMemoryMap",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionGraphRefreshResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Refresh Session Memory Map",
+        "tags": [
+          "memory-graph"
+        ]
+      }
+    },
     "/v1/scopes/{scope_name}/memory-graph/trace": {
       "post": {
         "operationId": "traceMemoryRecall",
@@ -4255,6 +9390,63 @@
               ],
               "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
               "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          },
+          {
+            "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+            "in": "header",
+            "name": "X-TMCRA-Client-Platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+              "title": "X-Tmcra-Client-Platform"
+            }
+          },
+          {
+            "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+            "in": "header",
+            "name": "X-TMCRA-Integration-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+              "title": "X-Tmcra-Integration-Id"
+            }
+          },
+          {
+            "description": "Optional invoking Agent identifier for operational allocation.",
+            "in": "header",
+            "name": "X-TMCRA-Agent-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional invoking Agent identifier for operational allocation.",
+              "title": "X-Tmcra-Agent-Id"
             }
           }
         ],
@@ -4337,6 +9529,507 @@
         ]
       }
     },
+    "/v1/scopes/{scope_name}/memory-graph/visual-atlas": {
+      "get": {
+        "operationId": "getVisualMemoryAtlas",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisualAtlasResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Visual Memory Atlas",
+        "tags": [
+          "memory-graph"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/memory-graph/visual-atlas/refresh": {
+      "post": {
+        "operationId": "refreshVisualMemoryAtlas",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionGraphRefreshResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Refresh Visual Memory Atlas",
+        "tags": [
+          "memory-graph"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/messages": {
+      "delete": {
+        "operationId": "deleteMemoryMessages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 8,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-TMCRA-Confirm-Message-Count",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "X-Tmcra-Confirm-Message-Count",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentDeletionJobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Delete Memory Messages",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/projection-build": {
+      "get": {
+        "operationId": "getProjectionBuildProgress",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectionBuildProgressResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Projection Build Progress",
+        "tags": [
+          "memory-graph",
+          "knowledge-base"
+        ]
+      },
+      "post": {
+        "operationId": "startProjectionBuild",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectionBuildProgressResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Start Projection Build",
+        "tags": [
+          "memory-graph",
+          "knowledge-base"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/provider-calls": {
+      "post": {
+        "description": "Server-to-server endpoint used by the TMCRA chat gateway. It accepts accounting metadata only and never accepts prompts, attachments, memory evidence, or model response content.",
+        "operationId": "reportAnswerProviderCall",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          },
+          {
+            "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+            "in": "header",
+            "name": "X-TMCRA-Client-Platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+              "title": "X-Tmcra-Client-Platform"
+            }
+          },
+          {
+            "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+            "in": "header",
+            "name": "X-TMCRA-Integration-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+              "title": "X-Tmcra-Integration-Id"
+            }
+          },
+          {
+            "description": "Optional invoking Agent identifier for operational allocation.",
+            "in": "header",
+            "name": "X-TMCRA-Agent-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional invoking Agent identifier for operational allocation.",
+              "title": "X-Tmcra-Agent-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderCallReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderCallReportView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Record one answer-model usage receipt",
+        "tags": [
+          "usage"
+        ]
+      }
+    },
     "/v1/scopes/{scope_name}/recall": {
       "post": {
         "operationId": "recallMemory",
@@ -4368,6 +10061,63 @@
               ],
               "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
               "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          },
+          {
+            "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+            "in": "header",
+            "name": "X-TMCRA-Client-Platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Calling client family, such as codex, openclaw, hermes, mcp, python, typescript, or rest. Direct-client values are reported, not trusted billing identity.",
+              "title": "X-Tmcra-Client-Platform"
+            }
+          },
+          {
+            "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+            "in": "header",
+            "name": "X-TMCRA-Integration-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Installation or connection registry identifier. It becomes trusted attribution only inside the managing-key/on-behalf proxy boundary.",
+              "title": "X-Tmcra-Integration-Id"
+            }
+          },
+          {
+            "description": "Optional invoking Agent identifier for operational allocation.",
+            "in": "header",
+            "name": "X-TMCRA-Agent-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional invoking Agent identifier for operational allocation.",
+              "title": "X-Tmcra-Agent-Id"
             }
           }
         ],
@@ -4445,6 +10195,73 @@
           }
         ],
         "summary": "Recall",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/recovery": {
+      "get": {
+        "operationId": "getMemoryScopeRecovery",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeRecoveryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Scope Recovery",
         "tags": [
           "memory"
         ]
@@ -4661,6 +10478,102 @@
         ]
       }
     },
+    "/v1/scopes/{scope_name}/sessions/{session_id}": {
+      "delete": {
+        "operationId": "deleteMemorySession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 8,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-TMCRA-Confirm-Session",
+            "required": true,
+            "schema": {
+              "title": "X-Tmcra-Confirm-Session",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentDeletionJobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Delete Memory Session",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
     "/v1/scopes/{scope_name}/summary": {
       "get": {
         "operationId": "getMemoryScopeSummary",
@@ -4791,6 +10704,57 @@
             }
           },
           {
+            "in": "query",
+            "name": "from_timestamp",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_timestamp",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(day|scope|stage|operation|provider|model|platform|integration|agent|attribution_source)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group By"
+            }
+          },
+          {
             "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
             "in": "header",
             "name": "X-TMCRA-On-Behalf-Of-Subject",
@@ -4816,9 +10780,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Getmemoryusage",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UsageCostsView"
                 }
               }
             },
@@ -5282,6 +11244,10 @@
   ],
   "tags": [
     {
+      "description": "Anonymous liveness and readiness probes for service discovery.",
+      "name": "health"
+    },
+    {
       "description": "Write, consolidate, and recall memory.",
       "name": "memory"
     },
@@ -5296,6 +11262,10 @@
     {
       "description": "Inspect registered model-API usage.",
       "name": "usage"
+    },
+    {
+      "description": "Authenticated speech transcription through the isolated TMCRA ASR worker.",
+      "name": "audio"
     },
     {
       "description": "Issue revocable persona-scoped access tokens.",

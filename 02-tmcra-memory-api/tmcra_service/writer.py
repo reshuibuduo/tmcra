@@ -24,6 +24,11 @@ from .provider_pool import ProviderKeyPool, ProviderPoolExhausted
 from .control_db import ControlDB
 from .jobs import JobStore
 from .usage_attribution import UNATTRIBUTED, UsageAttribution
+from .user_provider_client import (
+    USER_PROVIDER,
+    UserProviderBrokerClient,
+    normalize_user_provider_execution,
+)
 from .qwen36_writer_adapter import (
     ADAPTER_ID as QWEN36_ADAPTER_ID,
     REVIEWER_ADAPTER_ID as QWEN36_REVIEWER_ADAPTER_ID,
@@ -1235,6 +1240,53 @@ class LeasedDeepSeekClient:
         return self._call(payload, "reconcile")
 
 
+class UserProviderWriterClient:
+    def __init__(self, *, v4: Any, broker: UserProviderBrokerClient) -> None:
+        self.v4 = v4
+        self.broker = broker
+        self.model = broker.model
+        self.provider = broker.provider
+
+    def _sync_identity(self) -> None:
+        self.model = self.broker.model
+        self.provider = self.broker.provider
+
+    def complete(self, payload: Mapping[str, Any]) -> Any:
+        result = self.broker.complete_prompt(
+            system_prompt=str(self.v4.BATCH_SYSTEM_PROMPT),
+            payload=payload,
+            operation="batch_flash",
+            response_schema=self.v4.batch_response_json_schema(payload),
+        )
+        self._sync_identity()
+        return result
+
+    def reconcile(self, payload: Mapping[str, Any]) -> Any:
+        delegate = self.v4.DeepSeekBatchClient.__new__(
+            self.v4.DeepSeekBatchClient
+        )
+        delegate.model = self.model
+
+        def complete_through_broker(
+            *,
+            model: str,
+            system_prompt: str,
+            payload: Mapping[str, Any],
+            stage: str,
+        ) -> Any:
+            del model
+            return self.broker.complete_prompt(
+                system_prompt=system_prompt,
+                payload=payload,
+                operation=stage,
+            )
+
+        delegate._complete = complete_through_broker
+        result = delegate.reconcile(payload)
+        self._sync_identity()
+        return result
+
+
 _MISSING = object()
 
 
@@ -1255,6 +1307,7 @@ def execute_writer(
     max_tokens: int = 16384,
     recovery_mode: str = "none",
     usage_attribution: UsageAttribution = UNATTRIBUTED,
+    provider_execution: Mapping[str, Any] | None = None,
     v4_module: Any | None = None,
 ) -> dict[str, Any]:
     """Run one production Writer operation using the unchanged V4 core.
@@ -1352,113 +1405,170 @@ def execute_writer(
     v4.build_batches = build
     v4.build_batch_request = build_request
     try:
-        try:
-            primary_route = primary_writer_route(os.environ)
-            reviewer_route = reviewer_writer_route(
-                os.environ, fallback_model=reviewer_model
-            )
-        except ValueError as exc:
-            raise ProductionWriterError(f"invalid Writer provider route: {exc}") from exc
         control_db = str(os.getenv("TMCRA_SERVICE_CONTROL_DB") or "").strip()
         if not control_db:
             raise ProductionWriterError(
                 "production writer requires an explicit control DB"
             )
+        try:
+            user_execution = normalize_user_provider_execution(
+                provider_execution,
+                stage="writer",
+            )
+        except ValueError as exc:
+            raise ProductionWriterError(str(exc)) from exc
         base_writer_prompt = str(getattr(v4, "BATCH_SYSTEM_PROMPT", "") or "")
-        if primary_route.prompt_adapter == QWEN36_ADAPTER_ID:
-            if original_prompt_version is _MISSING:
-                raise ProductionWriterError("V4 Writer prompt version is missing")
+        if user_execution is not None:
             if not base_writer_prompt:
                 raise ProductionWriterError("V4 Writer system prompt is missing")
-            v4.PROMPT_VERSION = (
-                f"{original_prompt_version}+{QWEN36_ADAPTER_ID}"
+            writer_prompt_sha256 = _sha256(base_writer_prompt)
+            auth_key_id = user_execution["auth_key_id"]
+            flash = UserProviderWriterClient(
+                v4=v4,
+                broker=UserProviderBrokerClient(
+                    control_db=Path(control_db),
+                    tenant_id=tenant_id,
+                    scope_name=scope_name,
+                    auth_key_id=auth_key_id,
+                    job_id=job_id,
+                    stage_id=accounting_stage_id,
+                    task_stage="writer",
+                    timeout=timeout_seconds,
+                    max_tokens=max_tokens,
+                    usage_attribution=usage_attribution,
+                    record_ledger=True,
+                ),
             )
-            writer_prompt_sha256 = qwen36_prompt_sha256(base_writer_prompt)
+            pro = UserProviderWriterClient(
+                v4=v4,
+                broker=UserProviderBrokerClient(
+                    control_db=Path(control_db),
+                    tenant_id=tenant_id,
+                    scope_name=scope_name,
+                    auth_key_id=auth_key_id,
+                    job_id=job_id,
+                    stage_id=accounting_stage_id,
+                    task_stage="writer",
+                    timeout=timeout_seconds,
+                    max_tokens=max_tokens,
+                    usage_attribution=usage_attribution,
+                    record_ledger=True,
+                ),
+            )
+            primary_provider = USER_PROVIDER
+            primary_model = flash.model
+            primary_prompt_adapter = "none"
+            reviewer_provider = USER_PROVIDER
+            reviewer_model_value = pro.model
         else:
-            writer_prompt_sha256 = _sha256(
-                base_writer_prompt or str(v4.PROMPT_VERSION)
+            try:
+                primary_route = primary_writer_route(os.environ)
+                reviewer_route = reviewer_writer_route(
+                    os.environ, fallback_model=reviewer_model
+                )
+            except ValueError as exc:
+                raise ProductionWriterError(
+                    f"invalid Writer provider route: {exc}"
+                ) from exc
+            if primary_route.prompt_adapter == QWEN36_ADAPTER_ID:
+                if original_prompt_version is _MISSING:
+                    raise ProductionWriterError("V4 Writer prompt version is missing")
+                if not base_writer_prompt:
+                    raise ProductionWriterError("V4 Writer system prompt is missing")
+                v4.PROMPT_VERSION = (
+                    f"{original_prompt_version}+{QWEN36_ADAPTER_ID}"
+                )
+                writer_prompt_sha256 = qwen36_prompt_sha256(base_writer_prompt)
+            else:
+                writer_prompt_sha256 = _sha256(
+                    base_writer_prompt or str(v4.PROMPT_VERSION)
+                )
+            local_recovery_operation = bool(
+                recovery_mode != "none" or stage_attempt > 1
             )
-        local_recovery_operation = bool(
-            recovery_mode != "none" or stage_attempt > 1
-        )
-        primary_is_local_recovery = bool(
-            primary_route.provider == LOCAL_QWEN_PROVIDER
-            and local_recovery_operation
-        )
-        primary_pool = ProviderKeyPool(
-            Path(control_db),
-            pool=(
-                f"{primary_route.pool_name}-recovery"
-                if primary_is_local_recovery
-                else primary_route.pool_name
-            ),
-            keys=primary_route.api_keys,
-            max_concurrency_per_key=(
-                local_writer_recovery_concurrency_from_env()
-                if primary_is_local_recovery
-                else 1
-                if primary_route.provider == LOCAL_QWEN_PROVIDER
-                else int(os.getenv("TMCRA_PROVIDER_KEY_CONCURRENCY", "2"))
-            ),
-            lease_seconds=int(os.getenv("TMCRA_PROVIDER_LEASE_SECONDS", "300")),
-        )
-        reviewer_is_local_recovery = bool(
-            reviewer_route.provider == LOCAL_QWEN_PROVIDER
-            and local_recovery_operation
-        )
-        reviewer_pool = ProviderKeyPool(
-            Path(control_db),
-            pool=(
-                f"{reviewer_route.pool_name}-recovery"
-                if reviewer_is_local_recovery
-                else reviewer_route.pool_name
-            ),
-            keys=reviewer_route.api_keys,
-            max_concurrency_per_key=(
-                local_writer_recovery_concurrency_from_env()
-                if reviewer_is_local_recovery
-                else 1
-                if reviewer_route.provider == LOCAL_QWEN_PROVIDER
-                else int(os.getenv("TMCRA_PROVIDER_KEY_CONCURRENCY", "2"))
-            ),
-            lease_seconds=int(os.getenv("TMCRA_PROVIDER_LEASE_SECONDS", "300")),
-        )
-        flash = LeasedDeepSeekClient(
-            v4=v4,
-            pool=primary_pool,
-            operation_id=operation_id,
-            base_url=primary_route.base_url,
-            model=primary_route.model,
-            timeout=timeout_seconds,
-            max_tokens=max_tokens,
-            provider=primary_route.provider,
-            prompt_adapter=primary_route.prompt_adapter,
-            ledger_database=Path(control_db),
-            tenant_id=tenant_id,
-            scope_name=scope_name,
-            job_id=job_id,
-            stage_id=accounting_stage_id,
-            stage_name="batch_flash",
-            usage_attribution=usage_attribution,
-        )
-        pro = LeasedDeepSeekClient(
-            v4=v4,
-            pool=reviewer_pool,
-            operation_id=operation_id,
-            base_url=reviewer_route.base_url,
-            model=reviewer_route.model,
-            timeout=timeout_seconds,
-            max_tokens=max_tokens,
-            provider=reviewer_route.provider,
-            prompt_adapter=reviewer_route.prompt_adapter,
-            ledger_database=Path(control_db),
-            tenant_id=tenant_id,
-            scope_name=scope_name,
-            job_id=job_id,
-            stage_id=accounting_stage_id,
-            stage_name="reconciliation_pro",
-            usage_attribution=usage_attribution,
-        )
+            primary_is_local_recovery = bool(
+                primary_route.provider == LOCAL_QWEN_PROVIDER
+                and local_recovery_operation
+            )
+            primary_pool = ProviderKeyPool(
+                Path(control_db),
+                pool=(
+                    f"{primary_route.pool_name}-recovery"
+                    if primary_is_local_recovery
+                    else primary_route.pool_name
+                ),
+                keys=primary_route.api_keys,
+                max_concurrency_per_key=(
+                    local_writer_recovery_concurrency_from_env()
+                    if primary_is_local_recovery
+                    else 1
+                    if primary_route.provider == LOCAL_QWEN_PROVIDER
+                    else int(os.getenv("TMCRA_PROVIDER_KEY_CONCURRENCY", "2"))
+                ),
+                lease_seconds=int(os.getenv("TMCRA_PROVIDER_LEASE_SECONDS", "300")),
+            )
+            reviewer_is_local_recovery = bool(
+                reviewer_route.provider == LOCAL_QWEN_PROVIDER
+                and local_recovery_operation
+            )
+            reviewer_pool = ProviderKeyPool(
+                Path(control_db),
+                pool=(
+                    f"{reviewer_route.pool_name}-recovery"
+                    if reviewer_is_local_recovery
+                    else reviewer_route.pool_name
+                ),
+                keys=reviewer_route.api_keys,
+                max_concurrency_per_key=(
+                    local_writer_recovery_concurrency_from_env()
+                    if reviewer_is_local_recovery
+                    else 1
+                    if reviewer_route.provider == LOCAL_QWEN_PROVIDER
+                    else int(os.getenv("TMCRA_PROVIDER_KEY_CONCURRENCY", "2"))
+                ),
+                lease_seconds=int(os.getenv("TMCRA_PROVIDER_LEASE_SECONDS", "300")),
+            )
+            flash = LeasedDeepSeekClient(
+                v4=v4,
+                pool=primary_pool,
+                operation_id=operation_id,
+                base_url=primary_route.base_url,
+                model=primary_route.model,
+                timeout=timeout_seconds,
+                max_tokens=max_tokens,
+                provider=primary_route.provider,
+                prompt_adapter=primary_route.prompt_adapter,
+                ledger_database=Path(control_db),
+                tenant_id=tenant_id,
+                scope_name=scope_name,
+                job_id=job_id,
+                stage_id=accounting_stage_id,
+                stage_name="batch_flash",
+                usage_attribution=usage_attribution,
+            )
+            pro = LeasedDeepSeekClient(
+                v4=v4,
+                pool=reviewer_pool,
+                operation_id=operation_id,
+                base_url=reviewer_route.base_url,
+                model=reviewer_route.model,
+                timeout=timeout_seconds,
+                max_tokens=max_tokens,
+                provider=reviewer_route.provider,
+                prompt_adapter=reviewer_route.prompt_adapter,
+                ledger_database=Path(control_db),
+                tenant_id=tenant_id,
+                scope_name=scope_name,
+                job_id=job_id,
+                stage_id=accounting_stage_id,
+                stage_name="reconciliation_pro",
+                usage_attribution=usage_attribution,
+            )
+            primary_provider = primary_route.provider
+            primary_model = primary_route.model
+            primary_prompt_adapter = primary_route.prompt_adapter
+            reviewer_provider = reviewer_route.provider
+            reviewer_model_value = reviewer_route.model
         graph_factory = v4.RealGraphFactory(repo=repo, database=database)
         writer = v4.V4BatchWriter(
             store=v4.V4BatchStore(database),
@@ -1543,12 +1653,16 @@ def execute_writer(
                 "schema_version": "tmcra.service.incremental-writer.1",
                 "writer_schema_version": v4.BATCH_SCHEMA_VERSION,
                 "prompt_version": v4.PROMPT_VERSION,
-                "writer_provider": primary_route.provider,
-                "writer_model": primary_route.model,
-                "writer_prompt_adapter": primary_route.prompt_adapter,
+                "writer_provider": str(getattr(flash, "provider", primary_provider)),
+                "writer_model": str(getattr(flash, "model", primary_model)),
+                "writer_prompt_adapter": primary_prompt_adapter,
                 "writer_prompt_sha256": writer_prompt_sha256,
-                "reviewer_provider": reviewer_route.provider,
-                "reviewer_model": reviewer_route.model,
+                "reviewer_provider": str(
+                    getattr(pro, "provider", reviewer_provider)
+                ),
+                "reviewer_model": str(
+                    getattr(pro, "model", reviewer_model_value)
+                ),
                 "candidate_selector_version": v4.CANDIDATE_SELECTOR_VERSION,
                 "operation_id": operation_id,
                 "tenant_id": tenant_id,
@@ -1616,6 +1730,7 @@ def main() -> int:
     parser.add_argument("--job-id")
     parser.add_argument("--stage-id")
     parser.add_argument("--stage-attempt", type=int, default=1)
+    parser.add_argument("--provider-execution-json")
     parser.add_argument(
         "--reviewer-model",
         default=(
@@ -1652,6 +1767,20 @@ def main() -> int:
     if attribution_value is not None and not isinstance(attribution_value, Mapping):
         raise ProductionWriterError("usage attribution environment must be an object")
     usage_attribution = UsageAttribution.from_mapping(attribution_value)
+    try:
+        provider_execution_value = (
+            json.loads(args.provider_execution_json)
+            if args.provider_execution_json
+            else None
+        )
+    except json.JSONDecodeError as exc:
+        raise ProductionWriterError(
+            "provider execution argument is invalid JSON"
+        ) from exc
+    if provider_execution_value is not None and not isinstance(
+        provider_execution_value, Mapping
+    ):
+        raise ProductionWriterError("provider execution argument must be an object")
     recovery_mode = args.recovery_mode
     if args.recover_interrupted_api_calls:
         if recovery_mode != "none":
@@ -1675,6 +1804,7 @@ def main() -> int:
         max_tokens=args.max_tokens,
         recovery_mode=recovery_mode,
         usage_attribution=usage_attribution,
+        provider_execution=provider_execution_value,
     )
     return 0
 
