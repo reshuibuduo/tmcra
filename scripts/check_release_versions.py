@@ -14,6 +14,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = "0.3.0-rc2"
 NPM = "0.3.0-rc.2"
+CODEX = "0.3.0-rc.3"
 PYTHON = "0.3.0rc2"
 APPLE = "0.3.0"
 CLAUDE = "0.3.0-rc.2+claude.20260820"
@@ -85,7 +86,7 @@ def main() -> int:
         "03-tmcra-web-console/desktop/tmcra-memory/package.json",
         "04-tmcra-desktop/package.json",
     ]:
-        check_json(errors, path, ("tmcra", "fallbackPluginVersion"), NPM)
+        check_json(errors, path, ("tmcra", "fallbackPluginVersion"), CODEX)
     for path in package_locks:
         check_json(errors, path, ("version",), NPM)
         check_json(errors, path, ("packages", "", "version"), NPM)
@@ -144,13 +145,13 @@ def main() -> int:
         errors,
         "07-tmcra-codex-plugins/tmcra-memory/.codex-plugin/plugin.json",
         ("version",),
-        NPM,
+        CODEX,
     )
     check_json(
         errors,
         "03-tmcra-web-console/public/downloads/tmcra-codex-release.json",
         ("plugin", "version"),
-        NPM,
+        CODEX,
     )
     check_json(
         errors,
@@ -172,8 +173,8 @@ def main() -> int:
         ("05-tmcra-mobile/ios/App/App.xcodeproj/project.pbxproj", f"MARKETING_VERSION = {APPLE};", 2),
         ("03-tmcra-web-console/desktop/tmcra-memory/src/renderer/index.html", f"v{CANONICAL}", 1),
         ("04-tmcra-desktop/src/renderer/index.html", f"v{CANONICAL}", 1),
-        ("07-tmcra-codex-plugins/tmcra-memory/scripts/device_login.mjs", f'"{NPM}"', 2),
-        ("07-tmcra-codex-plugins/tmcra-memory/scripts/smoke_mcp.mjs", f'version: "{NPM}"', 1),
+        ("07-tmcra-codex-plugins/tmcra-memory/scripts/device_login.mjs", f'"{CODEX}"', 2),
+        ("07-tmcra-codex-plugins/tmcra-memory/scripts/smoke_mcp.mjs", f'version: "{CODEX}"', 1),
         ("08-tmcra-mcp-server/src/tmcra_mcp/client.py", f"tmcra-mcp/{CANONICAL}", 1),
         ("08-tmcra-mcp-server/src/tmcra_mcp/server.py", f'"integration_version": "{CANONICAL}"', 1),
     ]
@@ -192,7 +193,7 @@ def main() -> int:
 
     print(
         "Release versions are aligned: "
-        f"root={CANONICAL}, npm/nuget={NPM}, python={PYTHON}, apple={APPLE}"
+        f"root={CANONICAL}, npm/nuget={NPM}, codex={CODEX}, python={PYTHON}, apple={APPLE}"
     )
     return 0
 

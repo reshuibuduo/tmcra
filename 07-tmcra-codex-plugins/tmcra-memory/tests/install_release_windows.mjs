@@ -300,6 +300,17 @@ try {
   await rename(firstRoot, movedRoot);
   await installFrom(movedRoot);
 
+  const packageRootEntries = await readdir(movedRoot);
+  assert.equal(
+    packageRootEntries.some((entry) => entry.startsWith("System.Management.Automation.PSReference")),
+    false,
+    "config backup must not be written into the package directory",
+  );
+  const configBackups = (await readdir(codexHome)).filter((entry) =>
+    entry.startsWith("config.toml.tmcra-backup-"),
+  );
+  assert.ok(configBackups.length >= 1, "installer must back up config.toml beside the source file");
+
   const list = await run(codexCli, ["plugin", "list", "--json"], {
     cwd: movedRoot,
     env: { CODEX_HOME: codexHome },
@@ -347,6 +358,7 @@ try {
         pluginVersion: releaseManifest.version,
         cleanInstall: true,
         repeatedInstall: true,
+        configBackupPath: true,
         legacyReadWriteAclRecovered: true,
         movedUnicodeSpaceDirectory: true,
         bundledNodeFallback: true,
