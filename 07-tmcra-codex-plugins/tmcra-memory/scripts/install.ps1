@@ -149,7 +149,9 @@ function Invoke-CodexJson(
     if ($exitCode -ne 0) {
         if (
             $text -match 'failed to (?:back up|remove existing) plugin cache entry' -and
-            $text -match '(?:os error 5|Access is denied|拒绝访问)'
+            # Keep the script ASCII-safe for Windows PowerShell 5.1, which reads
+            # UTF-8 files without a BOM using the active ANSI code page.
+            $text -match '(?:os error 5|Access is denied|\u62D2\u7EDD\u8BBF\u95EE)'
         ) {
             throw "TMCRA_PLUGIN_CACHE_LOCKED"
         }

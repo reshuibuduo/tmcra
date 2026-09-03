@@ -174,7 +174,9 @@ try {
     }
 
     $hash = Get-FileHash -Algorithm SHA256 -LiteralPath $temporaryArchive
-    $bytes = (Get-Item -LiteralPath $temporaryArchive).Length
+    # PowerShell hides leading-dot files from Get-Item on Unix unless -Force is
+    # supplied. FileInfo reads the archive consistently on every runner.
+    $bytes = [System.IO.FileInfo]::new($temporaryArchive).Length
     Copy-Item -LiteralPath $temporaryArchive -Destination $temporaryAlias
     Write-Utf8NoBom $temporaryVersionedSha256 "$($hash.Hash.ToLowerInvariant())  $([System.IO.Path]::GetFileName($versionedOutput))`n"
     Write-Utf8NoBom $temporaryAliasSha256 "$($hash.Hash.ToLowerInvariant())  $([System.IO.Path]::GetFileName($resolvedOutput))`n"
