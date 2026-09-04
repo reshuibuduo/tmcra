@@ -27,7 +27,7 @@
   "tmcra": {
     "pluginArchive": "tmcra-codex-latest.zip",
     "pluginReleaseManifest": "tmcra-codex-release.json",
-  "fallbackPluginVersion": "0.3.0-rc.8",
+  "fallbackPluginVersion": "0.3.0-rc.10",
     "authorizationBaseUrl": "https://euvbyqa1jpvdm7yq-2000.sc01-webservice.gpuhome.cc:8443",
     "consolePath": "/personal",
     "allowedAuthenticationOrigins": [
