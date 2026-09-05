@@ -9,8 +9,8 @@
     "versioned": "tmcra-codex-1.0.0-rc.1.zip",
     "latestSha256": "tmcra-codex-latest.zip.sha256",
     "versionedSha256": "tmcra-codex-1.0.0-rc.1.zip.sha256",
-    "bytes": 6709156,
-    "sha256": "ef6fb5c06e88e81c2a8164dcf4e18ae2c9bdc4cdb868cbc7130b125bf77fb17d",
+    "bytes": 6709140,
+    "sha256": "a329fe3063023fba0068882b60fcfd9f7c393571c1bffd9e226e05148442c148",
     "entryCount": 235
   },
   "install": {
@@ -21,5 +21,5 @@
     "node": ">=18",
     "codexPluginCli": true
   },
-  "generatedAtUtc": "2026-09-05T19:32:37.2863365Z"
+  "generatedAtUtc": "2026-09-05T19:59:30.2754219Z"
 }
