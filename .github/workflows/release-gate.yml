@@ -44,6 +44,9 @@ jobs:
       - name: Verify portable service and model substitution
         working-directory: 02-tmcra-memory-api
         run: python -m unittest test_portable_release.py test_tmcra_service_model_flexibility.py
+      - name: Verify feedback and local-runtime safety contracts
+        working-directory: 02-tmcra-memory-api
+        run: python -m unittest discover -s tmcra_service/tests -q
       - name: Run frozen benchmark contracts
         working-directory: 09-tmcra-benchmarks
         env:

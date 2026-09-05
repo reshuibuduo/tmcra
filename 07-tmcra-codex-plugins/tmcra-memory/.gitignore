@@ -1,1 +1,15 @@
-.smoke-data/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.key
+*.pem
+.env
+.env.*
+.tmcra/
+scanner-report.*
+release/
+test-artifacts/
+__pycache__/
+*.py[cod]

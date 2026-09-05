@@ -3038,6 +3038,8 @@ def build_online_delta_index(
     base_candidates, base_payload = load_online_index_catalog(
         base_index_path, base_db_path, scope_id
     )
+    from tmcra_local_models import verify_index_identity
+    verify_index_identity(base_payload, args)
     text_dim = int(base_payload["text_dim"])
     if text_dim != int(_arg(args, "text_dim", text_dim)):
         raise RuntimeError("online delta text dimension differs from the active base")
@@ -3120,6 +3122,7 @@ def build_online_delta_index(
                 scope_id=scope_id,
                 subchunk_chars=int(base_payload["subchunk_chars"]),
                 subchunk_overlap=int(base_payload["subchunk_overlap"]),
+                vectorizer=vectorizer,
             )
             if parents
             else []
@@ -3162,6 +3165,7 @@ def build_online_delta_index(
             scope_id=scope_id,
             subchunk_chars=int(base_payload["subchunk_chars"]),
             subchunk_overlap=int(base_payload["subchunk_overlap"]),
+            vectorizer=vectorizer,
         )
         base_ids_for_diff = {
             _clean(item.get("candidate_id")) for item in base_candidates
@@ -3369,6 +3373,7 @@ def build_online_base_index(
         scope_id=scope_id,
         subchunk_chars=expected["subchunk_chars"],
         subchunk_overlap=expected["subchunk_overlap"],
+        vectorizer=vectorizer,
     )
     slow, semantic_records = load_v4_layered_inventory(db_path, scope_id, parents)
     slow_counts = _validated_slow_inventory_counts(slow)
@@ -3600,6 +3605,7 @@ def command_build_index(args: argparse.Namespace) -> None:
                 padding_side=str(
                     getattr(args, "embedding_padding_side", "right")
                 ),
+                long_document_policy=str(getattr(args, "embedding_long_document_policy", "reject")),
             )
         graph_fingerprint = v3.scope_fingerprint(db_path, scope_id)
         parents = v3.load_persisted_parent_chunks(db_path, scope_id)
@@ -3608,6 +3614,7 @@ def command_build_index(args: argparse.Namespace) -> None:
             scope_id=scope_id,
             subchunk_chars=args.subchunk_chars,
             subchunk_overlap=args.subchunk_overlap,
+            vectorizer=vectorizer,
         )
         slow, semantic_records = load_v4_layered_inventory(
             db_path, scope_id, parents
@@ -4118,6 +4125,8 @@ def main() -> int:
     retrieve = sub.add_parser("retrieve")
     retrieve.add_argument("--query-manifest", required=True); retrieve.add_argument("--out-dir", required=True); retrieve.add_argument("--resume", action="store_true"); retrieve.add_argument("--planner-replay-dir"); retrieve.add_argument("--checkpoint", required=True); retrieve.add_argument("--cross-model", default="/opt/tmcra-models/BAAI/bge-reranker-v2-m3"); retrieve.add_argument("--cross-max-length", type=int, default=1280); retrieve.add_argument("--cross-batch-size", type=int, default=24); retrieve.add_argument("--repo", required=True); retrieve.add_argument("--harness", required=True); retrieve.add_argument("--node-model", required=True); retrieve.add_argument("--path-model", required=True); retrieve.add_argument("--graph-device", default="cuda"); retrieve.add_argument("--candidate-event-k", type=int, default=24); retrieve.add_argument("--support-path-k", type=int, default=3); retrieve.add_argument("--path-tunnel-rescue-k", type=int, default=2); retrieve.add_argument("--graph-top-k", type=int, default=12); retrieve.add_argument("--dense-k", type=int, default=32); retrieve.add_argument("--slow-dense-k", type=int, default=24); retrieve.add_argument("--graph-k", type=int, default=24); retrieve.add_argument("--execution-lane", choices=sorted(EXECUTION_LANES), default="production"); retrieve.add_argument("--composition-mode", choices=sorted(COMPOSITION_MODES), default="layered"); retrieve.add_argument("--packing-budget-mode", choices=sorted(PACKING_BUDGET_MODES), default="fixed"); retrieve.add_argument("--top-k", type=int, default=8); retrieve.add_argument("--adaptive-simple-k", type=int, default=8); retrieve.add_argument("--adaptive-standard-k", type=int, default=12); retrieve.add_argument("--adaptive-complex-k", type=int, default=16); add_common_model_args(retrieve)
     args = parser.parse_args()
+    from tmcra_local_models import apply_local_profile
+    apply_local_profile(args)
     (command_build_index if args.command == "build-index" else command_retrieve)(args)
     return 0
 

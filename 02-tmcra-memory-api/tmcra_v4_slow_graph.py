@@ -1232,7 +1232,7 @@ class _DeepSeekTierClient:
             self.config.provider == LOCAL_QWEN_PROVIDER
             and self.config.base_url == LOCAL_QWEN_BASE_URL
         ):
-            body["id_slot"] = LOCAL_QWEN_GRAPH_SLOT_ID
+            body["id_slot"] = 0 if os.getenv("TMCRA_DEPLOYMENT_MODE") == "local" else LOCAL_QWEN_GRAPH_SLOT_ID
         if self.config.provider == DEEPSEEK_PROVIDER:
             body.update(
                 {

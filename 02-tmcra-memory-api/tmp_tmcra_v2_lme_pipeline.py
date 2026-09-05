@@ -348,6 +348,7 @@ class HuggingFaceDenseVectorizer:
         query_prefix: str = "",
         document_prefix: str = "",
         padding_side: str = "right",
+        long_document_policy: str = "reject",
     ):
         from transformers import AutoModel, AutoTokenizer
         self.dim = int(dim)
@@ -359,6 +360,9 @@ class HuggingFaceDenseVectorizer:
         self.query_prefix = str(query_prefix or "")
         self.document_prefix = str(document_prefix or "")
         self.padding_side = clean_text(padding_side).lower() or "right"
+        self.long_document_policy = long_document_policy
+        if long_document_policy not in {"reject", "window_mean"}:
+            raise ValueError("unknown long document policy")
         if self.max_length <= 0:
             raise RuntimeError("--embedding-max-length must be positive")
         if self.pooling not in {"cls", "mean", "last_token"}:
@@ -369,7 +373,10 @@ class HuggingFaceDenseVectorizer:
         self.model_path = str(resolved)
         self.tokenizer = AutoTokenizer.from_pretrained(str(resolved), local_files_only=True)
         self.tokenizer.padding_side = self.padding_side
-        self.model = AutoModel.from_pretrained(str(resolved), local_files_only=True).to(self.device)
+        self.model = AutoModel.from_pretrained(
+            str(resolved), local_files_only=True,
+            torch_dtype=torch.float16 if self.device.type == "cuda" and os.getenv("TMCRA_DEPLOYMENT_MODE") == "local" else torch.float32,
+        ).to(self.device)
         self.model.eval()
         hidden_size = int(getattr(self.model.config, "hidden_size", 0) or 0)
         if hidden_size != self.dim:
@@ -415,6 +422,48 @@ class HuggingFaceDenseVectorizer:
         *,
         purpose: str = "document",
     ) -> torch.Tensor:
+        prefix = self._purpose_prefix(purpose)
+        if purpose == "document" and self.long_document_policy == "window_mean":
+            spans = [self.source_spans(clean_text(text)) for text in texts]
+            if any(len(value) > 1 for value in spans):
+                # Slow capsules retain their full evidence text. Their one-vector
+                # representation pools all windows explicitly; source messages
+                # are independently windowed with exact source coordinates.
+                windows = [clean_text(text)[start:end] for text, values in zip(texts, spans) for start, end in values]
+                encoded_windows = self._encode_short_batch(windows, batch_size, purpose=purpose)
+                output = []
+                cursor = 0
+                for values in spans:
+                    vec = encoded_windows[cursor:cursor + len(values)].mean(dim=0)
+                    output.append(vec / vec.norm().clamp_min(1e-6))
+                    cursor += len(values)
+                return torch.stack(output)
+        return self._encode_short_batch(texts, batch_size, purpose=purpose)
+
+    def source_spans(self, text, *, prefix="", max_chars=None, overlap_chars=64):
+        """Cover every original character; tokenize prefix too; never truncate."""
+        limit = len(text) if max_chars is None else max(1, int(max_chars))
+        if len(self.tokenizer.encode(self.document_prefix + prefix, add_special_tokens=True)) >= self.max_length:
+            raise ValueError("source metadata exceeds embedding token budget")
+        if not text:
+            return [(0, 0)]
+        spans = []
+        start = 0
+        while start < len(text):
+            end = min(len(text), start + limit)
+            while len(self.tokenizer.encode(self.document_prefix + prefix + text[start:end], add_special_tokens=True)) > self.max_length:
+                # Token length need not be monotonic at subword boundaries.
+                # Geometric shrink is conservative and always makes progress.
+                end = start + max(0, (end - start) * 3 // 4)
+                if end <= start:
+                    raise ValueError("a source character cannot fit the embedding token budget")
+            spans.append((start, end))
+            if end == len(text):
+                break
+            start = max(start + 1, end - min(overlap_chars, (end - start) // 4))
+        return spans
+
+    def _encode_short_batch(self, texts, batch_size=4, *, purpose="document"):
         prefix = self._purpose_prefix(purpose)
         cleaned = [prefix + clean_text(t) for t in texts]
         if not cleaned:

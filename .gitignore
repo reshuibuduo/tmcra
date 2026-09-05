@@ -15,3 +15,5 @@ tmcra_service_state/
 03-tmcra-web-console/public/downloads/tmcra-codex-*.zip
 03-tmcra-web-console/desktop/tmcra-memory/resources/tmcra-codex-*
 04-tmcra-desktop/resources/tmcra-codex-*
+release/
+docs/LOCAL_DEPLOYMENT_PRODUCTION_AUDIT.zh-CN.md

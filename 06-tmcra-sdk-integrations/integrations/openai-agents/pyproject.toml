@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tmcra-openai-agents"
-version = "0.3.0rc2"
+version = "1.0.0rc1"
 description = "OpenAI Agents SDK lifecycle integration for TMCRA"
 requires-python = ">=3.10"
 readme = "README.md"
-dependencies = ["tmcra-client>=0.3.0rc2,<0.4", "openai-agents>=0.18,<1"]
+dependencies = ["tmcra-client>=1.0.0rc1,<2", "openai-agents>=0.18,<1"]
 license = { text = "MIT" }
 
 [project.optional-dependencies]

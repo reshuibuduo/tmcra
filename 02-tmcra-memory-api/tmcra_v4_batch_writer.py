@@ -2766,20 +2766,13 @@ class RealGraphBackend:
             f".{Path(self.adapter.storage_path).name}.{sha256_text(self.scope_id)[:16]}.commit.lock"
         )
         lock_path.parent.mkdir(parents=True, exist_ok=True)
-        with self._process_commit_lock(), lock_path.open("a+b") as lock_file:
-            try:
-                import fcntl
-            except ImportError:
-                fcntl = None
-            if fcntl is not None:
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        from tmcra_local_only import process_lock
+        with self._process_commit_lock(), process_lock(lock_path, timeout=600):
             self._scope_lock_depth = 1
             try:
                 yield
             finally:
                 self._scope_lock_depth = 0
-                if fcntl is not None:
-                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     @contextmanager
     def mutation_batch(self):

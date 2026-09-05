@@ -6186,7 +6186,7 @@
   "info": {
     "description": "Tenant-isolated long-term memory ingestion and prompt-ready recall. TMCRA does not generate the final assistant answer.",
     "title": "TMCRA Memory API",
-    "version": "0.3.0-rc2"
+    "version": "1.0.0-rc.1"
   },
   "openapi": "3.1.0",
   "paths": {

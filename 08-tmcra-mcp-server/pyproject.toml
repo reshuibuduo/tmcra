@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tmcra-mcp-server"
-version = "0.3.0rc2"
+version = "1.0.0rc1"
 description = "Model Context Protocol server for the TMCRA Memory API"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,6 +17,7 @@ dependencies = [
 [project.scripts]
 tmcra-mcp = "tmcra_mcp.server:main"
 tmcra-mcp-smoke = "tmcra_mcp.server_smoke:main"
+tmcra-mcp-setup = "tmcra_mcp.setup_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tmcra_mcp"]
