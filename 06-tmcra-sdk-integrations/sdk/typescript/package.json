@@ -1,6 +1,6 @@
 {
   "name": "@tmcra/typescript",
-  "version": "0.3.0-rc.2",
+  "version": "1.0.0-rc.1",
   "description": "Zero-runtime-dependency TypeScript client for the TMCRA Memory API",
   "type": "module",
   "license": "MIT",

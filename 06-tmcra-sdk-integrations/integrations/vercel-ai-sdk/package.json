@@ -1,6 +1,6 @@
 {
   "name": "@tmcra/vercel-ai-sdk",
-  "version": "0.3.0-rc.2",
+  "version": "1.0.0-rc.1",
   "description": "TMCRA LanguageModelV3 middleware for the Vercel AI SDK",
   "type": "module",
   "license": "MIT",
@@ -19,7 +19,7 @@
   },
   "peerDependencies": {
     "@ai-sdk/provider": ">=4 <5",
-    "@tmcra/typescript": ">=0.3.0-rc.2 <0.4.0"
+    "@tmcra/typescript": ">=1.0.0-rc.1 <2.0.0"
   },
   "devDependencies": {
     "@ai-sdk/provider": "4.0.3",

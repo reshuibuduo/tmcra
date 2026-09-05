@@ -878,6 +878,7 @@ def parent_subchunks(
     scope_id: str,
     subchunk_chars: int,
     subchunk_overlap: int,
+    vectorizer: Any = None,
 ) -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
     for parent in parents:
@@ -892,7 +893,10 @@ def parent_subchunks(
                 f"parent_chunk={int(parent['parent_chunk_index']):02d}"
             )
         payload_chars = int(subchunk_chars) - len(prefix) - 1
-        spans = covered_windows(str(parent["text"]), payload_chars, int(subchunk_overlap))
+        spans = (vectorizer.source_spans(str(parent["text"]), prefix=prefix + "\n",
+                                         max_chars=payload_chars, overlap_chars=int(subchunk_overlap))
+                 if vectorizer is not None and hasattr(vectorizer, "source_spans")
+                 else covered_windows(str(parent["text"]), payload_chars, int(subchunk_overlap)))
         for subchunk_index, (char_start, char_end) in enumerate(spans, start=1):
             text = f"{prefix}\n{str(parent['text'])[char_start:char_end]}"
             if len(text) > subchunk_chars:
@@ -1335,6 +1339,8 @@ class _SemanticOnlyFusion:
 
 class OnlineModels:
     def __init__(self, args: argparse.Namespace):
+        from tmcra_local_models import apply_local_profile
+        apply_local_profile(args)
         self.device = torch.device(args.device)
         if self.device.type == "cuda" and not torch.cuda.is_available():
             raise RuntimeError("CUDA is unavailable")
@@ -1348,6 +1354,7 @@ class OnlineModels:
             query_prefix=str(getattr(args, "embedding_query_prefix", "")),
             document_prefix=str(getattr(args, "embedding_document_prefix", "")),
             padding_side=str(getattr(args, "embedding_padding_side", "right")),
+            long_document_policy=str(getattr(args, "embedding_long_document_policy", "reject")),
         )
         self.reranker_mode = str(
             getattr(args, "reranker_mode", "fusion") or "fusion"
@@ -1370,7 +1377,7 @@ class OnlineModels:
             self.fusion = _SemanticOnlyFusion()
             return
 
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+        from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification, AutoTokenizer
 
         cross_path = Path(args.cross_model).resolve()
         model_manifest_path = cross_path / "TMCRA_MODEL_MANIFEST.json"
@@ -1378,7 +1385,14 @@ class OnlineModels:
             raise FileNotFoundError(f"pinned cross model manifest is required: {model_manifest_path}")
         self.cross_manifest = json.loads(model_manifest_path.read_text(encoding="utf-8"))
         self.cross_tokenizer = AutoTokenizer.from_pretrained(str(cross_path), local_files_only=True)
-        self.cross_model = AutoModelForSequenceClassification.from_pretrained(
+        self.reranker_adapter = getattr(args, "reranker_adapter", "sequence-classification")
+        if self.reranker_adapter not in {"sequence-classification", "causal-lm-yes-no"}:
+            raise ValueError("unsupported reranker adapter")
+        causal = self.reranker_adapter == "causal-lm-yes-no"
+        if causal and self.reranker_mode != "semantic-only":
+            raise ValueError("Qwen yes/no reranker requires semantic-only scoring")
+        model_class = AutoModelForCausalLM if causal else AutoModelForSequenceClassification
+        self.cross_model = model_class.from_pretrained(
             str(cross_path),
             local_files_only=True,
             torch_dtype=torch.float16 if self.device.type == "cuda" else torch.float32,
@@ -1412,6 +1426,8 @@ class OnlineModels:
             self.checkpoint_sha256 = sha256_file(checkpoint_path)
 
     def encode_cross(self, query: str, texts: Sequence[str]) -> tuple[torch.Tensor, torch.Tensor]:
+        if getattr(self, "reranker_adapter", "") == "causal-lm-yes-no":
+            return self._encode_causal_cross(query, texts)
         if self.reranker_mode == "dense-only":
             if not texts:
                 raise RuntimeError("dense-only reranker got no texts")
@@ -1497,6 +1513,30 @@ class OnlineModels:
                 representations.append(torch.stack(selected_representations, dim=0))
                 logits.append(torch.stack(selected_logits, dim=0))
         return torch.cat(representations, dim=0), torch.cat(logits, dim=0)
+
+    def _encode_causal_cross(self, query, texts):
+        from tmcra_local_models import qwen_rerank_windows
+        if not texts:
+            raise ValueError("reranker got no documents")
+        tokenizer = self.cross_tokenizer
+        tokenizer.padding_side = "left"
+        labels = [tokenizer.encode(label, add_special_tokens=False) for label in ("no", "yes")]
+        if any(len(label) != 1 for label in labels) or labels[0] == labels[1]:
+            raise RuntimeError("Qwen yes/no token contract differs")
+        scores = []
+        with torch.inference_mode():
+            for text in texts:
+                windows = qwen_rerank_windows(tokenizer, query, text, max_length=self.cross_max_length)
+                window_scores = []
+                for start in range(0, len(windows), self.cross_batch_size):
+                    encoded = tokenizer.pad({"input_ids": windows[start:start + self.cross_batch_size]},
+                                            padding=True, return_tensors="pt")
+                    encoded = {key: value.to(self.device) for key, value in encoded.items()}
+                    output = self.cross_model(**encoded, logits_to_keep=1, return_dict=True)
+                    logits = output.logits[:, -1, [labels[0][0], labels[1][0]]].float()
+                    window_scores.append(torch.log_softmax(logits, dim=-1)[:, 1])
+                scores.append(torch.cat(window_scores).max())
+        return torch.empty((len(texts), 0), device=self.device), torch.stack(scores)
 
 
 def load_online_index(path: Path, expected_db: Path, expected_scope: str) -> tuple[list[dict[str, Any]], torch.Tensor, list[dict[str, Any]], torch.Tensor, list[dict[str, Any]], dict[str, Any]]:

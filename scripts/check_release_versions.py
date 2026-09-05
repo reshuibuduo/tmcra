@@ -12,12 +12,12 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CANONICAL = "0.3.0-rc2"
-NPM = "0.3.0-rc.2"
-CODEX = "0.3.0-rc.10"
-PYTHON = "0.3.0rc2"
-APPLE = "0.3.0"
-CLAUDE = "0.3.0-rc.10+claude.20260904"
+CANONICAL = "1.0.0-rc.1"
+NPM = "1.0.0-rc.1"
+CODEX = "1.0.0-rc.1"
+PYTHON = "1.0.0rc1"
+APPLE = "1.0.0"
+CLAUDE = "1.0.0-rc.1+claude.20260906"
 
 
 def nested_value(document: Any, keys: tuple[str, ...]) -> Any:
@@ -167,7 +167,7 @@ def main() -> int:
         ("06-tmcra-sdk-integrations/sdk/python/tmcra_client/__init__.py", f'__version__ = "{PYTHON}"', 1),
         ("08-tmcra-mcp-server/src/tmcra_mcp/__init__.py", f'__version__ = "{PYTHON}"', 1),
         ("06-tmcra-sdk-integrations/integrations/microsoft-agent-framework/src/TMCRA.AgentFramework/TMCRA.AgentFramework.csproj", f"<Version>{NPM}</Version>", 1),
-        ("05-tmcra-mobile/android/app/build.gradle", 'versionCode 4', 1),
+        ("05-tmcra-mobile/android/app/build.gradle", 'versionCode 5', 1),
         ("05-tmcra-mobile/android/app/build.gradle", f'versionName "{CANONICAL}"', 1),
         ("05-tmcra-mobile/android/app/src/main/java/com/tmcra/memory/mobile/net/TmcraApiClient.java", f'CLIENT_VERSION = "{CANONICAL}"', 1),
         ("05-tmcra-mobile/ios/App/App.xcodeproj/project.pbxproj", f"MARKETING_VERSION = {APPLE};", 2),
@@ -175,14 +175,14 @@ def main() -> int:
         ("04-tmcra-desktop/src/renderer/index.html", f"v{CANONICAL}", 1),
         ("07-tmcra-codex-plugins/tmcra-memory/scripts/device_login.mjs", f'"{CODEX}"', 2),
         ("07-tmcra-codex-plugins/tmcra-memory/scripts/smoke_mcp.mjs", f'version: "{CODEX}"', 1),
-        ("08-tmcra-mcp-server/src/tmcra_mcp/client.py", f"tmcra-mcp/{CANONICAL}", 1),
-        ("08-tmcra-mcp-server/src/tmcra_mcp/server.py", f'"integration_version": "{CANONICAL}"', 1),
+        ("08-tmcra-mcp-server/src/tmcra_mcp/client.py", '"User-Agent": f"tmcra-mcp/{__version__}"', 1),
+        ("08-tmcra-mcp-server/src/tmcra_mcp/server.py", '"integration_version": __version__', 2),
     ]
     for path, fragment, count in text_checks:
         check_text(errors, path, fragment, count=count)
 
     citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
-    if not re.search(r"(?m)^date-released: 2026-08-20$", citation):
+    if not re.search(r"(?m)^date-released: 2026-09-06$", citation):
         errors.append("CITATION.cff: date-released must match the release-candidate date")
 
     if errors:

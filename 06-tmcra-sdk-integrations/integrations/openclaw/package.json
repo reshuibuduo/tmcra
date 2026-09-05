@@ -1,6 +1,6 @@
 {
   "name": "@tmcra/openclaw-memory",
-  "version": "0.3.0-rc.2",
+  "version": "1.0.0-rc.1",
   "description": "Native OpenClaw lifecycle plugin for TMCRA memory recall and turn ingestion.",
   "type": "module",
   "license": "MIT",

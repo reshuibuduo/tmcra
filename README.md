@@ -2,7 +2,9 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Current source release: **`0.3.0-rc2`** · [Changelog](CHANGELOG.md)
+Current source release: **`1.0.0-rc.1`** · [Changelog](CHANGELOG.md)
+
+New: [Windows full-local runtime preview](docs/LOCAL_DEPLOYMENT_PREVIEW.zh-CN.md), redesigned Codex/DSH memory controls, confirmed corrections, and three pinned embedding/reranker profiles. Full-local acceptance remains partial; production deployments are unchanged by this source release.
 
 **Temporal Memory-Centric Retrieval Architecture** is a self-hosted memory
 platform for products and AI agents. It turns conversations and application

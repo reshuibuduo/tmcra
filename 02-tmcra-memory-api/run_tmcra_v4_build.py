@@ -47,6 +47,9 @@ def _stage(root: Path, name: str, **values: Any) -> None:
 
 
 def _load_shell_environment(path: Path) -> dict[str, str]:
+    from tmcra_local_only import enabled, read_environment
+    if enabled():
+        return read_environment(path)
     if not path.is_file():
         raise BuildError(f"writer environment file is missing: {path}")
     command = 'set -a; source "$1"; env -0'
@@ -82,6 +85,10 @@ def _rotated(keys: Sequence[str], worker_index: int) -> str:
 
 def _worker_environment(base: Mapping[str, str], keys: Sequence[str], worker_index: int) -> dict[str, str]:
     environment = dict(base)
+    from tmcra_local_only import enabled, validate_environment
+    if enabled(environment):
+        validate_environment(environment)
+        return environment
     pool = _rotated(keys, worker_index)
     base_url = environment.get("TMCRA_DEEPSEEK_WRITER_BASE_URL") or environment.get("TMCRA_WRITER_BASE_URL") or "https://api.deepseek.com/v1"
     max_tokens = environment.get("TMCRA_WRITER_MAX_TOKENS", "16384")

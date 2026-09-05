@@ -92,6 +92,8 @@ export interface RetentionPolicy {
 export type FeedbackRating = "helpful" | "incorrect" | "stale" | "unsafe" | "missing";
 
 export interface FeedbackRequest {
+  action?: "note" | "ignore" | "correct" | "restore";
+  replacement?: string;
   query_id?: string;
   rating: FeedbackRating;
   memory_ids?: readonly string[];
@@ -100,6 +102,10 @@ export interface FeedbackRequest {
 }
 
 export interface FeedbackResponse {
+  action?: "note" | "ignore" | "correct" | "restore";
+  effective?: boolean;
+  correction_job_id?: string | null;
+  correction_index_status?: string | null;
   feedback_id: string;
   scope_name: string;
   rating: FeedbackRating | string;

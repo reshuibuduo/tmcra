@@ -1,5 +1,17 @@
 # Changelog / 变更记录
 
+## 1.0.0-rc.1 — 2026-09-06
+
+- Unify product and adapter versions for this major release candidate. Add account-free Windows one-click local installation, automatic private Python, bundled backend inventory, automatic local identity discovery and protection against stale cloud requests.
+
+- Add Windows full-local runtime preview with pinned E5/MiniLM, BGE and Qwen retrieval profiles, private local identity, loopback generation routing and per-model index identity checks.
+- Add memory workspace, provider configuration, knowledge/graph views, task continuity, session privacy controls and interactive correction confirmation.
+- Add effective source feedback, portable Windows locks and full-local cloud-handoff isolation. Production deployment is a separate operation.
+- Synchronize Codex 1.0.0-rc.1 and the nine-tool MCP implementation; preserve binary assets in reproducible plugin archives.
+- Validation boundary: synthetic CPU ingest/raw recall passed; complex compilation timed out. Organizer, full-service restart, and balanced/high-tier hardware acceptance remain pending.
+
+Current package spellings: npm/NuGet `1.0.0-rc.1`, Python `1.0.0rc1`. The previous release's package spelling is retained below for historical reference.
+
 All notable release changes are recorded here. Package ecosystems use their own
 valid prerelease spelling: `0.3.0-rc.2` for npm/NuGet and `0.3.0rc2` for Python.
 Both map to the repository release `0.3.0-rc2`.

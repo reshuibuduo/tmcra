@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "plugin": {
     "name": "tmcra-memory",
-    "version": "0.3.0-rc.10"
+    "version": "1.0.0-rc.1"
   },
   "archive": {
     "latest": "tmcra-codex-latest.zip",
-    "versioned": "tmcra-codex-0.3.0-rc.10.zip",
+    "versioned": "tmcra-codex-1.0.0-rc.1.zip",
     "latestSha256": "tmcra-codex-latest.zip.sha256",
-    "versionedSha256": "tmcra-codex-0.3.0-rc.10.zip.sha256",
-    "bytes": 608689,
-    "sha256": "df576ff7be026f67628124f402d5b06ceaf3f0a94ab0c6e516d96be70cbaa20a",
-    "entryCount": 37
+    "versionedSha256": "tmcra-codex-1.0.0-rc.1.zip.sha256",
+    "bytes": 6709140,
+    "sha256": "a329fe3063023fba0068882b60fcfd9f7c393571c1bffd9e226e05148442c148",
+    "entryCount": 235
   },
   "install": {
     "windows": ".\\Install-TMCRA.ps1",
@@ -21,5 +21,5 @@
     "node": ">=18",
     "codexPluginCli": true
   },
-  "generatedAtUtc": "2026-09-04T00:02:14.7544528Z"
+  "generatedAtUtc": "2026-09-05T19:59:30.2754219Z"
 }

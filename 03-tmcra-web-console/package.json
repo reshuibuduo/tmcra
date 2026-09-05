@@ -1,6 +1,6 @@
 {
   "name": "@tmcra/web-console",
-  "version": "0.3.0-rc.2",
+  "version": "1.0.0-rc.1",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
