@@ -29,7 +29,7 @@
     },
     {
       "path": "tmcra_v3_product_writer.py",
-      "sha256": "6ded6febcf59e24d78957669790f2200c21cb5247adfd1963ca5bf31085b60c5"
+      "sha256": "da7996b3db806f0ad02dfb4576fe72b6d3d76a6f13cc6ad42e7ca1e1f2296a12"
     },
     {
       "path": "tmcra_v3_recall_planner.py",
@@ -41,7 +41,7 @@
     },
     {
       "path": "tmcra_v4_batch_writer.py",
-      "sha256": "a46a3695b08a8a5bd205863a43c416340863976f274d851ed2db4d04f5c125f5"
+      "sha256": "cfe4b18bd86f936a1e74320440102c2c6e1521b0bb7f7f263f4489dcac64e028"
     },
     {
       "path": "tmcra_v4_cost_report.py",
@@ -86,6 +86,10 @@
     {
       "path": "tmcra_local_models.py",
       "sha256": "f464a241c7f7ca2f78a52f7c03d7157520795281ac5c7e01faeaea4606274fb4"
+    },
+    {
+      "path": "tmcra_entity_identity.py",
+      "sha256": "0648157305a98df62cb1127ad7b6ec1f368d9a17cc627ee4b2ab96c990e94b09"
     }
   ]
 }

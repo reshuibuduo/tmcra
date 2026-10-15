@@ -73,6 +73,7 @@ $releaseFiles = @(
     [ordered]@{ Source = "scripts/provider_executor.mjs"; Archive = "plugins/tmcra-memory/scripts/provider_executor.mjs" },
     [ordered]@{ Source = "scripts/provider_setup.mjs"; Archive = "plugins/tmcra-memory/scripts/provider_setup.mjs" },
     [ordered]@{ Source = "scripts/tmcra_client.mjs"; Archive = "plugins/tmcra-memory/scripts/tmcra_client.mjs" },
+    [ordered]@{ Source = "scripts/prompt_origin.mjs"; Archive = "plugins/tmcra-memory/scripts/prompt_origin.mjs" },
     [ordered]@{ Source = "resources/provider-settings.html"; Archive = "plugins/tmcra-memory/resources/provider-settings.html" },
     [ordered]@{ Source = "skills/manage-tmcra-memory/agents/openai.yaml"; Archive = "plugins/tmcra-memory/skills/manage-tmcra-memory/agents/openai.yaml" },
     [ordered]@{ Source = "skills/manage-tmcra-memory/SKILL.md"; Archive = "plugins/tmcra-memory/skills/manage-tmcra-memory/SKILL.md" },

@@ -55,6 +55,10 @@ def apply_feedback(evidence: Mapping[str, Any], effects: Mapping[str, Any]) -> d
             "text": effect["replacement"],
             "actor_role": "user",
             "authority": "explicit_user_correction",
+            # This is an audited correction operation, not proof of authorship.
+            # Preserve the action separately when conservative rendering removes
+            # legacy user-authority claims without origin declarations.
+            "correction_method": "explicit_user_correction",
             "timestamp": datetime.fromtimestamp(effect["created_at"], timezone.utc).isoformat(),
             "session_id": f"correction-{feedback_id}",
             "memory_contexts": [], "attachments": [], "source_group_context": [],

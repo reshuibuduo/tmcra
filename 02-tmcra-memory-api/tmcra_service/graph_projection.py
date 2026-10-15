@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
+from .actor_provenance import origin_metadata, source_authority
+
 from .adapters.v4 import V4AdapterError, V4StorageAdapter
 
 
@@ -583,6 +585,7 @@ class MemoryGraphProjection:
                     ),
                     "role": _text(metadata.get("role") or metadata.get("speaker")) or None,
                     "actor_role": _actor_role(metadata),
+                    **origin_metadata(metadata),
                     "agent_id": _text(metadata.get("agent_id")) or None,
                     "agent_name": _text(metadata.get("agent_name")) or None,
                     "agent_role": _text(metadata.get("agent_role")) or None,
@@ -1231,11 +1234,8 @@ def _node(
     actor_roles = _record_actor_roles(record, records)
     actor_role = actor_roles[0] if len(actor_roles) == 1 else None
     agent_values = _record_agent_values(record, records)
-    authority = _text(metadata.get("authority"))
-    if not authority and record.layer == "source" and actor_role:
-        authority = f"{actor_role}_source"
-    elif not authority and record.layer == "slow" and actor_roles == ["user"]:
-        authority = "derived_user_memory"
+    origin = origin_metadata(metadata)
+    authority = source_authority({**metadata, **origin, "actor_role": actor_role}, derived=record.layer != "source")
     provenance_source = _text(
         metadata.get("provenance_source")
         or metadata.get("source")
@@ -1291,6 +1291,7 @@ def _node(
         "source_kind": record.source_kind or None,
         "actor_role": actor_role,
         "actor_roles": actor_roles,
+        **origin,
         "authority": authority or None,
         "provenance_source": provenance_source or None,
         "evidence_count": evidence_count,
@@ -1299,6 +1300,7 @@ def _node(
         "attributes": {
             key: value
             for key, value in {
+                **origin,
                 "memory_type": metadata.get("memory_type"),
                 "memory_family": metadata.get("memory_family"),
                 "graph_entity_key": metadata.get("graph_entity_key"),

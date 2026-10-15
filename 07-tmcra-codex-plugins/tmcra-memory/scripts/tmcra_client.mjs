@@ -1,3 +1,4 @@
+import { normalizeQueuedOrigin, permitsPromptCapture } from "./prompt_origin.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { appendFile, mkdir, open, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
@@ -1534,6 +1535,12 @@ export async function removeOutboxTurn(outboxId, { expectedIdempotencyKey = null
 }
 
 export async function submitOutboxTurn(entry, config) {
+  if ((entry.messages || []).some(message => message.role === "user" &&
+      !permitsPromptCapture(normalizeQueuedOrigin(message.metadata || {}, message.role)))) {
+    await saveOutboxReceipt(entry, { state: "discarded", errorCode: "automatic_origin_excluded", completedAt: new Date().toISOString() });
+    await removeOutboxTurn(entry.outboxId, { expectedIdempotencyKey: entry.idempotencyKey });
+    return { skipped: true, reason: "automatic_origin_excluded" };
+  }
   if (!entry.capture) {
     const { controlKey, legacyWriteAllowed } = await import("./memory_controls.mjs");
     if (!await legacyWriteAllowed(controlKey(config, entry.scope), {
