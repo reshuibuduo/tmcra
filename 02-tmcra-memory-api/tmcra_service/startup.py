@@ -16,12 +16,13 @@ from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request
 
 from . import __version__
 from .adapters.v4 import V4StorageAdapter
 from .control_db import ControlDB
 from .health import readiness
+from .http_transport import open_request
 from .provider_pool import ProviderCircuitBreaker
 from .planner_provider import recall_planner_route
 from .runtime import LazyOnlineEngine, WorkerStatus
@@ -634,7 +635,7 @@ class StartupPreflight:
             method="GET",
         )
         try:
-            with urlopen(request, timeout=5.0) as response:
+            with open_request(request, timeout=5.0) as response:
                 payload = json.load(response)
         except Exception as exc:
             raise RuntimeError("local Qwen context probe failed") from exc

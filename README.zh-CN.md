@@ -4,6 +4,10 @@
 
 当前源码候选版本：**`1.0.0-rc.1`** · [更新记录](CHANGELOG.md)
 
+**仓库分工：** 本仓库是包含服务端、Web、桌面/移动端与适配器的完整私有化平台。
+只需要个人本地 Agent 记忆运行时，请看 [tmcra-memory](https://github.com/reshuibuduo/tmcra-memory)。
+两者的安装、配置和测试契约独立，直接复制数据目录或配置文件不等于完成迁移。
+
 新增：[Windows 完整本地运行预览](docs/LOCAL_DEPLOYMENT_PREVIEW.zh-CN.md)、新版记忆工作台、聊天确认纠错与三档固定版本的 embedding/reranker。完整本地验收仍未完成，本次源码发布不改动生产部署。
 
 TMCRA（Temporal Memory-Centric Retrieval Architecture）是面向产品和 AI Agent
