@@ -128,6 +128,8 @@ test("personal memory exposes a full evidence-bound semantic zoom atlas", async 
   assert.match(atlas, /loadedScopeRef/);
   assert.doesNotMatch(atlas, /data\.(?:galaxies|sessions|chapters|memories)\.slice/);
   assert.match(consoleClient, /<VisualMemoryAtlasExplorer scopeName=\{effectiveScope\}/);
+  assert.match(consoleClient, /lazy\(\(\) => import\("\.\/VisualMemoryAtlasExplorer"\)\)/u);
+  assert.match(consoleClient, /<Suspense fallback=/u);
   assert.match(consoleClient, /graphMode === "sessions"/);
 });
 

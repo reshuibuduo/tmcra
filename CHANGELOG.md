@@ -1,5 +1,31 @@
 # Changelog / 变更记录
 
+## Unreleased
+
+- Port reviewed runtime correctness fixes: bounded transient lane retries,
+  consolidation/reindex exclusion, retryable cancelled maintenance watermarks,
+  and aggregate unresolved-consolidation health without raw member content.
+- Preserve a content-free completion fence after deleting source accounting.
+  Persist hashed source-identity tombstones in the deletion transaction and
+  reject replay under a new session/key. Fix external/internal message-ID alias
+  collisions without removing public BYOK cleanup or Windows locking.
+- Extend strict Slow Graph validation with at most one correction per route;
+  transport failures are not automatically retried. Keep configurable model
+  aliases, provider routing and the benchmark package unchanged.
+- Lazy-load the personal memory atlas. Newly issued personal/Agent tokens no
+  longer grant `memory:consolidate`; existing tokens are not modified.
+- 本批同步通用正确性修复，不包含眼镜、团队部署配置或自动数据迁移。
+  发布内容与后续边界见 [同步说明](docs/RUNTIME_SYNC.zh-CN.md)。
+
+- Keep Python CLI loopback requests, local model health checks, and startup
+  context probes off environment/system proxies. Reject HTTP redirects from
+  those loopback endpoints rather than forwarding credentials to another
+  listener. Remote HTTP provider behavior is unchanged.
+- Add real loopback-socket regression tests for proxy routing and redirects,
+  and clarify the full-system versus owner-local repository boundary.
+- 修复 Python CLI、本地模型健康检查和启动预检的 loopback 代理与重定向问题。
+  本次只维护源码和回归测试，未更换模型、迁移数据或部署线上服务。
+
 ## 1.0.0-rc.1 — 2026-09-06
 
 - Unify product and adapter versions for this major release candidate. Add account-free Windows one-click local installation, automatic private Python, bundled backend inventory, automatic local identity discovery and protection against stale cloud requests.

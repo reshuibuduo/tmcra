@@ -32,7 +32,6 @@ const DEVICE_CODE_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const TOKEN_PERMISSIONS = [
   "memory:read",
   "memory:write",
-  "memory:consolidate",
   "memory:feedback",
 ] as const;
 

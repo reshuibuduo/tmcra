@@ -4,6 +4,12 @@
 
 Current source release: **`1.0.0-rc.1`** · [Changelog](CHANGELOG.md)
 
+**Repository scope:** this is the full self-hosted platform, including service,
+Web, desktop/mobile clients and adapters. For the smaller owner-local Agent
+memory runtime, see [tmcra-memory](https://github.com/reshuibuduo/tmcra-memory).
+They have separate installation, configuration and test contracts; do not copy
+one repository's data directory or settings into the other as a migration.
+
 New: [Windows full-local runtime preview](docs/LOCAL_DEPLOYMENT_PREVIEW.zh-CN.md), redesigned Codex/DSH memory controls, confirmed corrections, and three pinned embedding/reranker profiles. Full-local acceptance remains partial; production deployments are unchanged by this source release.
 
 **Temporal Memory-Centric Retrieval Architecture** is a self-hosted memory

@@ -65,6 +65,21 @@ Release、Codex 市场源码包与 DSH tarball 均携带后端运行文件和 SH
 
 ## 下一轮验收
 
+### 2026-10-15 源码维护：本机 HTTP 请求
+
+Python 用户 CLI、本地模型 supervisor 健康检查与启动上下文预检，现在对
+`127.0.0.0/8`、`::1` 和 `localhost` 的 HTTP(S) 请求显式禁用代理，包含
+macOS 系统代理；也拒绝所有 HTTP 重定向，包括转到另一本机端口。
+如本机反向代理返回 3xx，请配置最终端点，不要依靠跳转。
+
+外部供应商请求和安装阶段模型下载保留原有网络行为，未全局修改代理设置。
+回归使用合成请求与临时本机 HTTP 服务，不加载模型；历史完整本地验收状态不变。
+
+```bash
+cd 02-tmcra-memory-api
+python -m unittest tmcra_service.tests.test_loopback_transport -v
+```
+
 先腾出至少约 6.3GB 可用内存，再验证限流参数后的 Writer / Reviewer、身份归属、证据编译、Slow Graph、知识库投影和服务重启恢复。均衡、高配档需要在对应硬件上另测。当前结果不足以标注「所有电脑都可完整离线运行」。
 
 模型与依赖来源：[E5](https://huggingface.co/intfloat/multilingual-e5-small)、[MiniLM 重排](https://huggingface.co/cross-encoder/mmarco-mMiniLMv2-L12-H384-v1)、[BGE-M3](https://huggingface.co/BAAI/bge-m3)、[BGE 重排](https://huggingface.co/BAAI/bge-reranker-v2-m3)、[Qwen Embedding](https://huggingface.co/Qwen/Qwen3-Embedding-4B)、[Qwen Reranker](https://huggingface.co/Qwen/Qwen3-Reranker-0.6B)、[Qwen 生成模型](https://huggingface.co/Qwen/Qwen3-4B-GGUF)、[PyTorch 安装版本](https://pytorch.org/get-started/previous-versions/)。

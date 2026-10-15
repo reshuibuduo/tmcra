@@ -199,10 +199,55 @@ class StaffRuntimeStatus:
             "startup_preflight": self._startup_snapshot(),
             "readiness": self._readiness_snapshot(),
             "queue": self._queue_snapshot(),
+            "background_consolidation": self.background_snapshot(),
             "latency": self.latency_window.snapshot(),
             "costs": self._cost_snapshot(),
             "release": self._release_snapshot(),
         }
+
+    def background_snapshot(self) -> dict[str, Any]:
+        """Report unresolved consolidation failures without exposing scope identities.
+
+        A running/cancelled retry is not proof of recovery. Only a newer successful
+        consolidation clears a prior failure for the same tenant and scope.
+        """
+        try:
+            with self.database.transaction(immediate=False) as connection:
+                rows = connection.execute(
+                    """
+                    WITH terminal AS (
+                        SELECT state, updated_at,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY tenant_id, scope_name
+                                ORDER BY updated_at DESC, created_at DESC, job_id DESC
+                            ) AS ordinal
+                        FROM jobs AS j
+                        WHERE json_extract(payload_json, '$.job_type')='consolidate'
+                            AND state IN ('failed', 'succeeded')
+                            AND NOT EXISTS (
+                                SELECT 1 FROM scope_lifecycle AS l
+                                WHERE l.tenant_id=j.tenant_id AND l.scope_name=j.scope_name
+                                    AND l.state='deleted'
+                            )
+                    )
+                    SELECT state, COUNT(*) AS count, MAX(updated_at) AS latest_at
+                    FROM terminal WHERE ordinal=1 GROUP BY state
+                    """
+                ).fetchall()
+            counts = {str(row["state"]): int(row["count"]) for row in rows}
+            failed = counts.get("failed", 0)
+            return {
+                "availability": "available",
+                "source": "control_db.latest_terminal_consolidation_per_scope",
+                "status": "degraded" if failed else "healthy" if rows else "unobserved",
+                "failed_scope_count": failed,
+                "succeeded_scope_count": counts.get("succeeded", 0),
+                "last_terminal_at": max((float(row["latest_at"]) for row in rows), default=None),
+                "raw_error_text_exposed": False,
+            }
+        except Exception:
+            return {"availability": "unavailable", "status": "unknown",
+                    "reason": "consolidation_health_query_failed"}
 
     def _startup_snapshot(self) -> dict[str, Any]:
         try:

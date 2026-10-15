@@ -71,11 +71,12 @@ test("personal API key issuance is least-privilege, direct, and one-time-secret"
     source("app/api/personal/api-keys.ts"),
     source("db/console.ts"),
   ]);
+  assert.doesNotMatch(service, /"memory:consolidate"/u);
   assert.match(service, /createMemoryControlClient/u);
   assert.match(service, /subject:\s*access\.space\.id/u);
   assert.match(service, /scope_names:\s*\[\]/u);
   assert.match(service, /scope_prefixes:\s*\[`\$\{access\.space\.scopeName\}-`\]/u);
-  for (const permission of ["memory:read", "memory:write", "memory:consolidate", "memory:feedback"]) {
+  for (const permission of ["memory:read", "memory:write", "memory:feedback"]) {
     assert.match(service, new RegExp(`"${permission}"`, "u"));
   }
   assert.doesNotMatch(service, /provisional_delivery_seconds/u);
@@ -141,4 +142,23 @@ test("personal API key validation exposes explicit error contracts", async () =>
   }
   assert.match(service, /permissions must be a non-empty array/u);
   assert.match(service, /expiresInSeconds must be between 3600 and 31536000/u);
+});
+
+test("the actual personal permission validator rejects consolidation authority", async () => {
+  const { stripTypeScriptTypes } = await import("node:module");
+  const { runInNewContext } = await import("node:vm");
+  const service = (await source("app/api/personal/api-keys.ts"))
+    .replace(/^import[\s\S]*?from ["'][^"']+["'];\s*/gmu, "")
+    .replace(/^export /gmu, "");
+  class ConsoleError extends Error {
+    constructor(status, code, message) { super(message); this.status = status; this.code = code; }
+  }
+  const validate = runInNewContext(
+    `${stripTypeScriptTypes(service)}\nrequestedPermissions;`, { ConsoleError },
+  );
+  assert.deepEqual(Array.from(validate(undefined)), ["memory:read", "memory:write", "memory:feedback"]);
+  assert.deepEqual(Array.from(validate(["memory:read", "memory:read"])), ["memory:read"]);
+  assert.throws(() => validate(["memory:consolidate"]), (error) =>
+    error.status === 422 && error.code === "invalid_api_key_permissions");
+  assert.throws(() => validate(["memory:read", "memory:consolidate"]));
 });

@@ -253,6 +253,7 @@ test("approval requires SIWC plus personal space and never returns the control c
   assert.match(harnessConnectPage, /providerLabel="DeepSeek Harness"/);
   assert.match(connectClient, /nextAuthorization\.provider !== provider/);
 
+  assert.doesNotMatch(service, /"memory:consolidate"/u);
   assert.match(service, /createMemoryControlClient/);
   assert.match(service, /TMCRA_MEMORY_API_CONTROL_BASE_URL/);
   assert.match(service, /TMCRA_MEMORY_API_CONTROL_ALLOW_HTTP_LOOPBACK === "1"/);
@@ -260,7 +261,7 @@ test("approval requires SIWC plus personal space and never returns the control c
   assert.match(service, /scope_names:\s*\[\]/);
   assert.match(service, /scope_prefixes:\s*\[`\$\{access\.space\.scopeName\}-`\]/);
   assert.match(service, /subject:\s*access\.space\.id/);
-  assert.match(service, /"memory:read",\s*"memory:write",\s*"memory:consolidate",\s*"memory:feedback"/);
+  assert.match(service, /"memory:read",\s*"memory:write",\s*"memory:feedback"/);
   assert.match(service, /expires_in_seconds:\s*TOKEN_LIFETIME_SECONDS/);
   assert.match(service, /provisional_delivery_seconds:\s*PROVISIONAL_TOKEN_SECONDS/);
   assert.match(service, /issueTokenOnFirstPoll/);
