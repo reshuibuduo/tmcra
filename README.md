@@ -1,5 +1,7 @@
 # TMCRA — Full-Stack Open-Source Memory Infrastructure for AI Agents
 
+> Reliability update: see [origin tracking, background ingestion and stable entities](docs/RELIABILITY.zh-CN.md).
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 Current source release: **`1.0.0-rc.1`** · [Changelog](CHANGELOG.md)

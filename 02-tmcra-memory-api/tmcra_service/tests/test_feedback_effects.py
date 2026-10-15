@@ -29,6 +29,9 @@ class FeedbackEffectsTests(unittest.TestCase):
         self.assertEqual(prompt["content"].count("Correct user fact"), 1)
         self.assertIn("keep this", prompt["content"])
         self.assertIn("explicit_user_correction", prompt["content"])
+        self.assertIn("origin=unknown", prompt["content"])
+        self.assertNotIn("authority=explicit_user_correction", prompt["content"])
+        self.assertNotIn("User requirements and facts", prompt["content"])
         self.assertEqual(evidence, original)
         self.assertEqual(len(prompt["sources"]), 2)
 

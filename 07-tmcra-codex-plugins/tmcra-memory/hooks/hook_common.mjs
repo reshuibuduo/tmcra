@@ -1,3 +1,4 @@
+import { classifyPromptOrigin, permitsPromptCapture } from "../scripts/prompt_origin.mjs";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { mkdir, open, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
@@ -531,6 +532,8 @@ function visibleMemoryContext(messages) {
 }
 
 export async function rememberPrompt(input) {
+  const origin = classifyPromptOrigin(input);
+  if (!permitsPromptCapture(origin)) return null;
   const prompt = bounded(input.prompt);
   if (!prompt) return null;
   const { config, scopes, host } = await resolveHookContext(input);
@@ -550,6 +553,7 @@ export async function rememberPrompt(input) {
       explicitTurnId: hasExplicitTurnId(input),
       prompt,
       promptAt: new Date().toISOString(),
+      origin,
       cwd: String(input.cwd || ""),
       scopes,
       capture,
@@ -911,12 +915,14 @@ export async function ingestCompletedTurn(input) {
       role: "user",
       content: pending.prompt,
       timestamp: pending.promptAt,
+      metadata: pending.origin || {},
     },
     {
       message_id: messageId(host, sessionId, turnId, "assistant"),
       role: "assistant",
       content: assistant,
       timestamp: new Date().toISOString(),
+      metadata: { origin_kind: "assistant_generated", capture_method: "host_event_metadata", provenance_strength: "host_declared" },
     },
   ];
   const metadata = {

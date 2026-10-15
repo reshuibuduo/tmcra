@@ -53,7 +53,7 @@ jobs:
       - name: Verify workflow histories, receipts and selective transfer
         working-directory: 02-tmcra-memory-api
         run: |
-          PYTHONPATH=. python -m pytest workflow_tests tmcra_service/tests/test_workflow_routes.py -q
+          PYTHONPATH=. python -m pytest workflow_tests tmcra_service/tests -q
       - name: Run frozen benchmark contracts
         working-directory: 09-tmcra-benchmarks
         env:
@@ -159,6 +159,9 @@ jobs:
         env:
           TMCRA_TEST_POWERSHELL: ${{ runner.os == 'Windows' && 'pwsh' || '' }}
         run: node scripts/test_codex_e2e.mjs
+      - name: Verify prompt provenance contracts
+        working-directory: 07-tmcra-codex-plugins/tmcra-memory
+        run: node --test tests/prompt_origin.test.mjs
       - name: Build self-contained release archive
         shell: pwsh
         run: |

@@ -14,6 +14,8 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from tmcra_entity_identity import normalize_identity_metadata
+
 from .source_tombstones import initialize_source_tombstones, source_identity_revoked
 from .actor_provenance import (
     ActorProvenanceError,
@@ -188,6 +190,16 @@ class IdentityRegistry:
                     PRIMARY KEY(scope_id, session_id, operation_id, local_batch_index),
                     UNIQUE(scope_id, session_id, batch_index)
                 );
+                CREATE TABLE IF NOT EXISTS tmcra_service_message_entity_identity (
+                    scope_id TEXT NOT NULL,
+                    message_id TEXT NOT NULL,
+                    identity_metadata_json TEXT NOT NULL,
+                    identity_metadata_sha256 TEXT NOT NULL,
+                    PRIMARY KEY(scope_id, message_id),
+                    FOREIGN KEY(scope_id, message_id)
+                        REFERENCES tmcra_service_messages(scope_id, message_id)
+                        ON DELETE CASCADE
+                );
                 CREATE TABLE IF NOT EXISTS tmcra_service_message_actor_provenance (
                     scope_id TEXT NOT NULL,
                     message_id TEXT NOT NULL,
@@ -321,6 +333,7 @@ class IdentityRegistry:
             or str(metadata.get("timestamp") or "") != message.timestamp
             or str(metadata.get("raw_content") or "") != message.content
             or str(metadata.get("enrichment_status") or "") != "enriched"
+            or normalize_identity_metadata(metadata.get("identity_metadata")) != normalize_identity_metadata(getattr(message, "identity_metadata", {}))
         ):
             raise ProductionWriterError(
                 f"replayed message graph Source identity changed: {message.message_id}"
@@ -398,6 +411,13 @@ class IdentityRegistry:
                             )
                         except ActorProvenanceError as exc:
                             raise ProductionWriterError(str(exc)) from exc
+                        try:
+                            identity_metadata = normalize_identity_metadata(
+                                dict(raw.get("metadata") or {}).get("identity_metadata"))
+                        except (ValueError, TypeError) as exc:
+                            raise ProductionWriterError(f"invalid entity identity metadata: {exc}") from exc
+                        identity_json = json.dumps(identity_metadata, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                        identity_sha256 = _sha256(identity_json)
                         actor_json = actor_metadata_json(actor_metadata)
                         actor_sha256 = actor_metadata_sha256(actor_metadata)
                         identity = (scope_id, message_id)
@@ -528,6 +548,21 @@ class IdentityRegistry:
                             first_operation_id = str(
                                 prior["first_operation_id"] or ""
                             )
+                        entity_row = connection.execute(
+                            "SELECT identity_metadata_json,identity_metadata_sha256 FROM tmcra_service_message_entity_identity "
+                            "WHERE scope_id=? AND message_id=?", identity,
+                        ).fetchone()
+                        if entity_row is None:
+                            if prior is not None and identity_metadata:
+                                raise ProductionWriterError(f"message_id replay changed immutable entity identity: {message_id}")
+                            connection.execute(
+                                "INSERT INTO tmcra_service_message_entity_identity VALUES (?,?,?,?)",
+                                (scope_id, message_id, identity_json, identity_sha256),
+                            )
+                        elif (_sha256(str(entity_row["identity_metadata_json"])) != entity_row["identity_metadata_sha256"]
+                              or entity_row["identity_metadata_json"] != identity_json
+                              or entity_row["identity_metadata_sha256"] != identity_sha256):
+                            raise ProductionWriterError(f"message_id replay changed immutable entity identity: {message_id}")
                         message = v4.SourceMessage(
                             scope_id=scope_id,
                             session_id=session_id,
@@ -538,6 +573,7 @@ class IdentityRegistry:
                             timestamp=timestamp,
                             content=content,
                             actor_metadata=actor_metadata,
+                            identity_metadata=identity_metadata,
                         )
                         if prior is None or include_enriched_replays:
                             messages.append(message)

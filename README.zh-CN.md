@@ -1,5 +1,7 @@
 # TMCRA — 面向 AI Agent 的全栈开源长期记忆基础设施
 
+> 可靠性更新：参见[来源识别、后台写入与稳定实体](docs/RELIABILITY.zh-CN.md)。
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 当前源码候选版本：**`1.0.0-rc.1`** · [更新记录](CHANGELOG.md)

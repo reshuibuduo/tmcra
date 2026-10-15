@@ -1170,6 +1170,9 @@ class MemoryGraphEvidenceItem(StrictModel):
     message_id: str | None = None
     role: str | None = None
     actor_role: ActorRole | None = None
+    origin_kind: Literal["human_authored", "human_adopted", "app_generated", "automation", "assistant_generated", "tool_generated", "unknown"] = "unknown"
+    capture_method: Literal["host_event_metadata", "explicit_api_declaration", "legacy_role_only"] = "legacy_role_only"
+    provenance_strength: Literal["host_declared", "caller_declared", "unknown"] = "unknown"
     agent_id: str | None = None
     agent_name: str | None = None
     agent_role: str | None = None

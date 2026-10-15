@@ -2025,6 +2025,7 @@ class V4StorageAdapter:
                         *sorted(service_message_ids),
                     )
                     for table in (
+                        "tmcra_service_message_entity_identity",
                         "tmcra_service_message_actor_provenance",
                         "tmcra_service_messages",
                     ):
@@ -2051,6 +2052,31 @@ class V4StorageAdapter:
                         f"AND message_id IN ({message_placeholders})",
                         message_parameters,
                     )
+            # Later reconciliation/commit payloads may embed an earlier
+            # source's old value even though their owning message survives.
+            # Erase exact source references inside the same transaction; never
+            # use substring matching or reach into another tenant/scope.
+            audit_references = target_ids | message_ids
+            for table in ("v4_reconciliation_jobs", "v4_message_commit_journal", "v4_batch_journal"):
+                if table not in tables:
+                    continue
+                columns = {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
+                payload_columns = sorted(columns & {"request_json", "response_json", "plan_json", "response_metadata_json"})
+                if not payload_columns:
+                    continue
+                selection = ",".join(payload_columns)
+                audit_rows = connection.execute(
+                    f"SELECT rowid AS audit_row_id,{selection} FROM {table} WHERE scope_id=?",
+                    (paths.scope_id,),
+                ).fetchall()
+                erase = [int(row["audit_row_id"]) for row in audit_rows
+                    if any(self._json_contains_identifier(row[column], audit_references)
+                           for column in payload_columns)]
+                connection.executemany(
+                    f"DELETE FROM {table} WHERE scope_id=? AND rowid=?",
+                    ((paths.scope_id, row_id) for row_id in erase),
+                )
+
             if clean_session:
                 for table in ("tmcra_service_batches", "v4_batch_journal"):
                     if table in tables:
