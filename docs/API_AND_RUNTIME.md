@@ -111,3 +111,8 @@ For a runnable deployment walkthrough and the public single-GPU boundary, see
 the [deployment guide](DEPLOYMENT.md). For bringing an existing memory product
 to TMCRA or extending these contracts, see
 [integration and extension](INTEGRATION_AND_EXTENSION.md).
+
+
+## Workflow MCP and API
+
+The `tmcra_workflows` MCP tool maps project-bound calls to the existing workflow API. See [the concrete four-feature MCP/HTTP examples](WORKFLOW_MCP_API.zh-CN.md) and [client invocation table](WORKFLOW_COMMANDS.zh-CN.md). Public completion receipts remain reported; sensitive exports, commits, recovery and deletion require explicit user confirmation.

@@ -39,14 +39,21 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: 02-tmcra-memory-api/requirements-tmcra-service.txt
-      - name: Install production runtime dependencies
-        run: python -m pip install -r 02-tmcra-memory-api/requirements-tmcra-service.txt
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24.19.0"
+      - name: Install runtime and test dependencies
+        run: python -m pip install -r 02-tmcra-memory-api/requirements-tmcra-service.txt 'pytest==9.0.3'
       - name: Verify portable service and model substitution
         working-directory: 02-tmcra-memory-api
         run: python -m unittest test_portable_release.py test_tmcra_service_model_flexibility.py
       - name: Verify feedback and local-runtime safety contracts
         working-directory: 02-tmcra-memory-api
         run: python -m unittest discover -s tmcra_service/tests -q
+      - name: Verify workflow histories, receipts and selective transfer
+        working-directory: 02-tmcra-memory-api
+        run: |
+          PYTHONPATH=. python -m pytest workflow_tests tmcra_service/tests/test_workflow_routes.py -q
       - name: Run frozen benchmark contracts
         working-directory: 09-tmcra-benchmarks
         env:

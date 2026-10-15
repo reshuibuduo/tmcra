@@ -725,6 +725,17 @@
       "FeedbackRequest": {
         "additionalProperties": false,
         "properties": {
+          "action": {
+            "default": "note",
+            "enum": [
+              "note",
+              "ignore",
+              "correct",
+              "restore"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
           "comment": {
             "anyOf": [
               {
@@ -772,6 +783,19 @@
             ],
             "title": "Rating",
             "type": "string"
+          },
+          "replacement": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replacement"
           }
         },
         "required": [
@@ -783,9 +807,41 @@
       "FeedbackView": {
         "additionalProperties": false,
         "properties": {
+          "action": {
+            "default": "note",
+            "title": "Action",
+            "type": "string"
+          },
+          "correction_index_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correction Index Status"
+          },
+          "correction_job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correction Job Id"
+          },
           "created_at": {
             "title": "Created At",
             "type": "number"
+          },
+          "effective": {
+            "default": false,
+            "title": "Effective",
+            "type": "boolean"
           },
           "feedback_id": {
             "title": "Feedback Id",
@@ -2786,6 +2842,14 @@
           "source_text_verbatim": {
             "title": "Source Text Verbatim",
             "type": "boolean"
+          },
+          "sources": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Sources",
+            "type": "array"
           },
           "trust_boundary": {
             "title": "Trust Boundary",
@@ -6174,6 +6238,37 @@
         ],
         "title": "WebhookView",
         "type": "object"
+      },
+      "WorkflowIn": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "task.upsert/receipt, attempt.record, decision.create/revise, reminder.upsert/evaluate/act, record.delete, bridge.export/export_revocations/preview/commit/plan/retry_failed, context.prepare. No remote execution action.",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Action",
+            "type": "string"
+          },
+          "operation_id": {
+            "description": "Caller-generated stable operation identity. Reuse the same identity and identical inputs after an uncertain result; changing inputs requires a new identity.",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "description": "Action-specific fields; unknown fields are rejected. Bridge imports require explicit selected_ids, a bound preview_token and a separate commit. Execution reports from this API remain unverified.",
+            "title": "Payload",
+            "type": "object"
+          }
+        },
+        "required": [
+          "action",
+          "operation_id"
+        ],
+        "title": "WorkflowIn",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -7904,6 +7999,24 @@
             "schema": {
               "title": "Scope Name",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 8,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -10638,6 +10751,163 @@
         "summary": "Scope Summary",
         "tags": [
           "memory"
+        ]
+      }
+    },
+    "/v1/scopes/{scope_name}/workflows": {
+      "get": {
+        "description": "Requires memory:read. Optional as_of is an ISO8601 timezone-aware observation cutoff. Deleted content stays erased in historical views. Reading import states never submits or retries jobs.",
+        "operationId": "getMemoryWorkflows",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Read project tasks, decisions, reminders and import states",
+        "tags": [
+          "memory-workflows"
+        ]
+      },
+      "post": {
+        "description": "Requires memory:read and memory:write. Export additionally requires administrative memory:export; revocation requires administrative memory:delete. accepted_pending is not indexed. bridge.plan can resume unsubmitted records; bridge.retry_failed explicitly requests native audited retry. No action executes shell commands. See WORKFLOW_CENTER and WORKFLOW_MCP_API for action payloads.",
+        "operationId": "applyMemoryWorkflowAction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope_name",
+            "required": true,
+            "schema": {
+              "title": "Scope Name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+            "in": "header",
+            "name": "X-TMCRA-On-Behalf-Of-Subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trusted subject attribution for server-side control-plane proxies. Requires a tokens:manage API key.",
+              "title": "X-Tmcra-On-Behalf-Of-Subject"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "TMCRAApiKey": []
+          }
+        ],
+        "summary": "Apply a bounded task, decision, reminder or selective transfer action",
+        "tags": [
+          "memory-workflows"
         ]
       }
     },

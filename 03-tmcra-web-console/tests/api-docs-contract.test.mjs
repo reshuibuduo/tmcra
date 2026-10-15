@@ -24,7 +24,9 @@ test("bilingual API docs cover every published OpenAPI operation", () => {
   assert.equal(spec.info.version, JSON.parse(read("package.json")).version);
   assert.equal(spec.servers[0].url, "https://api.tmcra.com");
   assert.equal(spec.paths["/v1/session"].get.operationId, "getAuthenticatedSession");
-  assert.equal(operations.length, 58);
+  assert.equal(operations.length, 60);
+  assert.equal(spec.paths["/v1/scopes/{scope_name}/workflows"].get.operationId, "getMemoryWorkflows");
+  assert.equal(spec.paths["/v1/scopes/{scope_name}/workflows"].post.operationId, "applyMemoryWorkflowAction");
   for (const [method, apiPath] of operations) {
     assert.match(content, new RegExp(`method: \\"${method}\\"[\\s\\S]{0,120}path: \\"${apiPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\"`));
   }

@@ -25,6 +25,20 @@ async function read(key) {
     return state;
   } catch (error) { if (error.code === "ENOENT") return blank(); throw error; }
 }
+async function replaceControlState(temporary, destination) {
+  // Windows readers/AV can briefly deny atomic replacement of an existing
+  // state file. Keep the writer lock and old readable destination throughout;
+  // unlinking the destination first would expose missing/partial state.
+  const deadline = Date.now() + 1_000;
+  while (true) {
+    try { await rename(temporary, destination); return; }
+    catch (error) {
+      if (process.platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(error?.code)
+        || Date.now() >= deadline) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+  }
+}
 async function edit(key, fn) {
   if (!/^[a-f0-9]{64}$/u.test(key)) throw new Error("Invalid memory control key");
   await mkdir(controlsRoot(), { recursive: true, mode: 0o700 });
@@ -43,7 +57,7 @@ async function edit(key, fn) {
     temporary = join(controlsRoot(), `${key}.${randomUUID()}.tmp`);
     const file = await open(temporary, "wx", 0o600);
     try { await file.writeFile(JSON.stringify(state)); await file.sync(); } finally { await file.close(); }
-    await rename(temporary, join(controlsRoot(), `${key}.json`));
+    await replaceControlState(temporary, join(controlsRoot(), `${key}.json`));
     return result;
   } finally {
     if (temporary) await unlink(temporary).catch(() => {});

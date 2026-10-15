@@ -23,6 +23,7 @@ from pathlib import Path
 
 from tmcra_local_models import profile_by_id, profiles, sha256_file, signature, verify_weights
 from tmcra_local_only import configure_routes, process_lock, read_environment, validate_environment
+from .http_transport import open_request
 
 API_ROOT = Path(__file__).resolve().parents[1]
 GENERATION = {
@@ -305,7 +306,7 @@ def run(root):
                             raise RuntimeError("generation service exited; inspect its local log")
                         try:
                             request = urllib.request.Request(f"http://127.0.0.1:{receipt['model_port']}/health")
-                            with urllib.request.urlopen(request, timeout=2) as response:
+                            with open_request(request, timeout=2) as response:
                                 if response.status == 200:
                                     break
                         except (OSError, TimeoutError):

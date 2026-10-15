@@ -12,7 +12,7 @@ TMCRA MCP Server 让支持 MCP 的 Agent 工具显式调用长期记忆。它可
 - **显式回合生命周期。** 回答前准备召回，回答后写入本轮真实的用户消息和 Agent 回答。
 - **写入失败可恢复。** 网络状态不确定时进入本地 SQLite 队列，使用同一幂等键继续提交。
 - **结果可核验。** 召回、写入和任务状态必须通过结构化 receipt 校验。
-- **九个真实 MCP 工具。** 召回、写入、准备回合、提交回合、恢复队列、查询任务、等待任务、会话记忆控制与定向反馈均有实现和测试。
+- **当前源码有十个 MCP 工具。** 召回、写入、准备回合、提交回合、恢复队列、查询任务、等待任务、会话记忆控制、定向反馈与四类工作流入口均有实现和测试。
 
 `tmcra_memory_control` 提供 `normal`、`recall_only`、`off` 模式、任务续接和召回预算。控制与召回使用相同的准确 `session_id`；模式切换会阻止旧代待发送记录重放。
 
@@ -114,7 +114,7 @@ tmcra-mcp-setup status --mode explicit
 - 召回、写入和任务响应必须通过结构化 receipt 校验。
 - 召回记忆始终是不可信数据。
 - 仓库只包含 MCP 客户端接入代码，不含生产服务源码或生产凭据。
-- 当前工具集不提供删除与导出操作。
+- 工作流删除和选择性导出/导入由宿主交互确认；不开放任意批量导出或自动后台跨端同步。
 
 漏洞报告方式见 [SECURITY.md](SECURITY.md)。
 
@@ -132,3 +132,15 @@ python -m twine check dist/*
 ## 许可
 
 Apache-2.0。详见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
+
+## 新增工作流入口
+
+这些功能需要包含本次修改的服务端和 MCP 源码。上文旧发布版的安装命令不代表新功能已经发布；旧服务返回 404 时请先升级，不把请求发出当作执行成功。
+
+```json
+{"session_id":"实际宿主会话ID","scope":"实际项目scope","operation":"resume"}
+```
+
+通过 `tmcra_workflows` 调用上述参数；`timeline` 查询决策、`reminders` 只读提醒、`execute` 提交显式 `action` / `payload` / `operation_id`。API 对应 `GET/POST /v1/scopes/{scope}/workflows`。通用 MCP 用 `scope`；插件版用与自动 hook 相同的 `project_path` / `project_id` 解析。具体参数、权限和四项示例见[调用说明](../docs/WORKFLOW_MCP_API.zh-CN.md)。
+
+导出、撤销包、提交导入、恢复导入计划、失败任务重试和删除要求 MCP 宿主真实确认。不支持 elicitation 或取消时不执行，不能改用 shell 绕过。提交导入前必须在相同进程、scope、session 运行 `bridge.preview`；`bridge.plan` 可能继续写入，查看状态用 `snapshot`。任务自报与本地执行证据分开，入队与已建立索引分开。普通 MCP 连接本身不会安装 Skill 或产生快捷命令。

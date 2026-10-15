@@ -28,6 +28,7 @@ from ..planner import (
     recall_planner_from_env,
 )
 from ..gpu_scheduler import GpuWorkloadScheduler
+from ..source_tombstones import record_source_tombstones
 from ..control_db import ControlDB
 from ..costing import journal_deepseek_calls
 from ..jobs import JobStore
@@ -1990,22 +1991,33 @@ class V4StorageAdapter:
                     predicates = [f"message_id IN ({message_placeholders})"]
                     service_lookup_parameters: tuple[Any, ...] = message_parameters
                     if "internal_message_id" in service_columns:
-                        predicates.append(
-                            f"internal_message_id IN ({message_placeholders})"
-                        )
+                        # Source metadata names INTERNAL IDs. A caller may
+                        # independently use 's000_m000' as its external ID;
+                        # never revoke that unrelated row through an OR alias.
+                        predicates = [
+                            f"internal_message_id IN ({message_placeholders})",
+                            "(COALESCE(internal_message_id,'')='' AND "
+                            f"message_id IN ({message_placeholders}))",
+                        ]
                         service_lookup_parameters = (
                             paths.scope_id,
                             *sorted(message_ids),
                             *sorted(message_ids),
                         )
-                    service_message_ids.update(
-                        str(row[0])
-                        for row in connection.execute(
-                            "SELECT message_id FROM tmcra_service_messages "
+                    revoked_identities = connection.execute(
+                            "SELECT message_id,session_id FROM tmcra_service_messages "
                             "WHERE scope_id=? AND (" + " OR ".join(predicates) + ")",
                             service_lookup_parameters,
                         ).fetchall()
+                    # Retain only stable non-content identities in the SAME
+                    # deletion transaction before erasing the caller catalog.
+                    # A late new-key ingest must not recreate this source.
+                    record_source_tombstones(
+                        connection, paths.scope_id,
+                        ((str(row[0]), str(row[1])) for row in revoked_identities),
+                        deletion_job_id=job_id,
                     )
+                    service_message_ids.update(str(row[0]) for row in revoked_identities)
                 if service_message_ids:
                     service_placeholders = ",".join("?" for _ in service_message_ids)
                     service_parameters = (

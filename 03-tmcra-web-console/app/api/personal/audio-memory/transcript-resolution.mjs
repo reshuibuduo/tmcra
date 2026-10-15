@@ -1,7 +1,7 @@
 const MAX_COMPARISON_CHARACTERS = 5_000;
 const CONFIDENCE_BANDS = new Set(["high", "medium", "low"]);
 
-export async function resolveTranscriptCandidates({ local, remote, protectedTerms = [] }) {
+export async function resolveTranscriptCandidates({ local, remote, protectedTerms = /** @type {string[]} */ ([]) }) {
   const localCandidate = await candidateValue(local, "local");
   const remoteCandidate = await candidateValue(remote, "remote");
   if (!remoteCandidate) throw new TypeError("A remote transcript candidate is required.");
@@ -124,7 +124,7 @@ export function transcriptSimilarity(left, right) {
   return rounded(1 - previous[shorter.length] / longer.length);
 }
 
-export function criticalTranscriptConflicts(localText, remoteText, protectedTerms = []) {
+export function criticalTranscriptConflicts(localText, remoteText, protectedTerms = /** @type {string[]} */ ([])) {
   const conflicts = [];
   const localCritical = criticalTokens(localText);
   const remoteCritical = criticalTokens(remoteText);

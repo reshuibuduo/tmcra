@@ -304,3 +304,8 @@ GPU 显存**。实际容量仍取决于嵌入、重排和生成模型、并发�
 ## 许可证
 
 TMCRA 使用 Apache License 2.0，详见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
+
+
+### Skill、MCP 与 API
+
+四功能统一使用 `tmcra_workflows` MCP：任务接续、决策历史、情景提醒和选择性记忆包。参见 [一页调用表](docs/WORKFLOW_COMMANDS.zh-CN.md) 与 [真实 MCP / HTTP 示例](docs/WORKFLOW_MCP_API.zh-CN.md)。普通记录不等于执行验证；敏感操作仍需明确确认。

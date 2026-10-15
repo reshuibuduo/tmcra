@@ -544,6 +544,31 @@ try {
         }),
       }),
     ]);
+    // Hook failures intentionally exit zero. Assert actual durable capture before
+    // testing Stop pairing, so CI identifies a lost submit rather than hiding it
+    // behind a later wrong-prompt assertion. Keep the real concurrent submits.
+    const capturedTurns = await Promise.all([
+      ["claude-prompt-first", firstPrompt], ["claude-prompt-second", secondPrompt],
+    ].map(async ([promptId, prompt]) => {
+      const turnId = `auto-${createHash("sha256").update(
+        ["claude-code", sessionId, transcriptPath, promptId].join("\u0000"),
+      ).digest("hex").slice(0, 40)}`;
+      const name = `${createHash("sha256").update(`${sessionId}:${turnId}`).digest("hex")}.json`;
+      try { return { turnId, prompt: JSON.parse(await readFile(join(dataDir, "pending", name), "utf8")).prompt }; }
+      catch (error) { return { turnId, error: error.code || error.name }; }
+    }));
+    const pendingName = `${createHash("sha256").update(sessionId).digest("hex")}.json`;
+    let durableIndex;
+    try { durableIndex = JSON.parse(await readFile(join(dataDir, "pending-index", pendingName), "utf8")); }
+    catch (error) { durableIndex = { error: error.code || error.name, entries: [] }; }
+    const recentFailures = (await readFile(join(dataDir, "logs", "events.jsonl"), "utf8"))
+      .trim().split(/\r?\n/u).map(line => JSON.parse(line))
+      .filter(row => row.event.endsWith("_failed")).slice(-8)
+      .map(row => ({ event: row.event, message: redact(row.message) }));
+    const captureDiagnostic = JSON.stringify({ capturedTurns, durableIndex, recentFailures });
+    assert.deepEqual(capturedTurns.map(row => row.prompt), [firstPrompt, secondPrompt], captureDiagnostic);
+    assert.deepEqual(durableIndex.entries.filter(row => row.status === "pending").map(row => row.turnId).sort(),
+      capturedTurns.map(row => row.turnId).sort(), captureDiagnostic);
     await writeFile(transcriptPath, [
       JSON.stringify({ role: "user", content: firstPrompt }),
       JSON.stringify({ role: "user", content: secondPrompt }),
@@ -655,6 +680,43 @@ try {
     ]);
   });
 
+  await test("Unknown stable prompt_id never consumes the sole pending user prompt", async () => {
+    const claudeEnv = { ...env };
+    delete claudeEnv.CODEX_HOME;
+    const base = {
+      session_id: "claude-stable-id-mismatch",
+      transcript_path: join(tempRoot, "claude-stable-id-mismatch.jsonl"),
+      cwd: projectA,
+    };
+    const prompt = "EXACT_STABLE_PROMPT_MUST_SURVIVE";
+    const promptId = "exact-known-id";
+    await runNode(join(hooksDir, "user_prompt_submit.mjs"), [], {
+      cwd: projectA, env: claudeEnv,
+      input: JSON.stringify({ ...base, hook_event_name: "UserPromptSubmit", prompt_id: promptId, prompt }),
+    });
+    const turnId = `auto-${createHash("sha256").update(
+      ["claude-code", base.session_id, base.transcript_path, promptId].join("\u0000"),
+    ).digest("hex").slice(0, 40)}`;
+    const pendingName = `${createHash("sha256").update(`${base.session_id}:${turnId}`).digest("hex")}.json`;
+    const pendingPath = join(dataDir, "pending", pendingName);
+    const pendingBefore = await readFile(pendingPath, "utf8");
+    await runNode(join(hooksDir, "stop.mjs"), [], {
+      cwd: projectA, env: claudeEnv,
+      input: JSON.stringify({ ...base, hook_event_name: "Stop", prompt_id: "unknown-id",
+        last_assistant_message: "MISMATCHED_RESPONSE_MUST_NOT_BE_STORED" }),
+    });
+    assert.equal(await readFile(pendingPath, "utf8"), pendingBefore);
+    await runNode(join(hooksDir, "stop.mjs"), [], {
+      cwd: projectA, env: claudeEnv,
+      input: JSON.stringify({ ...base, hook_event_name: "Stop", prompt_id: promptId,
+        last_assistant_message: "EXACT_STABLE_RESPONSE" }),
+    });
+    await waitFor(() => server.records.some(record => record.messages.some(item => item.content === "EXACT_STABLE_RESPONSE")));
+    const record = server.records.find(row => row.messages.some(item => item.content === "EXACT_STABLE_RESPONSE"));
+    assert.deepEqual(record.messages.map(item => item.content), [prompt, "EXACT_STABLE_RESPONSE"]);
+    assert(!server.records.some(row => row.messages.some(item => item.content === "MISMATCHED_RESPONSE_MUST_NOT_BE_STORED")));
+  });
+
   await test("StopFailure checkpoints the user prompt without persisting provider error text", async () => {
     const claudeEnv = { ...env };
     delete claudeEnv.CODEX_HOME;
@@ -745,7 +807,7 @@ try {
       const listed = await client.request("tools/list");
       assert.deepEqual(
         listed.tools.map((tool) => tool.name).sort(),
-        ["tmcra_consolidate", "tmcra_get_job", "tmcra_ingest", "tmcra_last_recall", "tmcra_memory_control", "tmcra_open_local_install", "tmcra_open_local_model_settings", "tmcra_open_memory_center", "tmcra_recall", "tmcra_status", "tmcra_wait_job"],
+        ["tmcra_consolidate", "tmcra_get_job", "tmcra_ingest", "tmcra_last_recall", "tmcra_memory_control", "tmcra_open_local_install", "tmcra_open_local_model_settings", "tmcra_open_memory_center", "tmcra_recall", "tmcra_status", "tmcra_wait_job", "tmcra_workflows"],
       );
       assert.equal(
         listed.tools.find((tool) => tool.name === "tmcra_status")._meta.ui.resourceUri,

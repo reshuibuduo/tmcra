@@ -442,6 +442,9 @@ def create_server(
         json_response=True,
     )
 
+    from .workflows import register_workflows
+    register_workflows(server, http_client, tools, may_write)
+
     @server.tool()
     async def tmcra_memory_control(
         session_id: str, operation: Literal["dashboard", "mode", "budget", "task", "correction_start"],
