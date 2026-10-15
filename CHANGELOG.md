@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Port reviewed runtime correctness fixes: bounded transient lane retries,
+  consolidation/reindex exclusion, retryable cancelled maintenance watermarks,
+  and aggregate unresolved-consolidation health without raw member content.
+- Preserve a content-free completion fence after deleting source accounting.
+  Persist hashed source-identity tombstones in the deletion transaction and
+  reject replay under a new session/key. Fix external/internal message-ID alias
+  collisions without removing public BYOK cleanup or Windows locking.
+- Extend strict Slow Graph validation with at most one correction per route;
+  transport failures are not automatically retried. Keep configurable model
+  aliases, provider routing and the benchmark package unchanged.
+- Lazy-load the personal memory atlas. Newly issued personal/Agent tokens no
+  longer grant `memory:consolidate`; existing tokens are not modified.
+- 本批同步通用正确性修复，不包含眼镜、团队部署配置或自动数据迁移。
+  发布内容与后续边界见 [同步说明](docs/RUNTIME_SYNC.zh-CN.md)。
+
 - Keep Python CLI loopback requests, local model health checks, and startup
   context probes off environment/system proxies. Reject HTTP redirects from
   those loopback endpoints rather than forwarding credentials to another

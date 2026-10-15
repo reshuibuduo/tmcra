@@ -697,7 +697,8 @@ class CommercialControl:
                             (tenant_id, scope_name, operation_id),
                         )
                         connection.execute(
-                            "DELETE FROM scope_ingest_watermark_commits "
+                            "UPDATE scope_ingest_watermark_commits "
+                            "SET new_message_count=0,raw_token_estimate=0,user_turns=0 "
                             "WHERE tenant_id=? AND scope_name=? AND operation_id=?",
                             (tenant_id, scope_name, operation_id),
                         )

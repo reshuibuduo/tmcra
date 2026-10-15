@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { LanguageToggle, type Language, useLanguage } from "../i18n";
 import MemoryExplorer from "../console/MemoryExplorer";
 import PersonalUsageLedger from "./PersonalUsageLedger";
-import VisualMemoryAtlasExplorer from "./VisualMemoryAtlasExplorer";
+const VisualMemoryAtlasExplorer = lazy(() => import("./VisualMemoryAtlasExplorer"));
 
 type Actor = { id: string; displayName: string; email: string };
 type Space = { id: string; displayName: string; status: string };
@@ -679,7 +679,7 @@ function MemoryView({
       </div>
 
       {graphMode === "sessions" ? (
-        effectiveScope ? <VisualMemoryAtlasExplorer scopeName={effectiveScope} /> : null
+        effectiveScope ? <Suspense fallback={<p role="status">{t("Loading memory atlas…", "正在加载记忆图谱…")}</p>}><VisualMemoryAtlasExplorer scopeName={effectiveScope} /></Suspense> : null
       ) : (
         <MemoryExplorer
           enabled
