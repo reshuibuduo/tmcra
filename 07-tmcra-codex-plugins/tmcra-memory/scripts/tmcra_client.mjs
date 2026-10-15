@@ -784,7 +784,12 @@ export async function withTaskStateLock(sessionId, callback) {
   const path = join(directory, `${sessionStateKey(sessionId)}.lock`);
   await mkdir(directory, { recursive: true });
   let handle = null;
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+  // rememberPrompt holds this lock while beginMemoryTurn may wait up to 1.5s
+  // for the memory-controls lock and fsync its state. The previous 500ms
+  // budget could drop a concurrent prompt on slow filesystems. Stay bounded
+  // below the host hook deadline; never take over a fresh owner's lock.
+  const deadline = Date.now() + 2_000;
+  while (Date.now() < deadline) {
     try {
       handle = await open(path, "wx", 0o600);
       break;

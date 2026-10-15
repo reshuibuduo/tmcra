@@ -233,6 +233,17 @@ async function resolvePendingTurnId(input, sessionId) {
   );
   if (direct) return direct.turnId;
   if (hasExplicitTurnId(input)) return baseTurnId;
+  // A host-provided event identity is a binding, not a hint. If its prompt was
+  // not persisted (e.g. a contended hook failed open), never attach this event
+  // to another turn merely because only one pending prompt remains.
+  if (String(input.prompt_id || input.message_id || input.tool_use_id || input.event_id || "").trim()) {
+    await appendLog("pending_turn_identity_mismatch", {
+      host: hostName(input),
+      sessionIdHash: createHash("sha256").update(sessionId).digest("hex").slice(0, 12),
+      transcriptPathPresent: Boolean(currentTranscriptPath),
+    });
+    return null;
+  }
   const candidates = index.entries.filter((entry) =>
     entry.status === "pending" &&
     (!currentTranscriptPath || entry.transcriptPath === currentTranscriptPath),

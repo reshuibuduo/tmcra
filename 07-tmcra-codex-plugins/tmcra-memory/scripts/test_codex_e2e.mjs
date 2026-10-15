@@ -54,6 +54,7 @@ function run(script, { env = process.env, timeoutMs = 60_000 } = {}) {
 const output = { ok: true, requestedMode: mode };
 
 if (mode === "mock" || mode === "all") {
+  const pendingPairing = await run(join(pluginRoot, "tests", "pending_pairing_contract.mjs"));
   const workflowSkill = await run(join(pluginRoot, "tests", "workflow_skill_contract.mjs"));
   const workflowMcp = await run(join(pluginRoot, "tests", "workflow_mcp_contract.mjs"));
   const workflowContext = await run(join(pluginRoot, "tests", "workflow_context_contract.mjs"));
@@ -78,6 +79,7 @@ if (mode === "mock" || mode === "all") {
     timeoutMs: 90_000,
   });
   output.mock = {
+    pendingPairing,
     memoryControls,
     workflowContext,
     workflowMcp,
