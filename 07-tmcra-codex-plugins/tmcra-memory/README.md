@@ -150,3 +150,8 @@ npm run build:release
 ```
 
 The deterministic suite starts isolated mock services and does not read normal Codex history or contact the public TMCRA API. It verifies Codex and Claude Code lifecycle contracts, device authorization, scope isolation, durable writes, credential redaction, MCP tools, history preview/import rules, repository bootstrap, and release packaging on Windows and Linux.
+
+
+## Workflow Skill and MCP
+
+`skills/tmcra-workflows` provides resume, timeline, reminder and selective-package workflows through the actual `tmcra_workflows` MCP tool. See [MCP/API examples](docs/workflow-mcp-api.zh-CN.md). Skill files alone do not prove the client loaded the server; confirm with tools/list and a real read. Sensitive actions still require host confirmation.

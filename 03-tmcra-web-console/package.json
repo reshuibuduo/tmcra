@@ -9,10 +9,11 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/account-boundary.test.mjs tests/api-docs-contract.test.mjs tests/brand-assets-contract.test.mjs tests/desktop-release-contract.test.mjs tests/mobile-release-contract.test.mjs tests/device-authorization-contract.test.mjs tests/device-authorization-runtime.test.mjs tests/gpuhome-loopback-binding.test.mjs tests/internal-bootstrap-contract.test.mjs tests/internal-operations.test.mjs tests/internal-schema.test.mjs tests/memory-graph-contract.test.mjs tests/personal-api-keys-contract.test.mjs tests/personal-chat-contract.test.mjs tests/personal-chat-preview-boundary.test.mjs tests/personal-voice-contract.test.mjs tests/personal-export-contract.test.mjs tests/personal-knowledge-contract.test.mjs tests/personal-memory-control-contract.test.mjs tests/personal-integrations-contract.test.mjs tests/personal-history-import-contract.test.mjs",
+    "test": "npm run build && node --test tests/account-boundary.test.mjs tests/api-docs-contract.test.mjs tests/brand-assets-contract.test.mjs tests/desktop-release-contract.test.mjs tests/mobile-release-contract.test.mjs tests/device-authorization-contract.test.mjs tests/device-authorization-runtime.test.mjs tests/gpuhome-loopback-binding.test.mjs tests/internal-bootstrap-contract.test.mjs tests/internal-operations.test.mjs tests/internal-schema.test.mjs tests/memory-graph-contract.test.mjs tests/personal-api-keys-contract.test.mjs tests/personal-chat-contract.test.mjs tests/personal-chat-preview-boundary.test.mjs tests/personal-voice-contract.test.mjs tests/personal-export-contract.test.mjs tests/personal-knowledge-contract.test.mjs tests/personal-memory-control-contract.test.mjs tests/personal-workflows-contract.test.mjs tests/personal-integrations-contract.test.mjs tests/personal-history-import-contract.test.mjs",
     "test:security": "node tests/run-internal-security.mjs && python tests/test_gpuhome_proxy.py",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "test:workflows-browser": "node tests/personal-workflows.browser.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.30",

@@ -14,6 +14,7 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from .source_tombstones import initialize_source_tombstones, source_identity_revoked
 from .actor_provenance import (
     ActorProvenanceError,
     actor_metadata_json,
@@ -233,6 +234,8 @@ class IdentityRegistry:
                 "ON tmcra_service_messages(scope_id, internal_message_id)"
             )
 
+            initialize_source_tombstones(connection)
+
     @staticmethod
     def _internal_message_id(session_index: int, message_index: int) -> str:
         return f"s{session_index:03d}_m{message_index:03d}"
@@ -385,6 +388,8 @@ class IdentityRegistry:
                             raise ProductionWriterError(
                                 "message_id, timestamp, and non-empty content are required"
                             )
+                        if source_identity_revoked(connection, scope_id, message_id):
+                            raise ProductionWriterError("message identity was permanently revoked by content deletion")
                         if role not in {"user", "assistant", "system", "tool"}:
                             raise ProductionWriterError("production message role is invalid")
                         try:

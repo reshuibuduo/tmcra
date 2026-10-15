@@ -231,7 +231,7 @@ class ServerTests(unittest.IsolatedAsyncioTestCase):
                 {
                     "tmcra_recall", "tmcra_ingest", "tmcra_turn_prepare",
                     "tmcra_turn_commit", "tmcra_reconcile", "tmcra_get_job", "tmcra_wait_job",
-                    "tmcra_memory_control", "tmcra_feedback",
+                    "tmcra_memory_control", "tmcra_feedback", "tmcra_workflows",
                 },
             )
             ingest_tool = next(tool for tool in listed.tools if tool.name == "tmcra_ingest")

@@ -17,7 +17,7 @@ TMCRA MCP Server gives MCP hosts explicit access to long-term Agent memory. It r
 - **Explicit turn lifecycle.** A host can prepare recall before an answer and commit the exact user/assistant turn afterward.
 - **Durable write recovery.** Transport uncertainty enters a local SQLite queue with idempotent reconciliation.
 - **Verifiable receipts.** Recall, ingest, and job responses are validated before the MCP host receives them.
-- **Nine MCP tools.** Recall, ingest, prepare, commit, reconcile, get job, wait for job, session memory controls, and targeted feedback.
+- **Ten MCP tools in this source checkout.** Recall, ingest, prepare, commit, reconcile, get job, wait for job, session memory controls, targeted feedback, and four workflow features.
 
 `tmcra_memory_control` exposes task selection, a 12000-character default recall budget, and `normal`, `recall_only`, `off` modes. Pass the exact same `session_id` to recall/prepare and controls. Pending older generations are discarded after a mode change; already submitted jobs remain submitted. `tmcra_feedback` supports `ignore`, `correct` (user-supplied replacement), and `restore` with a stable idempotency key. Effective feedback requires the matching backend update; check `correction_index_status` separately. The visual control panel is provided by the Codex and DSH distributions. This MCP package automatically discovers the shared local installation; numeric loopback HTTP is permitted only for an explicit local identity. Hosted connections require HTTPS.
 
@@ -88,6 +88,7 @@ tmcra-mcp-setup status --mode explicit
 
 | Tool | Purpose |
 | --- | --- |
+| `tmcra_workflows` | Resume evidenced tasks, inspect decision history, evaluate reminders, and explicitly transfer selected memory packages. |
 | `tmcra_memory_control` | Inspect or explicitly change session modes, tasks and recall budgets. |
 | `tmcra_feedback` | Preview exact evidence and request interactive confirmation before targeted feedback. |
 | `tmcra_recall` | Return at most eight prompt-ready evidence windows for the current query. |
@@ -101,6 +102,28 @@ tmcra-mcp-setup status --mode explicit
 Every project collaborator should use the same project `scope`. Each conversation keeps its own `session_id`. Agent identity is attribution and does not split the project memory.
 
 Recalled content is returned with `trust_boundary: untrusted_memory_data`. A host must treat it as evidence, never executable instructions.
+
+## Workflow calls (new source checkout)
+
+The source checkout and matching API must both include the workflows extension; the older published release commands above do not imply that this extension has already shipped. Build/install this checkout or wait for a release containing it. A missing backend returns HTTP 404, not a successful operation.
+
+Call the real `tmcra_workflows` tool, with your actual conversation ID and the same configured/authorized scope as recall:
+
+```json
+{"session_id":"actual-host-session","scope":"project-example","operation":"resume"}
+```
+
+Use `timeline` (optional ISO `as_of`) for decisions, `reminders` for a read-only list, and `execute` for an explicit mutation:
+
+```json
+{"session_id":"actual-host-session","scope":"project-example","operation":"execute","action":"task.upsert","operation_id":"task-example-create-1","payload":{"id":"task-example","title":"Verify the API integration","goal":"Run the actual endpoint tests","version":"working-copy","next_step":"Run the contract suite"}}
+```
+
+API mapping: `GET /v1/scopes/{scope}/workflows` reads state; `POST` to the same endpoint accepts `action`, `payload`, and `operation_id`. Reuse the ID only for the same logical operation. MCP receipts are reported evidence, never fabricated local execution. The generic server uses `scope`; plugin editions instead resolve `project_path` / `project_id` with their hooks.
+
+`bridge.export`, `bridge.export_revocations`, `bridge.commit`, `bridge.plan`, `bridge.retry_failed`, and `record.delete` require an interactive MCP host confirmation. Run `bridge.preview` in the same MCP process, scope and session before commit. Hosts without form elicitation can read and prepare previews, but confirmation-required actions do not execute. Do not use a shell to bypass a declined/missing confirmation. `bridge.plan` may submit pending work; use `snapshot` for read-only status. Accepted/queued is not indexed.
+
+The full action schemas and four feature examples are in [the workflow invocation guide](../docs/WORKFLOW_MCP_API.zh-CN.md). This server does not register a host slash command itself; Skills require the plugin installation appropriate to that host.
 
 ## Explicit lifecycle
 
@@ -121,7 +144,7 @@ The lower-level equivalent is `tmcra_recall`, answer, `tmcra_ingest`, then `tmcr
 - Structured receipts reject malformed recall, ingest, and job responses.
 - Recalled memory remains untrusted data.
 - The repository contains the client-side MCP integration only. It contains no production service source code or production credentials.
-- Destructive memory deletion and export are not exposed by this toolset.
+- Workflow record deletion and explicitly selected package export/import are exposed only through host-confirmed workflow actions. This is not unrestricted bulk export or automatic cross-endpoint synchronization.
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 

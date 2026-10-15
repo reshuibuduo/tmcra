@@ -547,6 +547,29 @@ class LazyOnlineEngine:
             stop(timeout=timeout)
 
 
+def _retry_claim(
+    claim: Callable[[], bool],
+    stop: threading.Event,
+    *,
+    wait_seconds: float = 60.0,
+) -> bool:
+    """Retry a scope-lane claim that ControlDB refused for a transient reason.
+
+    ``ControlDB._claim_scope_job`` refuses whenever another connection commits
+    between its proof read and its write (the data_version fence), which is
+    routine under concurrent writes; the caller is expected to try again.
+    """
+    deadline = time.monotonic() + wait_seconds
+    delay = 0.05
+    while True:
+        if claim():
+            return True
+        if stop.is_set() or time.monotonic() >= deadline:
+            return False
+        stop.wait(delay)
+        delay = min(delay * 2, 1.0)
+
+
 class ServiceWorker:
     def __init__(
         self,
@@ -3119,6 +3142,28 @@ class ServiceWorker:
             )
         )
 
+    def _claim_index_for_stage(
+        self,
+        tenant_id: str,
+        scope_name: str,
+        job_id: str,
+        *,
+        wait_seconds: float = 60.0,
+    ) -> bool:
+        """Claim the scope's index lane for a job's own index stage.
+
+        A claim is refused while another job owns the lane, and also whenever
+        another connection commits between the claim's proof read and its write
+        (the data_version fence in ``ControlDB._claim_scope_job``). The second
+        case is routine under concurrent writes and passes on a retry, so retry
+        briefly instead of failing the whole job.
+        """
+        return _retry_claim(
+            lambda: self._claim_index(tenant_id, scope_name, job_id),
+            self._stop,
+            wait_seconds=wait_seconds,
+        )
+
     def _release_index(
         self,
         tenant_id: str,
@@ -3712,7 +3757,7 @@ class ServiceWorker:
         } else 0
 
         def execute(_stage_id: str, _stage_attempt: int) -> Mapping[str, Any]:
-            if not self._claim_index(tenant_id, scope_name, job.job_id):
+            if not self._claim_index_for_stage(tenant_id, scope_name, job.job_id):
                 raise RuntimeErrorBase("index job does not own this scope")
             try:
                 index = self.storage.build_index(
@@ -3751,7 +3796,7 @@ class ServiceWorker:
             raise RuntimeErrorBase("resident online index engine is unavailable")
 
         def execute(_stage_id: str, _stage_attempt: int) -> Mapping[str, Any]:
-            if not self._claim_index(tenant_id, scope_name, job.job_id):
+            if not self._claim_index_for_stage(tenant_id, scope_name, job.job_id):
                 raise RuntimeErrorBase("delta index job does not own this scope")
             try:
                 def resident_builder(**kwargs: Any) -> Mapping[str, Any]:
@@ -3853,7 +3898,9 @@ class ServiceWorker:
         )
         is_ingest = str((job.payload or {}).get("job_type") or "") == "ingest"
         base_seq = 1 if is_ingest else 0
-        if not self._claim_evolution(tenant_id, scope_name, job.job_id):
+        if not _retry_claim(
+            lambda: self._claim_evolution(tenant_id, scope_name, job.job_id), self._stop
+        ):
             raise RuntimeErrorBase("evolution job does not own this scope")
         index_claimed = False
         try:
@@ -4022,6 +4069,20 @@ class ServiceWorker:
                 tenant_queue_limit=getattr(self.settings, "tenant_queue_limit", None),
                 global_queue_limit=getattr(self.settings, "global_queue_limit", None),
             )
+            if getattr(job, "state", PENDING) == CANCELLED:
+                # The scheduler cancels its own job when the scope is busy and the
+                # claim below is refused. That job never ran, but its key would block
+                # this watermark until new writes arrive, so a scope that stops
+                # receiving writes would never be maintained. Try again under a key
+                # that changes every five minutes.
+                job = self.jobs.submit(
+                    tenant_id,
+                    f"{key}:retry-{int(time.time() // 300)}",
+                    payload,
+                    scope_name=scope_name,
+                    tenant_queue_limit=getattr(self.settings, "tenant_queue_limit", None),
+                    global_queue_limit=getattr(self.settings, "global_queue_limit", None),
+                )
             # A failed derived job requires an explicit audited retry. Replaying
             # it here can repeat a corrupt projection or an uncertain provider
             # outcome on every scheduler tick.
@@ -4070,13 +4131,26 @@ class ServiceWorker:
                 except CommercialContractError:
                     continue
             evolution_row = evolution_by_scope.get(key)
+            index_row = index_by_scope.get(key)
+            evolution_busy = bool(
+                (evolution_row or {}).get("active_evolution_job_id")
+                or (index_row or {}).get("active_evolution_job_id")
+            )
             if evolution_row is not None and not evolution_row.get(
                 "active_evolution_job_id"
             ):
                 if self._schedule_auto_job(evolution_row, "consolidate"):
                     scheduled += 1
-            index_row = index_by_scope.get(key)
-            if index_row is not None and not index_row.get("active_index_job_id"):
+                    evolution_busy = True
+            # A consolidation rebuilds the index itself once its Slow stage commits.
+            # A reindex claimed next to it would hold the index lane that the
+            # consolidation then waits for, while the reindex waits for the scope:
+            # both stall until the post-Slow claim times out. Reindex afterwards.
+            if (
+                index_row is not None
+                and not index_row.get("active_index_job_id")
+                and not evolution_busy
+            ):
                 if self._schedule_auto_job(index_row, "reindex"):
                     scheduled += 1
         if self.commercial is not None:

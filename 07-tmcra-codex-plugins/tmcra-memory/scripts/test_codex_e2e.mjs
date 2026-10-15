@@ -54,6 +54,9 @@ function run(script, { env = process.env, timeoutMs = 60_000 } = {}) {
 const output = { ok: true, requestedMode: mode };
 
 if (mode === "mock" || mode === "all") {
+  const workflowSkill = await run(join(pluginRoot, "tests", "workflow_skill_contract.mjs"));
+  const workflowMcp = await run(join(pluginRoot, "tests", "workflow_mcp_contract.mjs"));
+  const workflowContext = await run(join(pluginRoot, "tests", "workflow_context_contract.mjs"));
   const memoryControls = await run(join(pluginRoot, "tests", "memory_controls_contract.mjs"));
   const chatConfirmation = await run(join(pluginRoot, "tests", "chat_confirmation_contract.mjs"));
   const fullLocal = await run(join(pluginRoot, "tests", "full_local_contract.mjs"));
@@ -76,6 +79,9 @@ if (mode === "mock" || mode === "all") {
   });
   output.mock = {
     memoryControls,
+    workflowContext,
+    workflowMcp,
+    workflowSkill,
     chatConfirmation,
     fullLocal,
     outboxWakeup,

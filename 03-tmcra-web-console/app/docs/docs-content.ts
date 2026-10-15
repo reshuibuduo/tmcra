@@ -19,6 +19,14 @@ export type EndpointDoc = {
 
 export const endpointGroups: EndpointGroup[] = [
   {
+    id: "workflows",
+    label: { en: "Memory workflows", zh: "记忆工作流" },
+    description: {
+      en: "Continue tasks with evidence, revisit decisions, show contextual reminders, and transfer explicitly selected memories.",
+      zh: "带证据接续任务、回看决策、触发情景提醒，并传递明确选择的记忆。",
+    },
+  },
+  {
     id: "service",
     label: { en: "Service status", zh: "服务状态" },
     description: {
@@ -109,6 +117,18 @@ export const endpointGroups: EndpointGroup[] = [
 ];
 
 export const endpoints: EndpointDoc[] = [
+  {
+    group: "workflows", method: "GET", path: "/v1/scopes/{scope_name}/workflows",
+    title: { en: "Read memory workflows", zh: "读取记忆工作流" },
+    description: { en: "Read tasks, decision history, contextual reminders and import states; as_of selects an observation-time snapshot.", zh: "读取任务、决策历史、情景提醒与导入状态；as_of 按记录时间回看。" },
+    note: { en: "Requires memory:read. Deleted history stays erased. Reading does not submit or retry jobs.", zh: "需要 memory:read。历史视图不复活删除内容，读取不提交或重试任务。" },
+  },
+  {
+    group: "workflows", method: "POST", path: "/v1/scopes/{scope_name}/workflows",
+    title: { en: "Apply a workflow action", zh: "执行记忆工作流动作" },
+    description: { en: "Submit {action, operation_id, payload} for task.upsert, decision.create/revise, reminder.evaluate or bridge.preview/commit. Select records explicitly before transferring them.", zh: "提交 {action, operation_id, payload}，调用 task.upsert、decision.create/revise、reminder.evaluate 或 bridge.preview/commit。传递记忆前必须明确选择条目。" },
+    note: { en: "Requires memory:read/write; export and revocation retain their administrative permissions. accepted_pending is not indexed; bridge.plan can resume writes. bridge.retry_failed retains native recovery checks. Reports do not prove command execution.", zh: "需要 memory:read/write；导出和撤销仍需管理权限。accepted_pending 不等于入库；bridge.plan 可能恢复写入。bridge.retry_failed 保留原生恢复审核。文字回执不证明命令执行。" },
+  },
   {
     group: "service",
     method: "GET",

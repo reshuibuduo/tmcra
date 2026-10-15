@@ -23,6 +23,7 @@ import {
   pluginDataDir,
   redactSensitiveText,
   recall,
+  prepareWorkflowContext,
   removePendingTurn,
   removeSubagentBinding,
   removeTaskCheckpoint,
@@ -408,6 +409,21 @@ async function recallLayer(scope, query, config) {
   }
 }
 
+export async function workflowForSessionStart(input) {
+  try {
+    const { config, scopes } = await resolveHookContext(input);
+    const sessionId = await resolveLifecycleSessionId(input);
+    const policy = await memoryPolicy(controlKey(config, scopes.projectScope), sessionId);
+    // Evaluating reminders persists cooldown; never do that in recall-only/off.
+    if (!policy.read || !policy.write || !(await mayWrite(policy))) return "";
+    const context = await prepareWorkflowContext({ scope: scopes.projectScope, event: "project_open",
+      eventId: `${sessionId}:${input.event_id || input.source || "startup"}`, config });
+    return context ? wrapUntrustedMemory(context) : "";
+  } catch {
+    return "";
+  }
+}
+
 export async function recallForContext(input, query) {
   const { config, scopes, host } = await resolveHookContext(input);
   const sessionId = await resolveLifecycleSessionId(input);
@@ -415,9 +431,11 @@ export async function recallForContext(input, query) {
   if (!policy.read) return { context: "", status: "disabled", scopes, host, layers: {} };
   const continuation = await taskContext(policy.key, sessionId, query, { capture: policy });
   const safeQuery = bounded(continuation.query, 20_000);
-  const [globalMemory, projectMemory] = await Promise.all([
+  const [globalMemory, projectMemory, workflow] = await Promise.all([
     recallLayer(scopes.globalScope, safeQuery, config),
     recallLayer(scopes.projectScope, safeQuery, config),
+    policy.write && await mayWrite(policy) ? prepareWorkflowContext({ scope: scopes.projectScope,
+      event: "question", eventId: `${sessionId}:${pairingTurnId(input)}`, question: query, config }) : "",
   ]);
   const dashboard = await memoryDashboard(policy.key, sessionId);
   const selection = budgetEvidence([
@@ -429,6 +447,7 @@ export async function recallForContext(input, query) {
     visibleText: visibleMemoryContext(input.messages),
   });
   const blocks = selection.content ? [selection.content] : [];
+  if (workflow) blocks.push(workflow);
   if (continuation.task) blocks.unshift(`Task handoff (historical work, verify before acting):\n${safeQuery}`);
   if (continuation.candidates.length > 1) blocks.unshift(`Multiple active tasks; ask which task to continue:\n${JSON.stringify(continuation.candidates)}`);
   const successfulLayers = [globalMemory, projectMemory]

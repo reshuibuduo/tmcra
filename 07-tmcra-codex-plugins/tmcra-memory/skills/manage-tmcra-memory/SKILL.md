@@ -73,7 +73,7 @@ Example question shown in chat: “原来记的是 A，现在更正为 B，影�
 - For corrections, ignores and restores, follow the chat-confirmation workflow above. `ignore` hides a source from future recall; `restore` re-enables its recall rule. `submission_pending` requires retrying the same operation key.
 - `operation=budget` sets a character budget (1000–64000, default 12000). Token counts are estimates. Evidence deduplication requires a matching block in actual host-visible context; a persisted cache alone cannot establish that a block survived compaction.
 - If the user asks not to save a turn, switch that exact session to `recall_only` or `off` as requested and do not call ingestion for that content. Hooks may already have received the prompt; pending content is prevented from being delivered after the generation changes.
-- If the user asks to delete or export memory, state that the current MCP toolset does not yet expose those operations; do not simulate them.
+- For selected workflow memory export/import, revocation packages or workflow-record deletion, use the `tmcra-workflows` skill and the real `tmcra_workflows` tool with host confirmation. These operations do not expose arbitrary raw database export or bulk historical-memory deletion. `record.delete` removes workflow metadata; imported-memory deletion requires previewing an explicit revocation package. Do not simulate unavailable operations.
 - Do not store secrets, access tokens, passwords, private keys, or chain-of-thought.
 
 ## Authorization

@@ -17,7 +17,9 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urljoin
-from urllib.request import Request, urlopen
+from urllib.request import Request
+
+from .http_transport import open_request
 
 
 CLIENT_COMMANDS = frozenset({"recall", "ingest", "job", "turn"})
@@ -271,7 +273,7 @@ class HTTPClient:
             },
         )
         try:
-            with urlopen(request, timeout=self.config.timeout_seconds) as response:
+            with open_request(request, timeout=self.config.timeout_seconds) as response:
                 raw = response.read()
                 return _check_response(
                     (response.status, dict(response.headers.items()), _decode_json(raw))

@@ -3089,6 +3089,9 @@ def create_app(settings: ServiceSettings) -> FastAPI:
                 job.job_id,
                 reason="api_request",
             )
+            from .workflow_routes import bind_workflows
+            from .workflow_service import namespace_key
+            bind_workflows(components, context.tenant_id, scope_name).purge_namespace(namespace_key(context.tenant_id, scope_name))
             result = _job_payload(job, settings.public_base_url)
             result["idempotent_replay"] = False
             return result
@@ -3207,6 +3210,15 @@ def create_app(settings: ServiceSettings) -> FastAPI:
                 requested_job_id=requested_job_id,
                 on_new_jobs=register_deletion,
             )
+            from .workflow_routes import bind_workflows
+            from .workflow_service import namespace_key
+            workflow = bind_workflows(components, context.tenant_id, scope_name)
+            if target_payload.get("session_id"):
+                from .workflow_routes import revoke_deleted_session
+                revoke_deleted_session(components, context.tenant_id, scope_name, target_payload["session_id"])
+            else:
+                workflow.revoke_sources(namespace_key(context.tenant_id, scope_name),
+                    list(target_payload.get("memory_ids", [])), list(target_payload.get("message_ids", [])))
             components.commercial.cancel_jobs_for_content_deletion(
                 context.tenant_id, scope_name
             )
@@ -4605,4 +4617,6 @@ def create_app(settings: ServiceSettings) -> FastAPI:
         finally:
             components.gate.release(lease_id)
 
+    from .workflow_routes import install_workflow_routes
+    install_workflow_routes(app, components, require_permission, require_active_scope, ingest, delete_memory_messages, retry_job)
     return app

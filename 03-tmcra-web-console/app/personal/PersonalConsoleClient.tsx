@@ -259,6 +259,7 @@ export default function PersonalConsoleClient({
               <i>{item.number}</i><span>{t(item.en, item.zh)}</span>
             </button>
           ))}
+          <a href="/personal/workflows" className="button secondary">{t("Project workflow center", "项目接续工作台")}</a>
         </nav>
         <div className="personal-identity">
           <span>{resolvedActor.displayName}</span>

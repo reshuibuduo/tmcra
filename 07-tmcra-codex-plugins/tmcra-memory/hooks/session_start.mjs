@@ -4,17 +4,16 @@ import {
   readHookInput,
   recordSessionStart,
   resumeTaskContinuity,
+  workflowForSessionStart,
 } from "./hook_common.mjs";
 
 const input = await readHookInput();
 await failOpen("session_start", async () => {
   await recordSessionStart(input);
   const source = String(input.source || "startup");
-  if (!["compact", "resume"].includes(source)) {
-    emit({ continue: true });
-    return;
-  }
-  const context = await resumeTaskContinuity(input);
+  const workflow = workflowForSessionStart(input);
+  const continuity = ["compact", "resume"].includes(source) ? await resumeTaskContinuity(input) : "";
+  const context = [continuity, await workflow].filter(Boolean).join("\n\n");
   if (!context) {
     emit({ continue: true });
     return;

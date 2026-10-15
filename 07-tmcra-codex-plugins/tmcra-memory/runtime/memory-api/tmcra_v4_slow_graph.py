@@ -149,6 +149,14 @@ class TieredAPIError(DeepSeekCallError):
         super().__init__(message, retryable=False)
 
 
+class InvalidModelPatchError(TieredAPIError):
+    """A complete model response eligible for one controller-validated correction."""
+
+    def __init__(self, message: str, patch: Mapping[str, Any]) -> None:
+        super().__init__(message)
+        self.patch = dict(patch)
+
+
 def _clean(value: Any) -> str:
     return str(value).strip() if value is not None else ""
 
@@ -757,6 +765,7 @@ class DeepSeekTierConfig:
     cache_cost_per_million: float = 0.0
     provider: str = DEEPSEEK_PROVIDER
     prompt_adapter: str = "none"
+    timeout_seconds: float = 90.0
 
     @classmethod
     def from_env(
@@ -851,6 +860,9 @@ def _local_qwen_config() -> DeepSeekTierConfig:
             "local slow graph requires a loopback OpenAI-compatible route, one key, "
             "a positive token limit, and qwen36-slow-graph-v1"
         )
+    timeout = float(os.getenv("TMCRA_SLOW_GRAPH_TIMEOUT_SECONDS", "300"))
+    if not 0 < timeout <= 900:
+        raise SlowGraphError("local Slow timeout must be in (0, 900] seconds")
     return DeepSeekTierConfig(
         base_url=base_url,
         key_pool=key_pool,
@@ -858,6 +870,7 @@ def _local_qwen_config() -> DeepSeekTierConfig:
         model=model,
         provider=LOCAL_QWEN_PROVIDER,
         prompt_adapter=prompt_adapter,
+        timeout_seconds=timeout,
     )
 
 
@@ -1104,15 +1117,13 @@ class _DeepSeekTierClient:
                 "that the top-level key set is exactly [operations]."
             )
         if correction is not None:
-            if self.route != "pro":
-                raise EvidencePolicyError("semantic correction requires the Pro route")
             rejected_patch = correction.get("rejected_patch")
             validation_error = _clean(correction.get("validation_error"))
             if not isinstance(rejected_patch, Mapping) or not validation_error:
                 raise EvidencePolicyError("semantic correction context is incomplete")
             _assert_no_benchmark_fields(rejected_patch)
             system += (
-                " This is the single allowed correction pass. The previous Pro GraphPatch "
+                " This is the single allowed correction pass. The previous GraphPatch "
                 "was rejected by the deterministic controller validator. Return a complete "
                 "replacement GraphPatch, not a commentary or partial edit. Correct the "
                 "underlying semantic partition when topics differ; do not merely rename a "
@@ -1123,6 +1134,34 @@ class _DeepSeekTierClient:
                 + validation_error[:2000]
                 + "."
             )
+            if self.config.provider == LOCAL_QWEN_PROVIDER:
+                system += (
+                    " 修复时先逐条核对证据绑定：canonical_slot 必须逐字复制对应 evidence 的"
+                    " canonical_slot，不能自创、概括、合并或换成相近名称。不同 value 的 evidence"
+                    " 必须分成不同 claim；可以将这些 claim 放入同一个胶囊。保留每条证据的原意。"
+                    " 每个 claim 都必须有真实的 support 或 counterevidence，不能输出空绑定。"
+                )
+                if self.route == "flash":
+                    system += (
+                        " 本次仅提交增量！claims 只能引用 required_evidence_ids，绝对不要重复"
+                        "已有胶囊的 claim 或旧 support ID；已有内容由控制器自动合并保留。"
+                        " 如果无法在这个约束下表达冲突，明确请求 escalate，不要越权生成反证。"
+                        ' 一旦请求升级，整个回复必须恰好为 {"operations":[{"action":"escalate",'
+                        '"reason":"cross_slot_conflict"}]}，不能同时包含 revise 或其他操作。'
+                    )
+                binding_table = [
+                    {"memory_id": item.get("memory_id"),
+                     "canonical_slot": item.get("canonical_slot"),
+                     "value": item.get("value"), "evidence_role": item.get("evidence_role")}
+                    for item in region.get("evidence", [])
+                    if isinstance(item, Mapping)
+                    and (self.route != "flash" or item.get("memory_id") in required_evidence_ids)
+                ]
+                system += " 本次允许的证据绑定表：" + _json(binding_table)
+                system += " 操作已有胶囊只能逐字复制下列 capsule_id 和 base_revision，不能缩写或生成新 ID：" + _json([
+                    {"capsule_id": item.get("capsule_id"), "base_revision": item.get("revision")}
+                    for item in capsules
+                ])
         return [
             {"role": "system", "content": system},
             {"role": "user", "content": _json({"region": region, "capsules": capsules})},
@@ -1197,8 +1236,6 @@ class _DeepSeekTierClient:
         rejected_patch: Mapping[str, Any],
         validation_error: str,
     ) -> Mapping[str, Any]:
-        if self.route != "pro":
-            raise TieredAPIError("semantic correction is available only on the Pro route")
         return self._propose(
             region,
             capsules,
@@ -1259,7 +1296,7 @@ class _DeepSeekTierClient:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=90) as response:  # nosec B310
+            with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:  # nosec B310
                 status = response.getcode()
                 raw_text = response.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
@@ -1403,6 +1440,10 @@ class _DeepSeekTierClient:
         try:
             validate_patch(patch)
         except PatchValidationError as exc:
+            if isinstance(patch, Mapping):
+                raise InvalidModelPatchError(
+                    f"{self.route} returned an invalid GraphPatch: {exc}", patch
+                ) from exc
             raise TieredAPIError(f"{self.route} returned an invalid GraphPatch: {exc}") from exc
         self.last_call_metadata = {**self.last_call_metadata, "status": "completed"}
         return patch
@@ -7326,7 +7367,7 @@ class TieredGraphPatchManager:
             call = dict(raw_call)
             if index == len(tier_calls) - 1:
                 call["tier_stage"] = "semantic_correction"
-            elif route == "flash_to_pro" and index == 0:
+            elif route in {"flash", "flash_to_pro"} and index == 0:
                 call["tier_stage"] = "initial_flash"
             else:
                 call["tier_stage"] = "initial_pro"
@@ -7351,6 +7392,7 @@ class TieredGraphPatchManager:
             "route": route,
             "route_reason": route_reason,
             "semantic_correction_attempted": True,
+            "semantic_correction_version": "tmcra.slow.bounded-route-correction.3",
             "semantic_correction_validation_error": validation_error,
             "physical_api_call": physical_calls > 0,
             "physical_api_calls": physical_calls,
@@ -7419,7 +7461,7 @@ class TieredGraphPatchManager:
         )
         return committed_patch, merge_audit
 
-    def _validate_pro_with_optional_correction(
+    def _validate_with_optional_correction(
         self,
         *,
         client: Any,
@@ -7435,9 +7477,10 @@ class TieredGraphPatchManager:
         required_evidence_ids: set[str],
         partition_capsule_ids: set[str],
     ) -> tuple[dict[str, Any], dict[str, Any] | None, Mapping[str, Any]]:
+        validation_route = "flash" if route == "flash" else "pro"
         try:
             committed, merge_audit = self._validate_and_materialize_patch(
-                route="pro",
+                route=validation_route,
                 patch=patch,
                 region=region,
                 capsules=capsules,
@@ -7469,7 +7512,7 @@ class TieredGraphPatchManager:
             )
             correction_call_id = _clean(raw_correction.get("physical_call_id"))
             if correction_call_id and correction_call_id != previous_call_id:
-                correction_metadata = self._completed_client_metadata(client, "pro")
+                correction_metadata = self._completed_client_metadata(client, validation_route)
                 self.last_call_metadata = {
                     **self._aggregate_semantic_correction_metadata(
                         metadata,
@@ -7490,7 +7533,7 @@ class TieredGraphPatchManager:
                     "semantic_correction_validation_error": initial_error_text,
                 }
             raise
-        correction_metadata = self._completed_client_metadata(client, "pro")
+        correction_metadata = self._completed_client_metadata(client, validation_route)
         corrected_patch, correction_normalizations = _normalize_transport_patch(
             corrected_patch, public_capsules, public_region
         )
@@ -7506,9 +7549,18 @@ class TieredGraphPatchManager:
             route_reason=route_reason,
             validation_error=initial_error_text,
         )
+        if validation_route == "flash" and _flash_escalation_patch(corrected_patch):
+            self.last_call_metadata = {
+                **dict(self.last_call_metadata),
+                "status": "completed",
+                "semantic_correction_applied": True,
+                "escalation_requested": True,
+                "escalation_reason": FLASH_ESCALATION_REASON,
+            }
+            return dict(corrected_patch), None, corrected_patch
         try:
             committed, merge_audit = self._validate_and_materialize_patch(
-                route="pro",
+                route=validation_route,
                 patch=corrected_patch,
                 region=region,
                 capsules=capsules,
@@ -7567,6 +7619,8 @@ class TieredGraphPatchManager:
         _assert_no_benchmark_fields(public_capsules)
         try:
             patch = client.propose(public_region, public_capsules)
+        except InvalidModelPatchError as exc:
+            patch = exc.patch
         except Exception:
             client_metadata = getattr(client, "last_call_metadata", {})
             self.last_call_metadata = {**metadata, **dict(client_metadata), "route": route, "route_reason": reason}
@@ -7580,6 +7634,34 @@ class TieredGraphPatchManager:
                 **client_metadata,
                 "controller_transport_normalizations": controller_transport_normalizations,
             }
+
+        if route == "flash" and not _flash_escalation_patch(patch):
+            self.last_call_metadata = {
+                **metadata, **client_metadata, "route": route, "route_reason": reason,
+            }
+            committed_patch, merge_audit, model_patch = self._validate_with_optional_correction(
+                client=client, public_region=public_region, public_capsules=public_capsules,
+                region=region, capsules=capsules, patch=patch, metadata=metadata,
+                tier_calls=[client_metadata], route=route, route_reason=reason,
+                required_evidence_ids=required_ids, partition_capsule_ids=partition_capsule_ids,
+            )
+            if _flash_escalation_patch(committed_patch):
+                patch = committed_patch
+                client_metadata = dict(self.last_call_metadata)
+            else:
+                self.last_call_metadata = {
+                    **dict(self.last_call_metadata),
+                    "controller_summary_materialization": {
+                        "schema_version": SLOW_SUMMARY_CONTRACT_VERSION,
+                        "model_patch_sha256": _digest(model_patch),
+                        "committed_patch_sha256": _digest(committed_patch),
+                    },
+                }
+                if merge_audit is not None:
+                    self.last_call_metadata = {
+                        **dict(self.last_call_metadata), "controller_delta_merge": merge_audit,
+                    }
+                return committed_patch
 
         if route == "flash" and _flash_escalation_patch(patch):
             if self.pro is None:
@@ -7602,6 +7684,8 @@ class TieredGraphPatchManager:
             )
             try:
                 pro_patch = self.pro.propose(pro_region, public_capsules)
+            except InvalidModelPatchError as exc:
+                pro_patch = exc.patch
             except Exception:
                 pro_metadata = self._completed_client_metadata(self.pro, "pro")
                 self.last_call_metadata = self._aggregate_escalation_metadata(
@@ -7622,7 +7706,7 @@ class TieredGraphPatchManager:
             )
             escalation_reason = f"flash_escalation:{FLASH_ESCALATION_REASON}"
             committed_patch, merge_audit, model_patch = (
-                self._validate_pro_with_optional_correction(
+                self._validate_with_optional_correction(
                     client=self.pro,
                     public_region=pro_region,
                     public_capsules=public_capsules,
@@ -7658,9 +7742,9 @@ class TieredGraphPatchManager:
             "route": route,
             "route_reason": reason,
         }
-        if route == "pro":
+        if route in {"pro", "flash"}:
             committed_patch, merge_audit, model_patch = (
-                self._validate_pro_with_optional_correction(
+                self._validate_with_optional_correction(
                     client=client,
                     public_region=public_region,
                     public_capsules=public_capsules,
@@ -7669,7 +7753,7 @@ class TieredGraphPatchManager:
                     patch=patch,
                     metadata=metadata,
                     tier_calls=[client_metadata],
-                    route="pro",
+                    route=route,
                     route_reason=reason,
                     required_evidence_ids=required_ids,
                     partition_capsule_ids=partition_capsule_ids,

@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { createWorkflowClient, WORKFLOW_OPERATIONS, WORKFLOW_ACTIONS, WorkflowClientError, publicWorkflowError } from "./workflow_client.mjs";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -61,6 +62,16 @@ const RESOURCES = [
 ];
 
 const TOOLS = [
+  {
+    name: "tmcra_workflows",
+    description: "Use the current project's verified-continuation records, decision timeline, contextual reminders and selective memory bridge. Read operations never execute commands, import records or evaluate reminders. execute calls only the documented workflows API; public receipts remain reported, never independent execution proof. Sensitive exports/import commits/deletion/retry ask for host confirmation. If confirmation is unavailable or cancelled, stop; never bypass via shell/CLI. Commit requires a real bridge.preview in this same MCP session and project.",
+    inputSchema: { type: "object", additionalProperties: false, required: ["session_id", "operation"], properties: {
+      session_id: { type: "string", minLength: 1, maxLength: 200 }, project_path: { type: "string" }, project_id: { type: "string", maxLength: 200 },
+      operation: { type: "string", enum: WORKFLOW_OPERATIONS }, as_of: { type: "string", maxLength: 80, description: "Timezone-bearing ISO timestamp; read operations only." },
+      action: { type: "string", enum: WORKFLOW_ACTIONS }, payload: { type: "object" }, operation_id: { type: "string", minLength: 1, maxLength: 200 },
+    } },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+  },
   {
     name: "tmcra_open_local_install",
     description: "Open the server-independent local memory installer without a TMCRA account. The user chooses one of three embedding/reranker profiles in a loopback page; Python, models and private local identity are prepared automatically. Opening this page does not install anything or contact TMCRA servers.",
@@ -398,6 +409,7 @@ function publicJob(job) {
 }
 
 function publicToolError(error) {
+  if (error instanceof WorkflowClientError) return publicWorkflowError(error);
   const status = Number.isInteger(error?.status) ? error.status : null;
   const code = publicText(error?.code, 120)
     || (status === 401 ? "authentication_required" : "tmcra_request_failed");
@@ -958,7 +970,16 @@ async function memoryActions(args, confirmFeedback) {
   });
 }
 
+const workflowCallers = new Map();
 async function callTool(name, args, requestId) {
+  if (name === "tmcra_workflows") {
+    // One helper per exact session keeps real preview receipts available without
+    // storing source content or approval state on disk.
+    const session = String(args.session_id || "");
+    let caller = workflowCallers.get(session);
+    if (!caller) { caller = createWorkflowClient(); workflowCallers.set(session, caller); if (workflowCallers.size > 100) workflowCallers.delete(workflowCallers.keys().next().value); }
+    return caller(args, (message) => askFeedbackConfirmation(message, requestId));
+  }
   if (name === "tmcra_open_local_install") {
     const center = await startMemoryCenter({ invoke: localSetupAction });
     return { url: center.url, account_required: false, installation_started: false, expires_after_idle_minutes: 10 };
